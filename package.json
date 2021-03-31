@@ -1,0 +1,27 @@
+{
+  "name": "mwe",
+  "version": "1.0.0",
+  "description": "",
+  "targets": {
+    "webext-dev": {
+      "sourceMap": {
+        "inline": true,
+        "inlineSources": true
+      }
+    },
+    "webext-prod": {}
+  },
+  "scripts": {
+    "start": "parcel src/manifest.json --target webext-dev",
+    "build": "parcel src/manifest.json --target webext-prod"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@parcel/config-webextension": "^2.0.0-nightly.2256",
+    "@parcel/transformer-typescript-tsc": "^2.0.0-nightly.634",
+    "@parcel/validator-typescript": "^2.0.0-nightly.634",
+    "parcel": "^2.0.0-nightly.632",
+    "web-ext": "^6.0.0"
+  }
+}

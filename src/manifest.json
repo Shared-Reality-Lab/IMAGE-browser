@@ -1,0 +1,12 @@
+{
+    "manifest_version": 2,
+    "name": "Minimal Example",
+    "version": "0.0.1",
+    "description": "Basic test extension",
+
+    "content_scripts": [{
+        "css": ["styles.css"],
+        "js": ["content.ts"],
+        "matches": ["<all_urls>"]
+    }]
+}
