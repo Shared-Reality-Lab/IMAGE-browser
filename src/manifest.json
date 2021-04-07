@@ -3,10 +3,17 @@
     "name": "Minimal Example",
     "version": "0.0.1",
     "description": "Basic test extension",
+    "default_locale": "en",
 
+    "permissions": [
+        "contextMenus",
+        "tabs"
+    ],
+    "background": {
+        "scripts": ["background.ts"]
+    },
     "content_scripts": [{
-        "css": ["styles.css"],
-        "js": ["content.ts"],
-        "matches": ["<all_urls>"]
+        "matches": ["<all_urls>"],
+        "js": ["content.ts"]
     }]
 }

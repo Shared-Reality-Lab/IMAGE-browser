@@ -1,0 +1,6 @@
+{
+    "menuItem": {
+        "message": "Example item in the menu",
+        "description": "Description of item"
+    }
+}
