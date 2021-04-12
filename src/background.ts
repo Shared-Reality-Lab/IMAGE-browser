@@ -9,7 +9,7 @@ function onCreated(): void {
 browser.contextMenus.create({
     id: "mwe-item",
     title: browser.i18n.getMessage("menuItem"),
-    contexts: ["image"],
+    contexts: ["image", "link"],
 },
 onCreated);
 
