@@ -2,11 +2,15 @@ import { browser } from "webextension-polyfill-ts";
 
 var selectedElement: HTMLElement = null;
 
+let port = browser.runtime.connect({
+    name: "mwe-port"
+});
+
 document.addEventListener("contextmenu", (evt) => {
     selectedElement = evt.target;
 });
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+port.onMessage.addListener(message => {
     switch (message["selection"]) {
         case "mwe-item":
             console.debug(selectedElement);
