@@ -14,14 +14,8 @@ browser.contextMenus.create({
 onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
-    fetch("http://cim.mcgill.ca/~jeffbl/atp/tp01/renderings.json").then(resp => {
-        return resp.json();
-    }).then(json => {
-        browser.tabs.sendMessage(tab.id, {
-            "selection": info.menuItemId,
-            "response": json
-        });
-    }).catch(err => {
-        console.error(err);
+    browser.tabs.sendMessage(tab.id, {
+        "selection": info.menuItemId,
+        "tabId": tab.id
     });
 });
