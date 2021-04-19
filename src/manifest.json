@@ -15,8 +15,12 @@
     },
     "content_scripts": [{
         "matches": ["<all_urls>"],
-        "js": ["content.ts"]
+        "js": ["content.ts", "info/info.ts"]
     }],
+    "web_accessible_resources": [
+        "info/info.html",
+        "info/info.ts"
+    ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"
 }

@@ -1,13 +1,11 @@
 import { browser } from "webextension-polyfill-ts";
 
-var selectedElement: HTMLElement = null;
+var selectedElement: HTMLElement | null = null;
 
-let port = browser.runtime.connect({
-    name: "mwe-port"
-});
+let port = browser.runtime.connect();
 
-document.addEventListener("contextmenu", (evt) => {
-    selectedElement = evt.target;
+document.addEventListener("contextmenu", (evt: Event) => {
+    selectedElement = evt.target as HTMLElement;
 });
 
 port.onMessage.addListener(message => {
@@ -17,7 +15,7 @@ port.onMessage.addListener(message => {
             fetch("http://cim.mcgill.ca/~jeffbl/atp/tp01/renderings.json").then(resp => {
                 return resp.json();
             }).then(json => {
-                console.debug(json);
+                port.postMessage(json);
             }).catch(err => {
                 console.error(err);
             });
