@@ -6,7 +6,7 @@
     "default_locale": "en",
 
     "permissions": [
-        "http://cim.mcgill.ca/*",
+        "https://bach.cim.mcgill.ca/*",
         "contextMenus",
         "tabs"
     ],

@@ -2,16 +2,20 @@ let encodedRenderings = window.location.search.substring(1);
 let renderings = JSON.parse(decodeURIComponent(encodedRenderings));
 console.debug(renderings);
 
+let count = 1;
 for (let rendering of renderings["renderings"]) {
     let section = document.createElement("section");
+    section.classList.add("section");
     document.body.append(section);
     let header = document.createElement("h2");
-    header.textContent = rendering["text_string"];
+    header.classList.add("subtitle");
+    header.textContent = "Rendering " + count + ": " + rendering["text_string"];
     section.append(header);
     let details = rendering["metadata"]["more_details_rendering"];
     if (details["metadata"]["type_id"] === "c640f825-6192-44ce-b1e4-dd52e6ce6c63") {
         // Audio/Haptic
         let div = document.createElement("div");
+        div.classList.add("container");
         section.append(div);
         if (details["metadata"]["description"]) {
             let p = document.createElement("p");
@@ -25,4 +29,5 @@ for (let rendering of renderings["renderings"]) {
             div.append(audio);
         }
     }
+    count++;
 }
