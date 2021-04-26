@@ -24,5 +24,9 @@
     "parcel": "^2.0.0-nightly.632",
     "web-ext": "^6.0.0",
     "webextension-polyfill-ts": "^0.25.0"
+  },
+  "dependencies": {
+    "bootstrap": "^5.0.0-beta3",
+    "uuid": "^3.4.0"
   }
 }
