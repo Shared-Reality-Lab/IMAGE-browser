@@ -12,7 +12,7 @@ port.onMessage.addListener(message => {
     switch (message["selection"]) {
         case "mwe-item":
             console.debug(selectedElement);
-            fetch("http://cim.mcgill.ca/~jeffbl/atp/tp01/renderings.json").then(resp => {
+            fetch("http://bach.cim.mcgill.ca/atp/testpages/tp01/renderings.json").then(resp => {
                 return resp.json();
             }).then(json => {
                 port.postMessage(json);
