@@ -7,13 +7,18 @@
       "sourceMap": {
         "inline": true,
         "inlineSources": true
-      }
+      },
+      "distDir": "build"
     },
-    "webext-prod": {}
+    "webext-prod": {
+      "distDir": "build"
+    }
   },
   "scripts": {
-    "start": "parcel src/manifest.json --target webext-dev",
-    "build": "parcel src/manifest.json --target webext-prod"
+    "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
+    "clean": "rm -rf dist build",
+    "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
+    "build:ff": "npm run pack && web-ext build -s build -a dist"
   },
   "author": "",
   "license": "MIT",
