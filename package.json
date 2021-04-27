@@ -1,0 +1,37 @@
+{
+  "name": "mwe",
+  "version": "0.0.1",
+  "description": "",
+  "targets": {
+    "webext-dev": {
+      "sourceMap": {
+        "inline": true,
+        "inlineSources": true
+      },
+      "distDir": "build"
+    },
+    "webext-prod": {
+      "distDir": "build"
+    }
+  },
+  "scripts": {
+    "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
+    "clean": "rm -rf dist build",
+    "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
+    "build:ff": "npm run pack && web-ext build -s build -a dist"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@parcel/config-webextension": "^2.0.0-nightly.2256",
+    "@parcel/transformer-typescript-tsc": "^2.0.0-nightly.634",
+    "@parcel/validator-typescript": "^2.0.0-nightly.634",
+    "parcel": "^2.0.0-nightly.632",
+    "web-ext": "^6.0.0",
+    "webextension-polyfill-ts": "^0.25.0"
+  },
+  "dependencies": {
+    "bootstrap": "^5.0.0-beta3",
+    "uuid": "^3.4.0"
+  }
+}
