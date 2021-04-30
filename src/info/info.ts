@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 let encodedRenderings = window.location.search.substring(1);
 let renderings = JSON.parse(decodeURIComponent(encodedRenderings));
+console.debug(renderings);
 
 let count = 1;
 for (let rendering of renderings["renderings"]) {
