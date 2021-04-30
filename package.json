@@ -16,7 +16,7 @@
     "clean": "rm -rf build",
     "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
     "build:ff": "npm run pack && web-ext build -s build -a dist",
-    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir dist && mv build.crx dist/AHG-chrome.crx"
+    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/AHG-chrome.crx"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.0.0-nightly.2256",
