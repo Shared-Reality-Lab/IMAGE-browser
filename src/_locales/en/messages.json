@@ -1,6 +1,6 @@
 {
     "menuItem": {
-        "message": "Example item in the menu",
-        "description": "Description of item"
+        "message": "Get ATP Rendering",
+        "description": "Fetches ATP audio and haptic renderings for an image."
     }
 }

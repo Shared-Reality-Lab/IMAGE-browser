@@ -9,18 +9,15 @@ document.addEventListener("contextmenu", (evt: Event) => {
 });
 
 port.onMessage.addListener(message => {
-    switch (message["selection"]) {
-        case "mwe-item":
-            console.debug(selectedElement);
-            fetch("https://bach.cim.mcgill.ca/atp/testpages/tp01/renderings.json").then(resp => {
-                return resp.json();
-            }).then(json => {
-                port.postMessage(json);
-            }).catch(err => {
-                console.error(err);
+    switch (message["type"]) {
+        case "resourceRequest":
+            port.postMessage({
+                "type": "resource",
+                "resource": selectedElement?.outerHTML
             });
             break;
         default:
+            console.debug(message["type"]);
             break;
     }
     return true;

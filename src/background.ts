@@ -3,13 +3,29 @@ import { browser, Runtime } from "webextension-polyfill-ts";
 let ports: Runtime.Port[] = [];
 
 function handleMessage(message: any) {
-    console.debug(message);
-    if (message["renderings"].length > 0) {
-        let jsonURIComp = encodeURIComponent(JSON.stringify(message));
-        browser.windows.create({
-            type: "detached_panel",
-            url: "info/info.html?" + jsonURIComp
-        });
+    switch (message["type"]) {
+        case "resource":
+            // Get response and open new window
+            let resource = message["resource"] as HTMLElement;
+            fetch("https://bach.cim.mcgill.ca/atp/testpages/tp01/renderings.json").then(resp => {
+                return resp.json();
+            }).then(json => {
+                if (json["renderings"].length > 0) {
+                    let jsonURIComponent = encodeURIComponent(JSON.stringify(json));
+                    browser.windows.create({
+                        type: "panel",
+                        url: "info/info.html?" + jsonURIComponent
+                    });
+                } else {
+                    throw new Error("Received no renderings from test URL!");
+                }
+            }).catch(err => {
+                console.error(err);
+            });
+            break;
+        default:
+            console.debug(message["type"]);
+            break;
     }
 }
 
@@ -38,9 +54,10 @@ onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     if (tab?.id) {
+        // Request image from page
         ports[tab.id].postMessage({
-            "selection": info.menuItemId,
-            "tabId": tab.id
+            "type": "resourceRequest",
+            "tabId": tab.id,
         });
     } else {
         console.error("No tab passed to context menu listener!");

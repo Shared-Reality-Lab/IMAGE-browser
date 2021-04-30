@@ -16,12 +16,13 @@
     "clean": "rm -rf build",
     "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
     "build:ff": "npm run pack && web-ext build -s build -a dist",
-    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir dist && mv build.crx dist/AHG-chrome.crx"
+    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/AHG-chrome.crx"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.0.0-nightly.2256",
     "@parcel/transformer-typescript-tsc": "^2.0.0-nightly.634",
     "@parcel/validator-typescript": "^2.0.0-nightly.634",
+    "@types/uuid": "^8.3.0",
     "parcel": "^2.0.0-nightly.632",
     "web-ext": "^6.0.0",
     "webextension-polyfill-ts": "^0.25.0"
