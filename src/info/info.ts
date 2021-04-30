@@ -1,10 +1,19 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
+import { browser } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from 'uuid';
 
 let encodedRenderings = window.location.search.substring(1);
 let renderings = JSON.parse(decodeURIComponent(encodedRenderings));
 console.debug(renderings);
+
+// Update renderings label
+let title = document.getElementById("renderingTitle");
+if (title) {
+    title.textContent = browser.i18n.getMessage("renderingTitle");
+}
+
+let label = browser.i18n.getMessage("renderingLabel");
 
 let count = 1;
 for (let rendering of renderings["renderings"]) {
@@ -18,7 +27,7 @@ for (let rendering of renderings["renderings"]) {
     labelButton.setAttribute("data-bs-target", "#" + contentId);
     labelButton.setAttribute("aria-expanded", "false");
     labelButton.setAttribute("aria-controls", contentId);
-    labelButton.textContent = "Rendering " + count + ": " + rendering["text_string"];
+    labelButton.textContent = label + " " + count + ": " + rendering["text_string"];
     container.append(labelButton);
 
     let details = rendering["metadata"]["more_details_rendering"];
