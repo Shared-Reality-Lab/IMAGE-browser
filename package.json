@@ -23,6 +23,7 @@
     "@parcel/transformer-typescript-tsc": "^2.0.0-nightly.634",
     "@parcel/validator-typescript": "^2.0.0-nightly.634",
     "@types/uuid": "^8.3.0",
+    "@types/w3c-web-serial": "^1.0.1",
     "parcel": "^2.0.0-nightly.632",
     "web-ext": "^6.0.0",
     "webextension-polyfill-ts": "^0.25.0"
