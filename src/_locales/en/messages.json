@@ -18,5 +18,33 @@
     "renderingLabel": {
         "message": "Rendering",
         "description": "Label for each rendering returned from the server"
+    },
+    "monoSoundLabel": {
+        "message": "Mono Audio",
+        "description": "Label for mono audio option in extension preferences."
+    },
+    "stereoHeadphonesLabel": {
+        "message": "Stereo Headphones",
+        "description": "Label indicating the user can use spatialized audio via headphones."
+    },
+    "vibrationPhoneLabel": {
+        "message": "Allow Vibrations on Smartphone",
+        "description": "Label indicating the user wants phone vibrations if supported."
+    },
+    "vibrationWatchLabel": {
+        "message": "Allow Vibrations on Smartwatch",
+        "description": "Label indicating the user wants watch vibrations if supported."
+    },
+    "brailleReaderLabel": {
+        "message": "Allow Braille Reader",
+        "description": "Message indicating the user wants to use a Braille reader, if supported."
+    },
+    "hapticExplorerLabel": {
+        "message": "Allow 2D Haptic Explorer",
+        "description": "Label indicating the user wants to use a 2D haptic explorer."
+    },
+    "savePreferences": {
+        "message": "Save Preferences",
+        "description": "Label for saving user preferences."
     }
 }

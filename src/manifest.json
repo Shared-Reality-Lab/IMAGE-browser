@@ -5,6 +5,12 @@
     "description": "__MSG_extensionDescription__",
     "default_locale": "en",
 
+    "options_ui": {
+        "page": "options/options.html",
+        "browser_style": true,
+        "chrome_style": true
+    },
+
     "permissions": [
         "https://bach.cim.mcgill.ca/*",
         "contextMenus",
