@@ -6,9 +6,9 @@
     "default_locale": "en",
 
     "permissions": [
-        "https://bach.cim.mcgill.ca/*",
         "contextMenus",
-        "tabs"
+        "tabs",
+        "<all_urls>"
     ],
     "background": {
         "scripts": ["background.ts"]

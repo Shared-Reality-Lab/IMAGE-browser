@@ -1,13 +1,39 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
+import { v4 as uuidv4 } from "uuid";
 
 let ports: Runtime.Port[] = [];
+
+// TODO Update hard coded values
+function generateQuery(message: { context: string, image: string, url: string }): object {
+    return {
+        "request_uuid": uuidv4(),
+        "timestamp": Math.round(Date.now() / 1000),
+        "URL": message.url,
+        "image": message.image,
+        "context": message.context,
+        "language": "en",
+        "mono_sound": true,
+        "stereo_headphones": true,
+        "vibration_phone": false,
+        "vibration_smartwatch": false,
+        "braille_reader": false,
+        "2d_explorer": false
+    };
+}
 
 function handleMessage(message: any) {
     switch (message["type"]) {
         case "resource":
             // Get response and open new window
-            let resource = message["resource"] as HTMLElement;
-            fetch("https://bach.cim.mcgill.ca/atp/testpages/tp01/renderings.json").then(resp => {
+            const query = generateQuery(message);
+            console.debug(query);
+            fetch("https://bach.cim.mcgill.ca/atp/render", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify(query)
+            }).then(resp => {
                 return resp.json();
             }).then(json => {
                 if (json["renderings"].length > 0) {
