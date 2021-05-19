@@ -30,26 +30,28 @@ for (let rendering of renderings["renderings"]) {
     labelButton.textContent = label + " " + count + ": " + rendering["text_string"];
     container.append(labelButton);
 
-    let details = rendering["metadata"]["more_details_rendering"];
-    if (details["metadata"]["type_id"] === "c640f825-6192-44ce-b1e4-dd52e6ce6c63") {
-        // Audio/Haptic
-        let div = document.createElement("div");
-        div.classList.add("row");
-        container.append(div);
-        let contentDiv = document.createElement("div");
-        contentDiv.classList.add("collapse");
-        contentDiv.id = contentId;
-        div.append(contentDiv);
-        if (details["metadata"]["description"]) {
-            let p = document.createElement("p");
-            p.textContent = details["metadata"]["description"];
-            contentDiv.append(p);
-        }
-        if (details["audio_url"]) {
-            let audio = document.createElement("audio");
-            audio.setAttribute("controls", "");
-            audio.setAttribute("src", details["audio_url"]);
-            contentDiv.append(audio);
+    if (rendering["type_id"] === "ca.mcgill.cim.bach.atp.OldExample") {
+        let details = rendering["metadata"]["more_details_rendering"];
+        if (details["metadata"]["type_id"] === "c640f825-6192-44ce-b1e4-dd52e6ce6c63") {
+            // Audio/Haptic
+            let div = document.createElement("div");
+            div.classList.add("row");
+            container.append(div);
+            let contentDiv = document.createElement("div");
+            contentDiv.classList.add("collapse");
+            contentDiv.id = contentId;
+            div.append(contentDiv);
+            if (details["metadata"]["description"]) {
+                let p = document.createElement("p");
+                p.textContent = details["metadata"]["description"];
+                contentDiv.append(p);
+            }
+            if (details["audio_url"]) {
+                let audio = document.createElement("audio");
+                audio.setAttribute("controls", "");
+                audio.setAttribute("src", details["audio_url"]);
+                contentDiv.append(audio);
+            }
         }
     }
     document.body.append(container);

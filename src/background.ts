@@ -12,12 +12,10 @@ function generateQuery(message: { context: string, image: string, url: string })
         "image": message.image,
         "context": message.context,
         "language": "en",
-        "mono_sound": true,
-        "stereo_headphones": true,
-        "vibration_phone": false,
-        "vibration_smartwatch": false,
-        "braille_reader": false,
-        "2d_explorer": false
+        "capabilities": [],
+        "renderers": [
+            "ca.mcgill.cim.bach.atp.renderer.HelloWorld"
+        ],
     };
 }
 
