@@ -2,9 +2,16 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import { browser } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from 'uuid';
+import { RenderingResponse } from "../types/response.schema";
 
 let request_uuid = window.location.search.substring(1);
-let renderings = JSON.parse(window.localStorage.getItem(request_uuid));
+let renderingText = window.localStorage.getItem(request_uuid);
+let renderings: RenderingResponse;
+if (renderingText) {
+    renderings = JSON.parse(renderingText);
+} else {
+    renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
+}
 console.debug(renderings);
 
 window.onunload = () => {
@@ -42,7 +49,7 @@ for (let rendering of renderings["renderings"]) {
         contentDiv.classList.add("collapse");
         contentDiv.id = contentId;
         div.append(contentDiv);
-        const text = rendering["data"]["text"];
+        const text = rendering["data"]["text"] as string;
         const p = document.createElement("p");
         p.textContent = text;
         contentDiv.append(p);
@@ -57,7 +64,7 @@ for (let rendering of renderings["renderings"]) {
         div.append(contentDiv);
         const audio = document.createElement("audio");
         audio.setAttribute("controls", "");
-        audio.setAttribute("src", rendering["data"]["audio"]);
+        audio.setAttribute("src", rendering["data"]["audio"] as string);
         contentDiv.append(audio);
     }
     document.body.append(container);
