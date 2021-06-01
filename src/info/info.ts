@@ -2,11 +2,11 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import { browser } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from 'uuid';
-import { RenderingResponse } from "../types/response.schema";
+import { IMAGEResponse } from "../types/response.schema";
 
 let request_uuid = window.location.search.substring(1);
 let renderingText = window.localStorage.getItem(request_uuid);
-let renderings: RenderingResponse;
+let renderings: IMAGEResponse;
 if (renderingText) {
     renderings = JSON.parse(renderingText);
 } else {

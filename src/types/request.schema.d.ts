@@ -8,7 +8,7 @@
 /**
  * Request for renderings of an image given certain conditions.
  */
-export interface ImageRequest {
+export interface IMAGERequest {
   /**
    * UUID v4 identifying the request.
    */

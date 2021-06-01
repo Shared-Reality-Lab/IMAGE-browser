@@ -1,12 +1,12 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from "uuid";
-import { RenderingResponse } from "./types/response.schema";
-import { ImageRequest } from "./types/request.schema";
+import { IMAGEResponse} from "./types/response.schema";
+import { IMAGERequest } from "./types/request.schema";
 
 let ports: Runtime.Port[] = [];
 
 // TODO Update hard coded values
-function generateQuery(message: { context: string, image: string, url: string }): ImageRequest {
+function generateQuery(message: { context: string, image: string, url: string }): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -35,7 +35,7 @@ function handleMessage(message: any) {
                 "body": JSON.stringify(query)
             }).then(resp => {
                 return resp.json();
-            }).then((json: RenderingResponse) => {
+            }).then((json: IMAGEResponse) => {
                 if (json["renderings"].length > 0) {
                     window.localStorage.setItem(query["request_uuid"], JSON.stringify(json));
                     browser.windows.create({
