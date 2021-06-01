@@ -3,9 +3,13 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { browser } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from 'uuid';
 
-let encodedRenderings = window.location.search.substring(1);
-let renderings = JSON.parse(decodeURIComponent(encodedRenderings));
+let request_uuid = window.location.search.substring(1);
+let renderings = JSON.parse(window.localStorage.getItem(request_uuid));
 console.debug(renderings);
+
+window.onunload = () => {
+    window.localStorage.removeItem(request_uuid);
+};
 
 // Update renderings label
 let title = document.getElementById("renderingTitle");
