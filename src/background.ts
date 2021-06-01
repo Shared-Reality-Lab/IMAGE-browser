@@ -35,10 +35,10 @@ function handleMessage(message: any) {
                 return resp.json();
             }).then(json => {
                 if (json["renderings"].length > 0) {
-                    let jsonURIComponent = encodeURIComponent(JSON.stringify(json));
+                    window.localStorage.setItem(query["request_uuid"], JSON.stringify(json));
                     browser.windows.create({
                         type: "panel",
-                        url: "info/info.html?" + jsonURIComponent
+                        url: "info/info.html?" + query["request_uuid"]
                     });
                 } else {
                     throw new Error("Received no renderings from test URL!");
