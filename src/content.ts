@@ -18,6 +18,7 @@ port.onMessage.addListener(message => {
             } else {
                 imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
             }
+            imageElement.setAttribute("crossorigin", "anonymous");
 
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
