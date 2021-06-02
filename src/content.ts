@@ -40,3 +40,10 @@ port.onMessage.addListener(message => {
     }
     return true;
 });
+
+// Process images on page
+Array.from(document.getElementsByTagName("img")).forEach(image => {
+    if (!image.hasAttribute("tabindex") && !image.closest("a")) {
+        image.setAttribute("tabindex", "0");
+    }
+});
