@@ -18,6 +18,7 @@ port.onMessage.addListener(message => {
             } else {
                 imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
             }
+            imageElement.setAttribute("crossorigin", "anonymous");
 
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
@@ -38,4 +39,11 @@ port.onMessage.addListener(message => {
             break;
     }
     return true;
+});
+
+// Process images on page
+Array.from(document.getElementsByTagName("img")).forEach(image => {
+    if (!image.hasAttribute("tabindex") && !image.closest("a")) {
+        image.setAttribute("tabindex", "0");
+    }
 });
