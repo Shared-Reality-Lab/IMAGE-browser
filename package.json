@@ -20,17 +20,17 @@
     "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/AHG-chrome.crx"
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.0.0-nightly.2256",
-    "@parcel/transformer-typescript-tsc": "^2.0.0-nightly.634",
-    "@parcel/validator-typescript": "^2.0.0-nightly.634",
+    "@parcel/config-webextension": "^2.0.0-beta.3.1",
+    "@parcel/transformer-typescript-tsc": "^2.0.0-beta.3.1",
+    "@parcel/validator-typescript": "^2.0.0-beta.3.1",
     "@types/uuid": "^8.3.0",
     "json-schema-to-typescript": "^10.1.4",
-    "parcel": "^2.0.0-nightly.632",
+    "parcel": "^2.0.0-beta.3.1",
     "web-ext": "^6.0.0",
     "webextension-polyfill-ts": "^0.25.0"
   },
   "dependencies": {
-    "bootstrap": "^5.0.0-beta3",
+    "bootstrap": "^5.0.1",
     "uuid": "^3.4.0"
   }
 }
