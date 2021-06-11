@@ -19,7 +19,8 @@
     }],
     "web_accessible_resources": [
         "info/info.html",
-        "info/info.ts"
+        "info/info.ts",
+        "errors/no_renderings.html"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"

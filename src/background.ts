@@ -43,7 +43,11 @@ function handleMessage(message: any) {
                         url: "info/info.html?" + query["request_uuid"]
                     });
                 } else {
-                    throw new Error("Received no renderings from test URL!");
+                    browser.windows.create({
+                        type: "panel",
+                        url: "errors/no_renderings.html"
+                    });
+                    // throw new Error("Received no renderings from test URL!");
                 }
             }).catch(err => {
                 console.error(err);
