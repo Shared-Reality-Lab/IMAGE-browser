@@ -22,10 +22,16 @@ port.onMessage.addListener(message => {
 
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-            canvas.width = imageElement.width;
-            canvas.height = imageElement.height;
-            ctx?.drawImage(imageElement, 0, 0);
-            const data = canvas.toDataURL();
+            //canvas.width = imageElement.width;
+            //canvas.height = imageElement.height;
+            // Fix for #30
+            canvas.width = imageElement.naturalWidth;
+            canvas.height = imageElement.naturalHeight;
+            console.debug(imageElement.naturalWidth);
+            // Fix for #30, specify size and use lossy format
+            ctx?.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+            const data = canvas.toDataURL("image/jpeg");
+            console.debug(data);
 
             port.postMessage({
                 "type": "resource",
