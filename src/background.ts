@@ -16,7 +16,8 @@ function generateQuery(message: { context: string, image: string, url: string })
         "language": "en",
         "capabilities": [],
         "renderers": [
-            "ca.mcgill.cim.bach.atp.renderer.HelloWorld"
+            "ca.mcgill.cim.bach.atp.renderer.Text",
+            "ca.mcgill.cim.bach.atp.renderer.SimpleAudio"
         ],
     };
 }
