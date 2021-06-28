@@ -36,6 +36,7 @@ port.onMessage.addListener(message => {
                 "type": "resource",
                 "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
                 "image": data,
+                "dims": [ canvas.width, canvas.height ],
                 "url": window.location.href
             });
             break;

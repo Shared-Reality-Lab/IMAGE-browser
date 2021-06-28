@@ -6,12 +6,13 @@ import { IMAGERequest } from "./types/request.schema";
 let ports: Runtime.Port[] = [];
 
 // TODO Update hard coded values
-function generateQuery(message: { context: string, image: string, url: string }): IMAGERequest {
+function generateQuery(message: { context: string, image: string, url: string, dims: number[] }): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
         "URL": message.url,
         "image": message.image,
+        "dimensions": message.dims,
         "context": message.context,
         "language": "en",
         "capabilities": [],
