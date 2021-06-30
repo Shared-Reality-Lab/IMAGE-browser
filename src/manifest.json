@@ -3,6 +3,7 @@
     "name": "__MSG_extensionName__",
     "version": "0.0.2",
     "description": "__MSG_extensionDescription__",
+    "homepage_url": "https://image.a11y.mcgill.ca",
     "default_locale": "en",
 
     "permissions": [
