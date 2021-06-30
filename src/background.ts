@@ -32,8 +32,8 @@ async function generateQuery(message: { context: string, url: string, dims: numb
             "language": "en",
             "capabilities": [],
             "renderers": [
-                "ca.mcgill.cim.bach.atp.renderer.Text",
-                "ca.mcgill.cim.bach.atp.renderer.SimpleAudio"
+                "ca.mcgill.a11y.image.renderer.Text",
+                "ca.mcgill.a11y.image.renderer.SimpleAudio"
             ],
         };
     });
@@ -46,7 +46,7 @@ function handleMessage(p: Runtime.Port, message: any) {
             let query: IMAGERequest;
             generateQuery(message).then(q => {
                 query = q;
-                return fetch("https://bach.cim.mcgill.ca/atp/render", {
+                return fetch("https://image.a11y.mcgill.ca/render", {
                     "method": "POST",
                     "headers": {
                         "Content-Type": "application/json"
