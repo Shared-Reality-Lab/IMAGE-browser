@@ -4,6 +4,7 @@ import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 
 let ports: Runtime.Port[] = [];
+const responseMap: Map<string, IMAGEResponse> = new Map();
 
 // TODO Update hard coded values
 async function generateQuery(message: { context: string, url: string, dims: number[], sourceURL: string }): Promise<IMAGERequest> {
@@ -38,7 +39,7 @@ async function generateQuery(message: { context: string, url: string, dims: numb
     });
 }
 
-function handleMessage(message: any) {
+function handleMessage(p: Runtime.Port, message: any) {
     switch (message["type"]) {
         case "resource":
             // Get response and open new window
@@ -56,7 +57,7 @@ function handleMessage(message: any) {
                 return resp.json();
             }).then((json: IMAGEResponse) => {
                 if (json["renderings"].length > 0) {
-                    window.localStorage.setItem(query["request_uuid"], JSON.stringify(json));
+                    responseMap.set(query["request_uuid"], json);
                     browser.windows.create({
                         type: "panel",
                         url: "info/info.html?" + query["request_uuid"]
@@ -72,6 +73,11 @@ function handleMessage(message: any) {
                 console.error(err);
             });
             break;
+        case "info":
+            const value = responseMap.get(message["request_uuid"]);
+            p.postMessage(value);
+            responseMap.delete(message["request_uuid"]);
+            break;
         default:
             console.debug(message["type"]);
             break;
@@ -82,7 +88,13 @@ function storeConnection(p: Runtime.Port) {
     let id = p.sender?.tab?.id;
     if (id) {
         ports[id] = p;
-        ports[id].onMessage.addListener(handleMessage);
+        ports[id].onMessage.addListener(handleMessage.bind(null, p));
+        ports[id].onDisconnect.addListener((p: Runtime.Port) => {
+            const idx = ports.indexOf(p);
+            if (idx >= 0) {
+                ports.splice(idx, 1);
+            }
+        });
     }
 }
 
