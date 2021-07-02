@@ -6,35 +6,52 @@ import { IMAGERequest } from "./types/request.schema";
 let ports: Runtime.Port[] = [];
 
 // TODO Update hard coded values
-function generateQuery(message: { context: string, image: string, url: string, dims: number[] }): IMAGERequest {
-    return {
-        "request_uuid": uuidv4(),
-        "timestamp": Math.round(Date.now() / 1000),
-        "URL": message.url,
-        "image": message.image,
-        "dimensions": message.dims,
-        "context": message.context,
-        "language": "en",
-        "capabilities": [],
-        "renderers": [
-            "ca.mcgill.cim.bach.atp.renderer.Text",
-            "ca.mcgill.cim.bach.atp.renderer.SimpleAudio"
-        ],
-    };
+async function generateQuery(message: { context: string, url: string, dims: number[], sourceURL: string }): Promise<IMAGERequest> {
+    return fetch(message.sourceURL).then(resp => {
+        if (resp.ok) {
+            return resp.blob();
+        } else {
+            throw resp;
+        }
+    }).then(blob => {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+    }).then(image => {
+        return {
+            "request_uuid": uuidv4(),
+            "timestamp": Math.round(Date.now() / 1000),
+            "URL": message.url,
+            "image": image,
+            "dimensions": message.dims,
+            "context": message.context,
+            "language": "en",
+            "capabilities": [],
+            "renderers": [
+                "ca.mcgill.cim.bach.atp.renderer.Text",
+                "ca.mcgill.cim.bach.atp.renderer.SimpleAudio"
+            ],
+        };
+    });
 }
 
 function handleMessage(message: any) {
     switch (message["type"]) {
         case "resource":
             // Get response and open new window
-            const query = generateQuery(message);
-            console.debug(query);
-            fetch("https://bach.cim.mcgill.ca/atp/render", {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify(query)
+            let query: IMAGERequest;
+            generateQuery(message).then(q => {
+                query = q;
+                return fetch("https://bach.cim.mcgill.ca/atp/render", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(query)
+                });
             }).then(resp => {
                 return resp.json();
             }).then((json: IMAGEResponse) => {

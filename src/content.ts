@@ -18,27 +18,14 @@ port.onMessage.addListener(message => {
             } else {
                 imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
             }
-            imageElement.setAttribute("crossorigin", "anonymous");
-
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            //canvas.width = imageElement.width;
-            //canvas.height = imageElement.height;
-            // Fix for #30
-            canvas.width = imageElement.naturalWidth;
-            canvas.height = imageElement.naturalHeight;
-            console.debug(imageElement.naturalWidth);
-            // Fix for #30, specify size and use lossy format
-            ctx?.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
-            const data = canvas.toDataURL("image/jpeg");
-            console.debug(data);
-
+            console.debug(imageElement.currentSrc);
+            console.debug(port);
             port.postMessage({
                 "type": "resource",
                 "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                "image": data,
-                "dims": [ canvas.width, canvas.height ],
-                "url": window.location.href
+                "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
+                "url": window.location.href,
+                "sourceURL": imageElement.currentSrc
             });
             break;
         default:
