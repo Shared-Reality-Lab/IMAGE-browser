@@ -38,32 +38,38 @@ port.onMessage.addListener(message => {
         labelButton.textContent = label + " " + count + ": " + rendering["description"];
         container.append(labelButton);
 
-    if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.Text") {
-        let div = document.createElement("div");
-        div.classList.add("row");
-        container.append(div);
-        let contentDiv = document.createElement("div");
-        contentDiv.classList.add("collapse");
-        contentDiv.id = contentId;
-        div.append(contentDiv);
-        const text = rendering["data"]["text"] as string;
-        const p = document.createElement("p");
-        p.textContent = text;
-        contentDiv.append(p);
+        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.Text") {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            container.append(div);
+            let contentDiv = document.createElement("div");
+            contentDiv.classList.add("collapse");
+            contentDiv.id = contentId;
+            div.append(contentDiv);
+            const text = rendering["data"]["text"] as string;
+            const p = document.createElement("p");
+            p.textContent = text;
+            contentDiv.append(p);
+        }
+        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
+            let div = document.createElement("div");
+            div.classList.add("row");
+            container.append(div);
+            let contentDiv = document.createElement("div");
+            contentDiv.classList.add("collapse");
+            contentDiv.id = contentId;
+            div.append(contentDiv);
+            const audio = document.createElement("audio");
+            audio.setAttribute("controls", "");
+            audio.setAttribute("src", rendering["data"]["audio"] as string);
+            contentDiv.append(audio);
+        }
+        document.body.append(container);
+        count++;
     }
-    else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
-        let div = document.createElement("div");
-        div.classList.add("row");
-        container.append(div);
-        let contentDiv = document.createElement("div");
-        contentDiv.classList.add("collapse");
-        contentDiv.id = contentId;
-        div.append(contentDiv);
-        const audio = document.createElement("audio");
-        audio.setAttribute("controls", "");
-        audio.setAttribute("src", rendering["data"]["audio"] as string);
-        contentDiv.append(audio);
-    }
-    document.body.append(container);
-    count++;
-}
+});
+
+port.postMessage({
+    "type": "info",
+    "request_uuid": request_uuid
+});

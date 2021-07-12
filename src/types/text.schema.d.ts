@@ -6,7 +6,7 @@
  */
 
 /**
- * Data for the plain text renderer ca.mcgill.cim.bach.atp.renderer.Text.
+ * Data for the plain text renderer ca.mcgill.a11y.image.renderer.Text.
  */
 export interface PlainTextRenderer {
   text: string;

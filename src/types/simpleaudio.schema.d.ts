@@ -6,7 +6,7 @@
  */
 
 /**
- * Data for the noninteractive audio renderer ca.mcgill.cim.bach.atp.renderer.SimpleAudio.
+ * Data for the noninteractive audio renderer ca.mcgill.a11y.image.renderer.SimpleAudio.
  */
 export type SimpleAudioRenderer =
   | {

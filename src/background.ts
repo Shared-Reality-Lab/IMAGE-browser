@@ -35,7 +35,7 @@ async function generateQuery(message: { context: string, url: string, dims: numb
                 "ca.mcgill.a11y.image.renderer.Text",
                 "ca.mcgill.a11y.image.renderer.SimpleAudio"
             ],
-        };
+        } as IMAGERequest;
     });
 }
 

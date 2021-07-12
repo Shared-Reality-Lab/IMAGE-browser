@@ -22,6 +22,10 @@ export interface IMAGERequest {
    */
   image: string;
   /**
+   * The width and height of the image as requested in pixels.
+   */
+  dimensions: number[];
+  /**
    * Serialized XML of the image node and possibly related nodes.
    */
   context: string;
