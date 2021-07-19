@@ -1,5 +1,7 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
+import Plyr from "plyr";
+import "./info.scss";
 import { browser } from "webextension-polyfill-ts";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
@@ -67,6 +69,7 @@ port.onMessage.addListener(message => {
         document.body.append(container);
         count++;
     }
+    Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 });
 
 port.postMessage({
