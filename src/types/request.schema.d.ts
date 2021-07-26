@@ -24,7 +24,7 @@ export interface IMAGERequest {
   /**
    * The width and height of the image as requested in pixels.
    */
-  dimensions: number[];
+  dimensions: [number, number];
   /**
    * Serialized XML of the image node and possibly related nodes.
    */
@@ -32,7 +32,7 @@ export interface IMAGERequest {
   /**
    * URL of the page the request was generated from.
    */
-  URL: string;
+  URL?: string;
   /**
    * Language requested by the user as ISO 639-1.
    */
