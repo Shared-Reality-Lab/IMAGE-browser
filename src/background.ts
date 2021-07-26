@@ -7,7 +7,7 @@ let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 
 // TODO Update hard coded values
-async function generateQuery(message: { context: string, url: string, dims: number[], sourceURL: string }): Promise<IMAGERequest> {
+async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -39,11 +39,10 @@ async function generateQuery(message: { context: string, url: string, dims: numb
     });
 }
 
-function generateLocalQuery(message: { context: string, url: string, dims: number[], image: string}): IMAGERequest {
+function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
-        "URL": message.url,
         "image": message.image,
         "dimensions": message.dims,
         "context": message.context,

@@ -48,8 +48,6 @@ port.onMessage.addListener(message => {
                     port.postMessage({
                         "type": "localResource",
                         "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                        //"url": window.location.href,
-                        "url": "http://what.com",
                         "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                         "image": image
                     });
