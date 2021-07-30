@@ -1,15 +1,15 @@
 {
     "extensionName": {
-        "message": "Auditory Haptic Graphics Extension",
+        "message": "IMAGE Extension",
         "description": "Extension name"
     },
     "extensionDescription": {
-        "message": "Extension for the McGill ATP project. This is a very, very, early alpha.",
+        "message": "Extension for the McGill IMAGE project. This is a very, very, early alpha.",
         "description": "Brief description of the extension. Will be expanded eventually."
     },
     "menuItem": {
-        "message": "Get ATP Rendering",
-        "description": "Fetches ATP audio and haptic renderings for an image."
+        "message": "Get IMAGE Rendering",
+        "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
     "renderingTitle": {
         "message": "Renderings",
