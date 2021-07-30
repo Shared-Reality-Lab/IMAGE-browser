@@ -1,5 +1,14 @@
+@import '../../node_modules/bootstrap/scss/bootstrap.scss';
 @import '../../node_modules/plyr/src/sass/plyr.scss';
 
 .plyr--audio {
     display: flex;
+}
+
+.rendering {
+    padding: 0.25em;
+}
+
+.rendering-content {
+    margin: 1em;
 }
