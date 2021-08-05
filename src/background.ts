@@ -7,7 +7,7 @@ let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 
 // TODO Update hard coded values
-async function generateQuery(message: { context: string, url: string, dims: number[], sourceURL: string }): Promise<IMAGERequest> {
+async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -40,20 +40,44 @@ async function generateQuery(message: { context: string, url: string, dims: numb
     });
 }
 
-function handleMessage(p: Runtime.Port, message: any) {
+function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
+    return {
+        "request_uuid": uuidv4(),
+        "timestamp": Math.round(Date.now() / 1000),
+        "image": message.image,
+        "dimensions": message.dims,
+        "context": message.context,
+        "language": "en",
+        "capabilities": [],
+        "renderers": [
+            "ca.mcgill.a11y.image.renderer.Text",
+            "ca.mcgill.a11y.image.renderer.SimpleAudio"
+        ],
+    } as IMAGERequest;
+}
+
+async function handleMessage(p: Runtime.Port, message: any) {
+    let query: IMAGERequest;
     switch (message["type"]) {
+        case "info":
+            const value = responseMap.get(message["request_uuid"]);
+            p.postMessage(value);
+            responseMap.delete(message["request_uuid"]);
+            break;
         case "resource":
+        case "localResource":
             // Get response and open new window
-            let query: IMAGERequest;
-            generateQuery(message).then(q => {
-                query = q;
-                return fetch("https://image.a11y.mcgill.ca/render", {
+            if (message["type"] === "resource") {
+                query = await generateQuery(message);
+            } else {
+                query = generateLocalQuery(message);
+            }
+            fetch("https://image.a11y.mcgill.ca/render", {
                     "method": "POST",
                     "headers": {
                         "Content-Type": "application/json"
                     },
                     "body": JSON.stringify(query)
-                });
             }).then(resp => {
                 return resp.json();
             }).then((json: IMAGEResponse) => {
@@ -73,11 +97,6 @@ function handleMessage(p: Runtime.Port, message: any) {
             }).catch(err => {
                 console.error(err);
             });
-            break;
-        case "info":
-            const value = responseMap.get(message["request_uuid"]);
-            p.postMessage(value);
-            responseMap.delete(message["request_uuid"]);
             break;
         default:
             console.debug(message["type"]);

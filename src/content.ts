@@ -20,13 +20,39 @@ port.onMessage.addListener(message => {
             }
             console.debug(imageElement.currentSrc);
             console.debug(port);
-            port.postMessage({
-                "type": "resource",
-                "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
-                "url": window.location.href,
-                "sourceURL": imageElement.currentSrc
-            });
+            const scheme = imageElement.currentSrc.split(":")[0];
+            if (scheme === "http" || scheme === "https") {
+                port.postMessage({
+                    "type": "resource",
+                    "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
+                    "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
+                    "url": window.location.href,
+                    "sourceURL": imageElement.currentSrc
+                });
+            } else if (scheme === "file") {
+                console.debug("File!");
+                fetch(imageElement.currentSrc).then(resp => {
+                    if (resp.ok) {
+                        return resp.blob();
+                    } else {
+                        throw resp;
+                    }
+                }).then(blob => {
+                    return new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = () => reject(reader.error);
+                        reader.readAsDataURL(blob);
+                    });
+                }).then(image => {
+                    port.postMessage({
+                        "type": "localResource",
+                        "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
+                        "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
+                        "image": image
+                    });
+                });
+            }
             break;
         default:
             console.debug(message["type"]);
