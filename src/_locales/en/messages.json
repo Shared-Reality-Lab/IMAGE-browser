@@ -18,5 +18,17 @@
     "renderingLabel": {
         "message": "Rendering",
         "description": "Label for each rendering returned from the server"
+    },
+    "segmentAudioSelLabel": {
+        "message": "Part of Rendering to Play",
+        "description": "Label for the SegmentAudio selection menu."
+    },
+    "segmentAudioFullRendering": {
+        "message": "Full Rendering",
+        "description": "Selection option to play through the entire rendering."
+    },
+    "segmentAudioButton": {
+        "message": "Play Segment",
+        "description": "Play the selected audio segment."
     }
 }

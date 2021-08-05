@@ -71,9 +71,6 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(audio);
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
-            console.log("A thing occurred!");
-            console.log(rendering["data"]["audioInfo"]);
-            // Just show basic thing for now
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
@@ -86,7 +83,7 @@ port.onMessage.addListener(async (message) => {
             selectDiv.classList.add("form-floating");
             contentDiv.append(selectDiv);
             const label = document.createElement("label");
-            label.textContent = "Part of Rendering to Play";
+            label.textContent = browser.i18n.getMessage("segmentAudioSelLabel");
             label.classList.add("form-label");
             const select = document.createElement("select");
             select.classList.add("form-select");
@@ -95,7 +92,7 @@ port.onMessage.addListener(async (message) => {
             const fullOption = document.createElement("option");
             fullOption.setAttribute("value", "full");
             fullOption.setAttribute("selected", "true");
-            fullOption.textContent = "Full Rendering";
+            fullOption.textContent = browser.i18n.getMessage("segmentAudioFullRendering");
             select.append(fullOption);
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
             for (let idx = 0; idx < audioInfo.length; idx++) {
@@ -109,7 +106,7 @@ port.onMessage.addListener(async (message) => {
             selectDiv.append(label);
 
             const button = document.createElement("button");
-            button.textContent = "Play Segment";
+            button.textContent = browser.i18n.getMessage("segmentAudioButton");
             button.classList.add("btn", "btn-secondary");
             selectDiv.append(button);
 
@@ -141,16 +138,12 @@ port.onMessage.addListener(async (message) => {
                 sourceNode.connect(audioCtx.destination);
                 sourceNode.start(0, currentOffset, currentDuration);
             });
-            // const audio = document.createElement("audio");
-            // audio.setAttribute("controls", "");
-            // audio.setAttribute("src", rendering["data"]["audioFile"] as string);
-            // contentDiv.append(audio);
         }
 
         document.body.append(container);
         count++;
     }
-    //Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+    Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 });
 
 port.postMessage({
