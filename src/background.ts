@@ -33,7 +33,8 @@ async function generateQuery(message: { context: string, url: string, dims: numb
             "capabilities": [],
             "renderers": [
                 "ca.mcgill.a11y.image.renderer.Text",
-                "ca.mcgill.a11y.image.renderer.SimpleAudio"
+                "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                "ca.mcgill.a11y.image.renderer.SegmentAudio"
             ],
         } as IMAGERequest;
     });
