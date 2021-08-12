@@ -11,6 +11,7 @@ document.addEventListener("contextmenu", (evt: Event) => {
 port.onMessage.addListener(message => {
     switch (message["type"]) {
         case "resourceRequest":
+        case "preprocessRequest":
             const serializer = new XMLSerializer();
             let imageElement: HTMLImageElement;
             if (selectedElement instanceof HTMLImageElement ) {
@@ -27,7 +28,8 @@ port.onMessage.addListener(message => {
                     "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
                     "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                     "url": window.location.href,
-                    "sourceURL": imageElement.currentSrc
+                    "sourceURL": imageElement.currentSrc,
+                    "toRender": (message["type"] === "resourceRequest")
                 });
             } else if (scheme === "file") {
                 console.debug("File!");
@@ -49,7 +51,8 @@ port.onMessage.addListener(message => {
                         "type": "localResource",
                         "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
                         "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
-                        "image": image
+                        "image": image,
+                        "toRender": (message["type"] === "resourceRequest")
                     });
                 });
             }
