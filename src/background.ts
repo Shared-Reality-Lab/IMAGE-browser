@@ -72,31 +72,43 @@ async function handleMessage(p: Runtime.Port, message: any) {
             } else {
                 query = generateLocalQuery(message);
             }
-            fetch("https://image.a11y.mcgill.ca/render", {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(query)
-            }).then(resp => {
-                return resp.json();
-            }).then((json: IMAGEResponse) => {
-                if (json["renderings"].length > 0) {
-                    responseMap.set(query["request_uuid"], json);
-                    browser.windows.create({
-                        type: "panel",
-                        url: "info/info.html?" + query["request_uuid"]
-                    });
-                } else {
-                    browser.windows.create({
-                        type: "panel",
-                        url: "errors/no_renderings.html"
-                    });
-                    // throw new Error("Received no renderings from test URL!");
-                }
-            }).catch(err => {
-                console.error(err);
-            });
+            if (message["toRender"] === true) {
+                fetch("https://image.a11y.mcgill.ca/render", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify(query)
+                }).then(resp => {
+                    return resp.json();
+                }).then((json: IMAGEResponse) => {
+                    if (json["renderings"].length > 0) {
+                        responseMap.set(query["request_uuid"], json);
+                        browser.windows.create({
+                            type: "panel",
+                            url: "info/info.html?" + query["request_uuid"]
+                        });
+                    } else {
+                        browser.windows.create({
+                            type: "panel",
+                            url: "errors/no_renderings.html"
+                        });
+                        // throw new Error("Received no renderings from test URL!");
+                    }
+                }).catch(err => {
+                    console.error(err);
+                });
+            } else {
+                browser.downloads.download({
+                    url: "https://image.a11y.mcgill.ca/render/preprocess",
+                    headers: [{ name: "Content-Type", value: "application/json" }],
+                    body: JSON.stringify(query),
+                    method: "POST",
+                    saveAs: true
+                }).catch(err => {
+                    console.error(err);
+                });
+            }
             break;
         default:
             console.debug(message["type"]);
@@ -132,14 +144,28 @@ browser.contextMenus.create({
     contexts: ["image", "link"],
 },
 onCreated);
+browser.contextMenus.create({
+    id: "preprocess-only",
+    title: browser.i18n.getMessage("preprocessItem"),
+    contexts: ["image", "link"]
+},
+onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
+    console.debug(info);
     if (tab?.id) {
         // Request image from page
-        ports[tab.id].postMessage({
-            "type": "resourceRequest",
-            "tabId": tab.id,
-        });
+        if (info.menuItemId === "mwe-item") {
+            ports[tab.id].postMessage({
+                "type": "resourceRequest",
+                "tabId": tab.id,
+            });
+        } else if (info.menuItemId === "preprocess-only") {
+            ports[tab.id].postMessage({
+                "type": "preprocessRequest",
+                "tabId": tab.id
+            });
+        }
     } else {
         console.error("No tab passed to context menu listener!");
     }

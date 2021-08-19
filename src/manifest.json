@@ -9,6 +9,7 @@
     "permissions": [
         "contextMenus",
         "tabs",
+        "downloads",
         "<all_urls>"
     ],
     "background": {

@@ -11,6 +11,10 @@
         "message": "Get IMAGE Rendering",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
+    "preprocessItem": {
+        "message": "Get Preprocessed Data",
+        "description": "Fetch preprocessed JSON data for an image without renderings."
+    },
     "renderingTitle": {
         "message": "Renderings",
         "description": "Header of popup window"
