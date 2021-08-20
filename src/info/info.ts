@@ -69,6 +69,10 @@ port.onMessage.addListener(async (message) => {
             audio.setAttribute("controls", "");
             audio.setAttribute("src", rendering["data"]["audio"] as string);
             contentDiv.append(audio);
+            const download = document.createElement("a");
+            download.setAttribute("href", rendering["data"]["audio"] as string);
+            download.textContent = "Download Audio File";
+            contentDiv.append(download);
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
             let div = document.createElement("div");
