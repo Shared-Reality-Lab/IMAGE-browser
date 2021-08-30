@@ -79,8 +79,19 @@ async function handleMessage(p: Runtime.Port, message: any) {
                             "Content-Type": "application/json"
                         },
                         "body": JSON.stringify(query)
-                }).then(resp => {
-                    return resp.json();
+                }).then(async (resp) => {
+                    if (resp.ok) {
+                        return resp.json();
+                    } else {
+                        browser.windows.create({
+                            type: "panel",
+                            url: "errors/http_error.html"
+                        });
+                        console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+                        const textContent = await resp.text();
+                        console.error(textContent);
+                        throw new Error(textContent);
+                    }
                 }).then((json: IMAGEResponse) => {
                     if (json["renderings"].length > 0) {
                         responseMap.set(query["request_uuid"], json);
