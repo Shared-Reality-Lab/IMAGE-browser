@@ -22,7 +22,8 @@
     "web_accessible_resources": [
         "info/info.html",
         "info/info.ts",
-        "errors/no_renderings.html"
+        "errors/no_renderings.html",
+        "errors/http_error.html"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"
