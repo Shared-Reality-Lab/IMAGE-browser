@@ -19,8 +19,6 @@ port.onMessage.addListener(message => {
             } else {
                 imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
             }
-            console.debug(imageElement.currentSrc);
-            console.debug(port);
             const scheme = imageElement.currentSrc.split(":")[0];
             if (scheme === "http" || scheme === "https") {
                 port.postMessage({
@@ -29,7 +27,8 @@ port.onMessage.addListener(message => {
                     "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                     "url": window.location.href,
                     "sourceURL": imageElement.currentSrc,
-                    "toRender": (message["type"] === "resourceRequest")
+                    "toRender": (message["type"] === "resourceRequest"),
+                    "mode": message["mode"]
                 });
             } else if (scheme === "file") {
                 console.debug("File!");

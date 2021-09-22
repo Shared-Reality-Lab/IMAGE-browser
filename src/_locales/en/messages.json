@@ -7,9 +7,13 @@
         "message": "Extension for the McGill IMAGE project. This is a very, very, early alpha.",
         "description": "Brief description of the extension. Will be expanded eventually."
     },
-    "menuItem": {
-        "message": "Get IMAGE Rendering",
-        "description": "Fetches IMAGE audio and haptic renderings for an image."
+    "menuAudioItem": {
+        "message": "Get Audio Rendering",
+        "description": "Fetches IMAGE audio renderings for an image."
+    },
+    "menuHapticItem": {
+        "message": "Get Haptic Rendering",
+        "description": "Fetches IMAGE haptic renderings for an image."
     },
     "preprocessItem": {
         "message": "Get Preprocessed Data",

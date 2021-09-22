@@ -20,8 +20,21 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
+        "./hAPI/libraries/p5.js",
+        "./hAPI/libraries/Actuator.js",
+        "./hAPI/libraries/Pwm.js",
+        "./hAPI/libraries/Sensor.js",
+        "./hAPI/libraries/p5.js",
+        "./hAPI/libraries/p5.sound.js",
+        "./hAPI/libraries/Pantograph.js",
+        "./hAPI/libraries/Board.js",
+        "./hAPI/libraries/Device.js",
+        "./hAPI/hello_ball.js",
+        "./hAPI/hello_ball_worker.js",
         "info/info.html",
         "info/info.ts",
+        "info/hapticInfo.html",
+        "info/hapticInfo.ts",
         "errors/no_renderings.html",
         "errors/http_error.html"
     ],

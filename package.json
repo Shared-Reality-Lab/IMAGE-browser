@@ -32,7 +32,9 @@
   },
   "dependencies": {
     "bootstrap": "^5.0.1",
+    "chromium": "^3.0.2",
     "plyr": "^3.6.8",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "node-p5": "^1.0.4"
   }
 }

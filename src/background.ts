@@ -8,6 +8,7 @@ const responseMap: Map<string, IMAGEResponse> = new Map();
 
 // TODO Update hard coded values
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
+    console.log("generate Query");
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -41,6 +42,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
 }
 
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
+    console.log("generateLocalQuery");
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -97,7 +99,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         responseMap.set(query["request_uuid"], json);
                         browser.windows.create({
                             type: "panel",
-                            url: "info/info.html?" + query["request_uuid"]
+                            url: message["mode"] == "audio" ? "info/info.html?" + query["request_uuid"]
+                                                            : "info/hapticInfo.html?" + query["request_uuid"]
                         });
                     } else {
                         browser.windows.create({
@@ -151,8 +154,14 @@ function onCreated(): void {
 
 browser.contextMenus.create({
     id: "mwe-item",
-    title: browser.i18n.getMessage("menuItem"),
+    title: browser.i18n.getMessage("menuAudioItem"),
     contexts: ["image", "link"],
+},
+onCreated);
+browser.contextMenus.create({
+    id: "haptic-item",
+    title: browser.i18n.getMessage("menuHapticItem"),
+    contexts: ["image", "link"]
 },
 onCreated);
 browser.contextMenus.create({
@@ -170,6 +179,13 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
             ports[tab.id].postMessage({
                 "type": "resourceRequest",
                 "tabId": tab.id,
+                "mode": "audio"
+            });
+        } else if (info.menuItemId === "haptic-item") {
+            ports[tab.id].postMessage({
+                "type": "resourceRequest",
+                "tabId": tab.id,
+                "mode": "haptic"
             });
         } else if (info.menuItemId === "preprocess-only") {
             ports[tab.id].postMessage({
