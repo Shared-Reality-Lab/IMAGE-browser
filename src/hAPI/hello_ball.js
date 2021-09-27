@@ -1,18 +1,40 @@
-var x = 0;
+const p5 = require('node-p5');
+console.log("running sketch");
 
-alert('test');
-console.log("sketch started");
-
-function setup() {
-  let c = createCanvas(600, 600);
-  c.position(0, 0);
-  console.log("sketch setup");
+function sketch(p) {
+    p.setup = () => {
+        let canvas = p.createCanvas(200, 200);
+        setTimeout(() => {
+            p.saveCanvas(canvas, 'myCanvas', 'png').then(filename => {
+                console.log(`saved the canvas as ${filename}`);
+            });
+        }, 100);
+    }
+    p.draw = () => {
+        console.log("draw");
+        p.background(50);
+        p.text('hello world!', 50, 100);
+    }
 }
 
-function draw() {
-  background(0);
-  console.log("sketch looping");
-}
+let p5Instance = p5.createSketch(sketch);
+
+// console.log("abc");
+
+// function setup() {
+//   createCanvas(600, 600);
+//   console.log("sketch setup");
+//   alert('test');
+// }
+
+// function draw() {
+//   //hello_ball.background(120);
+//   console.log("sketch looping");
+// }
+
+// //var myp5 = new p5(s);
+// console.log("sketch started");
+//alert('test 2');
 
 // var haplyBoard;
 // var widgetOne;

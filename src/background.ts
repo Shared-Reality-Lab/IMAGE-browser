@@ -87,7 +87,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     } else {
                         browser.windows.create({
                             type: "panel",
-                            url: "errors/http_error.html"
+                            // for testing purposes
+                            url: "info/hapticInfo.html" //errors/http_error.html"
                         });
                         console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
                         const textContent = await resp.text();
@@ -154,7 +155,7 @@ function onCreated(): void {
 
 browser.contextMenus.create({
     id: "mwe-item",
-    title: browser.i18n.getMessage("menuAudioItem"),
+    title: browser.i18n.getMessage("menuItem"),
     contexts: ["image", "link"],
 },
 onCreated);
