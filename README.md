@@ -3,7 +3,8 @@ auditory-haptic-graphics browser extensions &amp; client-side code
 
 ## Set Up
 
-Clone this repository and install the dependencies using NPM:
+Clone this repository and install the dependencies using NPM.
+Ensure you have npm v7 or later installed, ideally by using [nvm](https://github.com/nvm-sh/nvm)!
 ```bash
 npm i
 ```
