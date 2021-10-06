@@ -2,7 +2,7 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import Plyr from "plyr";
 import "./info.scss";
-import { browser } from "webextension-polyfill-ts";
+import browser from "webextension-polyfill";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
 

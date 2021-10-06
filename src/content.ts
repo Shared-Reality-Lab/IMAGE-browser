@@ -1,4 +1,4 @@
-import { browser } from "webextension-polyfill-ts";
+import browser from "webextension-polyfill";
 
 var selectedElement: HTMLElement | null = null;
 
