@@ -24,15 +24,15 @@
     "@parcel/transformer-sass": "^2.0.0-beta.3.1",
     "@parcel/transformer-typescript-tsc": "^2.0.0-beta.3.1",
     "@parcel/validator-typescript": "^2.0.0-beta.3.1",
-    "@types/uuid": "^8.3.0",
+    "@types/uuid": "^8.3.1",
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.0.0-beta.3.1",
     "web-ext": "^6.0.0",
-    "webextension-polyfill-ts": "^0.25.0"
+    "webextension-polyfill-ts": "^0.26.0"
   },
   "dependencies": {
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
-    "uuid": "^3.4.0"
+    "uuid": "^8.3.2"
   }
 }
