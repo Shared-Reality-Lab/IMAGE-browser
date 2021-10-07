@@ -161,6 +161,12 @@ browser.contextMenus.create({
     contexts: ["image", "link"]
 },
 onCreated);
+browser.contextMenus.create({
+    id: "preprocess-only-map",
+    title: browser.i18n.getMessage("preprocessMap"),
+    contexts: ["image", "link"],
+},
+onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     console.debug(info);
@@ -174,6 +180,11 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         } else if (info.menuItemId === "preprocess-only") {
             ports[tab.id].postMessage({
                 "type": "preprocessRequest",
+                "tabId": tab.id
+            });
+        } else if (info.menuItemId === "preprocess-only-map") {
+            ports[tab.id].postMessage({
+                "type": "preprocessMap",
                 "tabId": tab.id
             });
         }

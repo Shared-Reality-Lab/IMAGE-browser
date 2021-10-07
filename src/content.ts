@@ -57,6 +57,8 @@ port.onMessage.addListener(message => {
                 });
             }
             break;
+        case "preprocessMap":
+            
         default:
             console.debug(message["type"]);
             break;
