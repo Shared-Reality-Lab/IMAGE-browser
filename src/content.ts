@@ -72,3 +72,12 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
         image.setAttribute("tabindex", "0");
     }
 });
+
+// Process maps on page
+Array.from(document.getElementsByTagName("iframe")).forEach(map => {
+    if (!map.hasAttribute("tabindex") && !map.closest("a")) {
+        if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
+            map.setAttribute("tabindex", "0");
+        }
+    }
+});
