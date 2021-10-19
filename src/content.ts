@@ -105,17 +105,17 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                 lat = center.split(",")[0];
                 lon = center.split(",")[1];
                 console.log("Lat = " + lat + ", Lon = " + lon);
-             }
-             if(src?.includes("&zoom=")){
+            }
+            if(src?.includes("&zoom=")){
                 let i1 = src.indexOf("&zoom=") + 6;
                 let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
                 zoom = src.substring(i1, i2);
                 console.log("Zoom = " + zoom);
-             }
-             if(src?.includes("&maptype=satellite")){
-                 maptype = "satellite";
-                 console.log("Maptype = " + maptype);
-             }
+            }
+            if(src?.includes("&maptype=satellite")){
+                maptype = "satellite";
+                console.log("Maptype = " + maptype);
+            }
         }
     }
 });
