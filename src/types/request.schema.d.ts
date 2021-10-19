@@ -6,7 +6,7 @@
  */
 
 /**
- * Request for renderings of an image or map given certain conditions.
+ * Request for renderings of an image or a map given certain conditions.
  */
 export type IMAGERequest = IMAGERequest1 & IMAGERequest2;
 export type IMAGERequest2 = {
@@ -36,8 +36,6 @@ export interface IMAGERequest1 {
   coordinates?: {
     latitude: number;
     longitude: number;
-    q?: string;
-    zoom?: number;
     [k: string]: unknown;
   };
   /**
