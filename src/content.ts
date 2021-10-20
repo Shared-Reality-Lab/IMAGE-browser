@@ -6,7 +6,7 @@ let port = browser.runtime.connect();
 
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
-    console.info(selectedElement.id);
+    console.debug(selectedElement.id);
 });
 
 port.onMessage.addListener(message => {
