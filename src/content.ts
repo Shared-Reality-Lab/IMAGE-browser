@@ -68,10 +68,7 @@ port.onMessage.addListener(message => {
             console.debug(mapElement.src);
 
             let src = mapElement.getAttribute("src");
-            let q;
-            let lat;
-            let lon;
-            let zoom;
+            let q, lat, lon, zoom;
             let maptype = "roadmap";
             if(src?.includes("&q=")){
                let i1 = src.indexOf("&q=") + 3;
