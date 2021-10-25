@@ -72,7 +72,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
             } else {
                 query = generateLocalQuery(message);
             }
-            if (message["toRender"] === true) {
+            if (message["toRender"] === "full") {
                 fetch("https://image.a11y.mcgill.ca/render", {
                         "method": "POST",
                         "headers": {
@@ -109,12 +109,21 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 }).catch(err => {
                     console.error(err);
                 });
-            } else {
+            } else if (message["toRender"] === "preprocess") {
                 browser.downloads.download({
                     url: "https://image.a11y.mcgill.ca/render/preprocess",
                     headers: [{ name: "Content-Type", value: "application/json" }],
                     body: JSON.stringify(query),
                     method: "POST",
+                    saveAs: true
+                }).catch(err => {
+                    console.error(err);
+                });
+            } else if (message["toRender"] === "none") {
+                const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
+                const blobURL = URL.createObjectURL(blob);
+                browser.downloads.download({
+                    url: blobURL,
                     saveAs: true
                 }).catch(err => {
                     console.error(err);
@@ -161,6 +170,12 @@ browser.contextMenus.create({
     contexts: ["image", "link"]
 },
 onCreated);
+browser.contextMenus.create({
+    id: "request-only",
+    title: browser.i18n.getMessage("requestItem"),
+    contexts: ["image", "link"]
+},
+onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     console.debug(info);
@@ -174,6 +189,11 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         } else if (info.menuItemId === "preprocess-only") {
             ports[tab.id].postMessage({
                 "type": "preprocessRequest",
+                "tabId": tab.id
+            });
+        } else if (info.menuItemId === "request-only") {
+            ports[tab.id].postMessage({
+                "type": "onlyRequest",
                 "tabId": tab.id
             });
         }
