@@ -15,6 +15,10 @@
         "message": "Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
     },
+    "requestItem": {
+        "message": "Download Request Data",
+        "description": "Download request to be sent to server."
+    },
     "renderingTitle": {
         "message": "Renderings",
         "description": "Header of popup window"
