@@ -8,7 +8,6 @@ const responseMap: Map<string, IMAGEResponse> = new Map();
 
 // TODO Update hard coded values
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
-    console.log("generate Query");
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -87,8 +86,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     } else {
                         browser.windows.create({
                             type: "panel",
-                            // for testing purposes
-                            url: "info/hapticInfo.html" //errors/http_error.html"
+                            url: "errors/http_error.html" 
                         });
                         console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
                         const textContent = await resp.text();
@@ -101,7 +99,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         browser.windows.create({
                             type: "panel",
                             url: message["mode"] == "audio" ? "info/info.html?" + query["request_uuid"]
-                                                            : "info/hapticInfo.html?" + query["request_uuid"]
+                                                            : "hAPI/hello_ball.html?" + query["request_uuid"] 
                         });
                     } else {
                         browser.windows.create({

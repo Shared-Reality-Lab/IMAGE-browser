@@ -187,20 +187,20 @@ class Device{
         
         let control;
         
-        let encoderParameters = new Float32Array(); // was const
+        let encoderParameters = new Float32Array();
     
-        let encoderParams = [];// = new Uint8Array;// was const
-        let motorParams = []// = new Uint8Array;// was const
-        let sensorParams = [];// = new Uint8Array;// was const
-        let pwmParams = [];// = new Uint8Array;// was const
+        let encoderParams = [];
+        let motorParams = [];
+        let sensorParams = [];
+        let pwmParams = [];
 
         console.log(encoderParams.length);
         
         if(this.encodersActive > 0){	
-      encoderParams = new Uint8Array(this.encodersActive + 1);
+            encoderParams = new Uint8Array(this.encodersActive + 1);
             control = 0;		
     
-            for(let i = 0; i < this.encoders.length; i++){
+            for (let i = 0; i < this.encoders.length; i++){
                 if(this.encoders[i].get_encoder() != (i+1)){
                     console.log("warning, improper encoder indexing");
                     this.encoders[i].set_encoder(i+1);
@@ -230,15 +230,15 @@ class Device{
                 }
             }
         }
-        else{
-      encoderParams = new Uint8Array(1);// byte[1];
-      encoderParams[0] = 0;
-            encoderParameters = new Float32Array(0);//float[0];
+        else {
+            encoderParams = new Uint8Array(1);
+            encoderParams[0] = 0;
+            encoderParameters = new Float32Array(0);
         }
         
         
         if(this.actuatorsActive > 0){
-      motorParams = new Uint8Array(this.actuatorsActive + 1);//byte[this.actuatorsActive + 1];
+            motorParams = new Uint8Array(this.actuatorsActive + 1);
             control = 0;
             
             for(let i = 0; i < this.motors.length; i++){
@@ -268,7 +268,7 @@ class Device{
       }
         }
     else{
-      const motorParams = new Uint8Array(1);//[1];
+      const motorParams = new Uint8Array(1);
       motorParams[0] = 0;
     }
         
@@ -289,7 +289,7 @@ class Device{
             
         }
         else{
-            sensorParams = new Uint8Array(1);//byte[1];
+            sensorParams = new Uint8Array(1);
             sensorParams[0] = 0;
         }
     
@@ -324,7 +324,6 @@ class Device{
         this.arraycopy(sensorParams, 0, encMtrSenPwm, motorParams.length+encoderParams.length, sensorParams.length);
         this.arraycopy(pwmParams, 0, encMtrSenPwm, motorParams.length+encoderParams.length+sensorParams.length, pwmParams.length);
         
-        //console.log(this.deviceLink);
         console.log("call from device");
         console.log(this.deviceLink);
         //this.deviceLink.transmit(2,1,[1], 5);
@@ -343,20 +342,6 @@ class Device{
     arraycopy(src, srcPos, dst, dstPos, length) {
         while (length--) dst[dstPos++] = src[srcPos++]; return dst;
     }
-                
-        
-  //   // console.log(motorParams);
-  //   // console.log(encMtrSenPwm);
-  //   // console.log(motorParams.length);
-
-  // //   console.log("src:" + src);
-  // //   console.log(srcIndex);
-  // //   console.log(dest);
-  // //   console.log(destIndex);
-  // //   console.log(length);
-  // // dest.splice(destIndex, length, ...src.slice(srcIndex, srcIndex + length));
-  // }
-	 
 
  /**
   * assigns encoder positions based on actuator port
@@ -379,9 +364,7 @@ class Device{
 
         //do not process garbled data from the serial comms
         if (device_data[0] == 0 && device_data[1] == 0)
-            return;
-    
-        //console.log("device_data: " + device_data);
+            return; 
 
         for(let i = 0; i < this.sensorsActive; i++){
             this.sensors[i].set_value(device_data[dataCount]);
@@ -405,7 +388,6 @@ class Device{
       pulses[i] = pwms[i].get_value();
     }
     
-        // think about this more encoder is detached from actuators
         let j = 0;
         for(let i = 0; i < this.actuatorPositions.length; i++){
             if(this.actuatorPositions[i] > 0){
@@ -490,8 +472,6 @@ class Device{
         this.mechanism.torqueCalculation(forces);
         var torques = this.mechanism.get_torque();
 
-        //torques = [-10, 0];
-        
         for(let i = 0; i < this.actuatorsActive; i++){
             this.motors[i].set_torque(torques[i]);
         }

@@ -20,11 +20,12 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "./hAPI/hello_ball.js",
+        "hAPI/libraries/*.js",
+        "hAPI/hello_ball.js",
+        "hAPI/hello_ball_worker.js",
+        "hAPI/hello_ball.html",
         "info/info.html",
         "info/info.ts",
-        "info/hapticInfo.html",
-        "info/hapticInfo.ts",
         "errors/no_renderings.html",
         "errors/http_error.html"
     ],

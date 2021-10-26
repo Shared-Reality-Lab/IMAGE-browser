@@ -12,7 +12,7 @@
         "description": "Fetches IMAGE renderings for an image."
     },
     "menuHapticItem": {
-        "message": "Get Haptic Rendering",
+        "message": "DEBUG: Get Haptic Rendering",
         "description": "Fetches haptic renderings for an image."
     },
     "preprocessItem": {

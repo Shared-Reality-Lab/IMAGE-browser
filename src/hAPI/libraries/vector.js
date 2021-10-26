@@ -98,11 +98,6 @@ function Vector(x, y, z) {
       // this.x = v[0];
       // this.y = v[1];
       // this.z = v[2];
-
-      // return [this.x, this.y, this.z];
-      //console.log("in set function. This is the input: " + v);
-      //return new Vector(Math.round(v[0]), Math.round(v[1]), Math.round(v[2]));
-
     },
     init: function(x, y, z) {
       this.x = x; this.y = y; this.z = z;

@@ -12,15 +12,7 @@ class Board {
 	decoder;
 	prev_data;
 
-    constructor(){ //portName, baud
-		// let port = await navigator.serial.requestPort();
-        // this.port = new p5.SerialPort();  
-        // let options = { baudrate: baud};
-        // this.port.open(portName, options);              // open a serial port
-		// this.port.on('connected', this.serverConnected);
-		//this.init();
-        // this.port.clear();
-		// this.reset_board();
+    constructor() {
 		console.log("created board")
 
 		this.encoder = new TextEncoder("utf-8");
@@ -36,7 +28,6 @@ class Board {
 			  await this.port.open({ baudRate: 57600}); // `baudRate` was `baudrate` in previous versions.
 	  
 			  this.writer = this.port.writable.getWriter();
-			  //console.log(this.writer);
 			  this.reader = this.port.readable.getReader();
 	  
 			  const signals = await this.port.getSignals();
@@ -52,7 +43,7 @@ class Board {
 		  }
 	}
 
-    async transmit(communicationType, deviceID, bData, fData){
+    async transmit(communicationType, deviceID, bData, fData) {
 
 		//bData length is 8, fData length is 4
         let outData = new Uint8Array(2 + bData.length + 4 * fData.length);
@@ -66,22 +57,18 @@ class Board {
 		 this.arraycopy(bData, 0, outData, 2, bData.length);
 		
 		 let j = 2 + bData.length;
-		for(let i = 0; i < fData.length; i++){
+		for(let i = 0; i < fData.length; i++) {
 			segments = this.FloatToBytes(fData[i]);
 			this.arraycopy(segments, 0, outData, j, 4);
 			j = j + 4;
 		}
 
-		//console.log(outData);
-
 		this.writer.write(outData);
 		return;
     }
 
-    async receive(communicationType, deviceID, expected){
+    async receive(communicationType, deviceID, expected) {
 
-	//this.set_buffer(1 + 4 * expected);
-	
 	let segments = new Uint8Array(4);
 	
 	let inData = new Uint8Array(1 + 4 * expected);
@@ -90,17 +77,12 @@ class Board {
 	try {
 		const readerData = await this.reader.read();
 		inData = readerData.value;
-	//	console.log(inData);
-	//	console.log("receive in device: " + this.decoder.decode(readerData.value));
-		
-		if (inData[0] != deviceID){
+
+		if (inData[0] != deviceID) {
 			return data;
-			//throw "Error, another device expects this data!";
 		}
-		else if (inData.length != 9)
-		{
+		else if (inData.length != 9) {
 			return data;
-			//throw "Error, invalid inData length";
 		}
 
 		let j = 1;
@@ -112,25 +94,18 @@ class Board {
 			j = j + 4;
 		}
 
-		//console.log(data);
-
-		//this.prev_data = data;
-		//console.log(data);
 		return data;
 
 	  } catch (err) {
-		  console.log("ERROR");
 		const errorMessage = `error reading data: ${err}`;
 		console.error(errorMessage);
-		//return new Float32Array([-60.9375, 240.9375]);//data;
-		//return data;//errorMessage;
 	  }
 }
 
     data_available(){
          let available = false;
         
-        if(this.port.readable){
+        if(this.port.readable) {
             available = true;
         }
         
@@ -146,21 +121,13 @@ class Board {
 		this.transmit(communicationType, deviceID, bData, fData);
 	}
 
-    set_buffer(length){
-		//this.port.buffer(length);
+    set_buffer(length) {
 	}
 
     FloatToBytes(val){
 
-		//let v = this.FloatToIEEE(val)
 		let segments = new ArrayBuffer(4);
 		let temp = this.floatToRawIntBits(val);
-  
-		// segments[3] = (byte)((temp >> 24) & 0xff);
-		// segments[2] = (byte)((temp >> 16) & 0xff);
-		// segments[1] = (byte)((temp >> 8) & 0xff);
-		// segments[0] = (byte)((temp) & 0xff);
-
 		segments[3] = ((temp >> 24) & 0xff);
 		segments[2] = ((temp >> 16) & 0xff);
 		segments[1] = ((temp >> 8) & 0xff);
@@ -204,7 +171,7 @@ class Board {
     while (length--) dst[dstPos++] = src[srcPos++]; return dst;
 }
   serverConnected() {
-  print("Connected to Server");
+  print("Connected to server");
 }
     
 }
