@@ -83,10 +83,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     if (resp.ok) {
                         return resp.json();
                     } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/http_error.html"
-                        });
+                       window.alert(" An error occurred while trying to connect to the IMAGE server. Please try again later. If this error persists, please contact the IMAGE team by email at atp@cim.mcgill.ca.");
                         console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
                         const textContent = await resp.text();
                         console.error(textContent);
@@ -100,10 +97,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                             url: "info/info.html?" + query["request_uuid"]
                         });
                     } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/no_renderings.html"
-                        });
+                     window.alert("IMAGE is unable to render this graphic. Please note that IMAGE is still in pre-release development, so only works on a limited set of graphics. For working examples, please see http://srl.mcgill.ca/image.")
                         // throw new Error("Received no renderings from test URL!");
                     }
                 }).catch(err => {
