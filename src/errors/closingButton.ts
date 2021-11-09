@@ -1,5 +1,4 @@
-const closeButtonHttpError : Element | null = document.querySelector('#httpError');
-closeButtonHttpError?.addEventListener("click", () => window.close());
-
-const closeButtonNoRenderings : Element | null = document.querySelector('#noRenderings');
-closeButtonNoRenderings?.addEventListener("click", () => window.close());
+window.onload = function() {
+const closeButton : Element | null = document.getElementById('closing-button');
+closeButton?.addEventListener("click", () => window.close());
+}

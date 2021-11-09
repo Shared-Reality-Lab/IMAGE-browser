@@ -1,35 +1,11 @@
-#httpError {
+#closing-button {
     background-color:#008CBA; 
     border: none;
     color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    text-align: center;
-    text-decoration: none;
     display: inline-block;
-    font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     font-weight: 500;
-}
-#httpError:hover, #httpError:focus {
-      background-color: #74b4e9;
-      box-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;  
-}
-
-#noRenderings {
-    background-color:#008CBA; 
-    border: none;
-    color: white;
     padding: 10px 16px;
-    border-radius: 8px;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
-    font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-}
-#noRenderings:hover, #noRenderings:focus {
-      background-color: #74b4e9;
-      box-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;  
 }
