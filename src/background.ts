@@ -102,7 +102,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     } else {
                         browser.windows.create({
                             type: "panel",
-                            url: "errors/no_renderings.html",
+                            url: "errors/no_renderings.html"
                         });
                         // throw new Error("Received no renderings from test URL!");
                     }
