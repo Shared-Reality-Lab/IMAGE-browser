@@ -5,7 +5,13 @@
     display: inline-block;
     font-size: 14px;
     font-weight: 500;
-    padding: 10px 16px;
-    text-align: center;
     text-decoration: none;
+    position: fixed;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 200;
+    width: 150px; 
+    height: 50px; 
 }
