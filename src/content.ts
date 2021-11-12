@@ -121,7 +121,49 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
 Array.from(document.getElementsByTagName("iframe")).forEach(map => {
     if (!map.hasAttribute("tabindex") && !map.closest("a")) {
         if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
-            map.setAttribute("tabindex", "0");
+            map.setAttribute("tabindex", "0");     
+            let map_button = document.createElement("button");
+            map_button.innerText = "Render Map";
+            map_button.addEventListener("click", () => {
+                const serializer = new XMLSerializer();
+                let src = map.getAttribute("src");
+                let q, lat, lon, zoom;
+                let maptype = "roadmap";
+                if(src?.includes("&q=")){
+                   let i1 = src.indexOf("&q=") + 3;
+                   let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+                   q = src.substring(i1, i2);
+                }
+                if(src?.includes("&center=")){
+                    let i1 = src.indexOf("&center=") + 8;
+                    let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+                    let center = src.substring(i1, i2);
+                    lat = center.split(",")[0];
+                    lon = center.split(",")[1];
+                }
+                if(src?.includes("&zoom=")){
+                    let i1 = src.indexOf("&zoom=") + 6;
+                    let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+                    zoom = src.substring(i1, i2);
+                }
+                if(src?.includes("&maptype=satellite")){
+                    maptype = "satellite";
+                }
+                if(lat && lon){
+                    port.postMessage({
+                        "type": "resource",
+                        "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
+                        "coordinates": {
+                            "latitude": lat,
+                            "longitude": lon
+                        },
+                        "url": window.location.href,
+                        "toRender": true
+                    });
+                }
+            });
+            map_button.setAttribute("tabindex", "0");
+            map.insertAdjacentElement("afterend", map_button);
         }
     }
 });
