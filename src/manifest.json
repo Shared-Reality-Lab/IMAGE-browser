@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "__MSG_extensionName__",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "description": "__MSG_extensionDescription__",
     "homepage_url": "https://image.a11y.mcgill.ca",
     "default_locale": "en",
@@ -13,7 +13,7 @@
     "browser_action": {
         "default_icon": "image-icon-128.png"
     },
-    
+
     "permissions": [
         "contextMenus",
         "downloads",
