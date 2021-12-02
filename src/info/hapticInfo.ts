@@ -161,7 +161,7 @@ port.onMessage.addListener(async (message) => {
 
             // serial comms
             btn.addEventListener("click", _ => {
-                const worker = new Worker("./worker.js");
+                const worker = new Worker(browser.runtime.getURL("./info/worker.js"));
                 let port = navigator.serial.requestPort();
                 worker.addEventListener("message", function(msg){
 
