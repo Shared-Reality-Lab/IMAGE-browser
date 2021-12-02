@@ -34,7 +34,8 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             "renderers": [
                 "ca.mcgill.a11y.image.renderer.Text",
                 "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "ca.mcgill.a11y.image.renderer.SegmentAudio"
+                "ca.mcgill.a11y.image.renderer.SegmentAudio",
+                "ca.mcgill.a11y.image.renderer.SimpleHaptics"
             ],
         } as IMAGERequest;
     });
@@ -52,7 +53,8 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
         "capabilities": [],
         "renderers": [
             "ca.mcgill.a11y.image.renderer.Text",
-            "ca.mcgill.a11y.image.renderer.SimpleAudio"
+            "ca.mcgill.a11y.image.renderer.SimpleAudio",
+            "ca.mcgill.a11y.image.renderer.SimpleHaptics"
         ],
     } as IMAGERequest;
 }
@@ -99,7 +101,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         browser.windows.create({
                             type: "panel",
                             url: message["mode"] == "audio" ? "info/info.html?" + query["request_uuid"]
-                                                            : "hAPI/hello_ball.html?" + query["request_uuid"] 
+                                                            : "info/hapticInfo.html?" + query["request_uuid"] 
                         });
                     } else {
                         browser.windows.create({
