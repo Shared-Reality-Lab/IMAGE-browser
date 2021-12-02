@@ -1,9 +1,11 @@
+import { Vector } from "../hAPI/libraries/vector.js";
+
   var widgetOne;
   var pantograph;
  
   var widgetOneID = 5;
   
-  self.importScripts("../hAPI/libraries/vector.js");
+  //self.importScripts("../hAPI/libraries/vector.js");
   
   var angles = new Vector(0,0);    
   var torques = new Vector(0,0);

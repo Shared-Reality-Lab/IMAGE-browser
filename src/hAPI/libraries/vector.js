@@ -167,3 +167,5 @@ function Vector(x, y, z) {
   Vector.mag = function(a,b) {
       return sqrt(a.x*a.x + b.y*b.y);
   }
+  
+  export { Vector };
