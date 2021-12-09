@@ -340,7 +340,7 @@ port.onMessage.addListener(async (message) => {
                 for(var i=0;i<rec.length;i++){
                     var s=rec[i];
                     // ctx.fillRect(s.x,s.y,s.width,s.height);
-                    ctx.strokeStyle="black";
+                    ctx.strokeStyle="red";
                     ctx.strokeRect(s.x,s.y,s.width,s.height);
                 }   
                 // console.log("drew all my boxes!");
