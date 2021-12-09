@@ -1,4 +1,4 @@
-import browser, { cookies, Runtime } from "webextension-polyfill";
+import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";

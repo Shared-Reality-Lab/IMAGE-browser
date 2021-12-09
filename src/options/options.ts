@@ -17,7 +17,7 @@ function saveOptions() {
         server: (<HTMLInputElement>document.getElementById("server")).value
     }),
     (function() {
-     // Update status to let user know options were saved.
+        // Update status to let user know options were saved.
         var status = (<HTMLInputElement>document.getElementById("status"));
         status.textContent = "Options successfully saved...";
         setTimeout(function() {
@@ -29,7 +29,7 @@ function saveOptions() {
 
 //Restores selection using the preferences stored in browser.storage.
 function restore_options() {
-// Use Bach as default sever  
+    // Use Bach as default sever  
      browser.storage.sync.get({"server": "bach-server"}).then(items => { 
         (<HTMLInputElement>document.getElementById('server')).value = items["server"]; 
     });
