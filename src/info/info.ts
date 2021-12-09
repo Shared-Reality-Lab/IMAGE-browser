@@ -369,6 +369,7 @@ port.onMessage.addListener(async (message) => {
 
                 xE = pixelsPerMeter * -xE;
                 yE = pixelsPerMeter * yE;
+                console.log("x coord in the main script: ");
                 console.log(xE);
 
                 endEffector.x = deviceOrigin.x +xE-x_trans;
@@ -391,7 +392,7 @@ port.onMessage.addListener(async (message) => {
                 
                
                 worker.addEventListener("message", function(msg){
-                    console.log("got a message from the worker");
+                    // console.log("got a message from the worker");
                     
                     // worker.postMessage(names);
                     posEE.x = msg.data.positions.x;
