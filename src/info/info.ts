@@ -393,12 +393,9 @@ port.onMessage.addListener(async (message) => {
                
                 worker.addEventListener("message", function(msg){
                     // console.log("got a message from the worker");
-                    
-                    // worker.postMessage(names);
+
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
-                    // posBall.x = msg.data.posBall.x;
-                    // posBall.y = msg.data.posBall.y;
                     objectData = msg.data.objectData;
 
                     if(firstCall){
