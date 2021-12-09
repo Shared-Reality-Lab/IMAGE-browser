@@ -218,10 +218,7 @@ port.onMessage.addListener(async (message) => {
 
             const screenFactor_x = worldPixelWidth / pixelsPerMeter;
             const screenFactor_y = worldPixelHeight / pixelsPerMeter;
-            // posBall = {
-            //     x: 0,
-            //     y: 0
-            // };
+
 
             posEE = {
                 x: 0,
@@ -250,21 +247,7 @@ port.onMessage.addListener(async (message) => {
             var img = new Image();
             img.src = imageSrc;
 
-            ball = {
-                x: 100,
-                y: 100,
-                vx: 5,
-                vy: 2,
-                radius: 25,
-                color: 'blue',
-                draw: function() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-                    ctx.closePath();
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                }
-            };
+    
 
             border = {
                 draw: function() {
@@ -294,30 +277,9 @@ port.onMessage.addListener(async (message) => {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
                 updateAnimation();
-                // checkBounds();
                 raf = window.requestAnimationFrame(draw);
               }
 
-              function checkBounds(){
-                if (ball.y + ball.vy > canvas.height ||
-                    ball.y + ball.vy < 0) {
-                  ball.vy = -ball.vy;
-                }
-                if (ball.x + ball.vx > canvas.width ||
-                    ball.x + ball.vx < 0) {
-                  ball.vx = -ball.vx;
-                }
-              
-                if (endEffector.y + endEffector.vy > canvas.height ||
-                  endEffector.y + endEffector.vy < 0) {
-                endEffector.vy = -endEffector.vy;
-                }
-                if (endEffector.x + endEffector.vx > canvas.width ||
-                    endEffector.x + endEffector.vx < 0) {
-                  endEffector.vx = -endEffector.vx;
-                }
-              
-              }  
 
               var rec = [];
               function create_rect()   {
