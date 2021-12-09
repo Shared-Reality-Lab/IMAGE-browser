@@ -132,3 +132,5 @@ temp/
 
 *.swp
 build/
+
+.DS_Store

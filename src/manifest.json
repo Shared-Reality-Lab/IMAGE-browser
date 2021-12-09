@@ -1,14 +1,21 @@
 {
     "manifest_version": 2,
     "name": "__MSG_extensionName__",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "description": "__MSG_extensionDescription__",
     "homepage_url": "https://image.a11y.mcgill.ca",
     "default_locale": "en",
 
+    "icons": {
+        "128": "image-icon-128.png"
+    },
+
+    "browser_action": {
+        "default_icon": "image-icon-128.png"
+    },
+
     "permissions": [
         "contextMenus",
-        "tabs",
         "downloads",
         "<all_urls>"
     ],
@@ -20,10 +27,7 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "hAPI/libraries/*.js",
         "info/worker.js",
-        "info/hapticInfo.html",
-        "info/hapticInfo.ts",
         "info/info.html",
         "info/info.ts",
         "errors/no_renderings.html",

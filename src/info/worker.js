@@ -1,5 +1,15 @@
 import { Vector } from "../hAPI/libraries/vector.js";
+import { Board } from "../hAPI/libraries/Board.ts";
+import { Actuator } from "../hAPI/libraries/Actuator.ts";
+import { Device } from "../hAPI/libraries/Device.ts";
+import { Sensor } from "../hAPI/libraries/Sensor.ts";
+import { Pwm } from "../hAPI/libraries/Pwm.ts";
+import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
+// import { IMAGEResponse } from "../types/response.schema.d.ts";
 
+
+console.log("in worker!");
+  var rendering;
   var widgetOne;
   var pantograph;
  
@@ -55,17 +65,35 @@ import { Vector } from "../hAPI/libraries/vector.js";
   var posWallBottom = new Vector(0.0, 0.1);
   
   var haplyBoard;
-  
+
+  var objectData = []
+
+  class DetectedObject{
+    constructor(type, centroid, coords) {
+      this.type = type;
+      this.centroid = centroid;
+      this.coords = coords;
+    }
+  }
+
   self.addEventListener("message", async function(e) {
-  
-    /**************IMPORTING HAPI FILES*****************/
-  
-    self.importScripts("../hAPI/libraries/Board.js");
-    self.importScripts("../hAPI/libraries/Actuator.js");
-    self.importScripts("../hAPI/libraries/Sensor.js");
-    self.importScripts("../hAPI/libraries/Pwm.js");
-    self.importScripts("../hAPI/libraries/Device.js");
-    self.importScripts("../hAPI/libraries/Pantograph.js");
+    // this is where we receive the image data from the main script
+    if (e) {
+      rendering = e.data; // assinged the data array received from main script
+      
+      for (var i = 0; i < rendering.length; i++) {
+        let obj = rendering[i];
+        let centroid = obj.centroid;
+        let coords = obj.coords;
+        let type = obj.type;
+        objectData.push(new DetectedObject(type, centroid, coords));
+      }
+       console.log("got data");
+       console.log(rendering);
+      // console.log(rendering[0]);
+      // console.log(rendering[0].text);
+  } 
+ 
   
     /************ BEGIN SETUP CODE *****************/
     haplyBoard = new Board();
@@ -85,7 +113,7 @@ import { Vector } from "../hAPI/libraries/vector.js";
   
 
     var g = new Vector(10, 20, 2);
-  
+    // console.log(haplyBoard);
     /************************ END SETUP CODE ************************* */
   
     /**********  BEGIN CONTROL LOOP CODE *********************/
@@ -158,7 +186,7 @@ import { Vector } from "../hAPI/libraries/vector.js";
       
       /* sum of forces */
       fBall = (fContact.clone()).add(fGravity).add(fDamping).add(fWall);      
-      fEE = (fContact.clone()).multiply(-1);
+      let fEE = (fContact.clone()).multiply(-1);
       // fEE.set(graphics_to_device(fEE));
       /* end sum of forces */
   
@@ -170,7 +198,8 @@ import { Vector } from "../hAPI/libraries/vector.js";
       var data = {
         angles: {x: angles[0], y: angles[1]},
         positions: {x: positions[0], y: positions[1]},
-        posBall: posBall
+        posBall: posBall,
+        objectData: objectData
       }
   
       this.self.postMessage(data);
@@ -178,7 +207,7 @@ import { Vector } from "../hAPI/libraries/vector.js";
       widgetOne.set_device_torques(fEE.toArray());
       widgetOne.device_write_torques();
         
-      renderingForce = false;    
+      // renderingForce = false;    
   
       await new Promise(r => setTimeout(r, 1));
     }
