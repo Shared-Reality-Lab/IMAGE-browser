@@ -204,10 +204,7 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-            // const img = document.createElement("img");
-            // img.setAttribute('src', imageSrc);
-            // img.setAttribute('width', '700px')
-            // contentDiv.append(img);
+    
 
             let worker;
             
@@ -229,7 +226,8 @@ port.onMessage.addListener(async (message) => {
                 x: worldPixelWidth / 2,
                 y: 0
             };
-
+            // TODO: fix canvas positioning
+            
             canvas = document.createElement('canvas');
             canvas.id = "main";
             canvas.width = 800;
