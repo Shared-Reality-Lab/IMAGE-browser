@@ -272,11 +272,6 @@ port.onMessage.addListener(async (message) => {
                 }
             };
 
-            box = {
-                draw:function() {
-                    ctx.strokeRect(140,70,canvas.width-310, canvas.height-200);
-                }
-            }
 
             endEffector = {
                 x: canvas.width/2,
@@ -331,12 +326,6 @@ port.onMessage.addListener(async (message) => {
                     let [lrx, lry] = to_haply_frame(objectData[i].coords[2], objectData[i].coords[3]);
                     let objWidth = Math.abs(ulx-lrx);
                     let objHeight = Math.abs(uly-lry);
-                    // console.log("the height is: ");
-                    // console.log(objHeight);
-                    // console.log("upper x is:");
-                    // console.log(ulx);
-                    // console.log("lower x is:");
-                    // console.log(lrx);
                     rec.push({
                         x:ulx,
                         y:uly,
@@ -362,7 +351,6 @@ port.onMessage.addListener(async (message) => {
             
                 draw_rect();
                 border.draw();
-                box.draw();
                 xE = posEE.x;
                 yE = posEE.y;
         
