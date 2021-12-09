@@ -18,7 +18,7 @@ let box: any;
 let canvas: any;
 let ctx: any;
 let raf: any;
-let posBall: any;
+// let posBall: any;
 let posEE: any;
 let deviceOrigin: any;
 let xB, yB, xE, yE:any;
@@ -29,6 +29,9 @@ let centroids:[Number,Number][] =[[0,0]];
 let coords:[number,number,number,number][] =[[0,0,0,0]];
 var canReceive = false;
 let objectData: any;
+var firstCall:boolean = true;
+const canvas_width = 800;
+const canvas_height = 500;
 
 const audioCtx = new window.AudioContext();
 port.onMessage.addListener(async (message) => {
@@ -201,10 +204,10 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-            const img = document.createElement("img");
-            img.setAttribute('src', imageSrc);
-            img.setAttribute('width', '700px')
-            contentDiv.append(img);
+            // const img = document.createElement("img");
+            // img.setAttribute('src', imageSrc);
+            // img.setAttribute('width', '700px')
+            // contentDiv.append(img);
 
             let worker;
             
@@ -215,10 +218,10 @@ port.onMessage.addListener(async (message) => {
 
             const screenFactor_x = worldPixelWidth / pixelsPerMeter;
             const screenFactor_y = worldPixelHeight / pixelsPerMeter;
-            posBall = {
-                x: 0,
-                y: 0
-            };
+            // posBall = {
+            //     x: 0,
+            //     y: 0
+            // };
 
             posEE = {
                 x: 0,
@@ -243,6 +246,9 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(canvas);
 
             ctx = canvas.getContext('2d');
+
+            var img = new Image();
+            img.src = imageSrc;
 
             ball = {
                 x: 100,
@@ -291,8 +297,9 @@ port.onMessage.addListener(async (message) => {
 
             function draw() {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
                 updateAnimation();
-                checkBounds();
+                // checkBounds();
                 raf = window.requestAnimationFrame(draw);
               }
 
@@ -318,51 +325,60 @@ port.onMessage.addListener(async (message) => {
               }  
 
               var rec = [];
-              function create_rect(x1, y1, x2, y2)   {
-                x1 = pixelsPerMeter * x1 * (screenFactor_x);
-                y1 = pixelsPerMeter * y1 * (screenFactor_y);
-                x2 = pixelsPerMeter * x2 * (screenFactor_x);
-                y2 = pixelsPerMeter * y2 * (screenFactor_y);
-                //console.log (x1, y1, x2, y2);
-                return pg.rect(x1, y1, (x2-x1), (y2-y1));
+              function create_rect()   {
+                for (var i = 0; i < objectData.length; i++) {
+                    let [ulx, uly] = to_haply_frame(objectData[i].coords[0], objectData[i].coords[1]); 
+                    let [lrx, lry] = to_haply_frame(objectData[i].coords[2], objectData[i].coords[3]);
+                    let objWidth = Math.abs(ulx-lrx);
+                    let objHeight = Math.abs(uly-lry);
+                    // console.log("the height is: ");
+                    // console.log(objHeight);
+                    // console.log("upper x is:");
+                    // console.log(ulx);
+                    // console.log("lower x is:");
+                    // console.log(lrx);
+                    rec.push({
+                        x:ulx,
+                        y:uly,
+                        width:objWidth,
+                        height:objHeight,
+
+                    });    
+                }      
+              }
+
+              function draw_rect(){
+                for(var i=0;i<rec.length;i++){
+                    var s=rec[i];
+                    // ctx.fillRect(s.x,s.y,s.width,s.height);
+                    ctx.strokeStyle="black";
+                    ctx.strokeRect(s.x,s.y,s.width,s.height);
+                }   
+                // console.log("drew all my boxes!");
               }
 
               function updateAnimation(){
 
-                // console.log(objectData)
-                // for (var i = 0; i < objectData.length; i++) {
-                //     let ulx = objectData[i].coords[0];
-                //     let uly = objectData[i].coords[1];
-                //     let lrx = objectData[i].coords[2];
-                //     let lry = objectData[i].coords[3];
-                //     pg.stroke(color(255,0,0));
-                //     pg.fill(255, 0);
-                //     rec[i] = create_rect(ulx,uly,lrx,lry);
-                // }
-
+            
+                draw_rect();
                 border.draw();
                 box.draw();
                 xE = posEE.x;
                 yE = posEE.y;
-                xB = posBall.x;
-                yB = posBall.y;
+        
 
                 xE = pixelsPerMeter * -xE;
                 yE = pixelsPerMeter * yE;
-
-                ball.x =deviceOrigin.x + xB * -pixelsPerMeter-x_trans;
-                ball.y = deviceOrigin.y + yB * pixelsPerMeter;
-                ball.draw();
+                console.log(xE);
 
                 endEffector.x = deviceOrigin.x +xE-x_trans;
                 endEffector.y = deviceOrigin.y+yE;
                 endEffector.draw();
-                // ball.x += ball.vx;
-                // ball.y += ball.vy;   
+             
               }
 
-            ball.draw();
-
+            endEffector.draw();
+    
             // serial comms
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
@@ -372,16 +388,23 @@ port.onMessage.addListener(async (message) => {
                     worker.postMessage(data);
                     canReceive = false;
                 }
-                raf = window.requestAnimationFrame(draw);
+                
                
                 worker.addEventListener("message", function(msg){
                     console.log("got a message from the worker");
+                    
                     // worker.postMessage(names);
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
-                    posBall.x = msg.data.posBall.x;
-                    posBall.y = msg.data.posBall.y;
+                    // posBall.x = msg.data.posBall.x;
+                    // posBall.y = msg.data.posBall.y;
                     objectData = msg.data.objectData;
+
+                    if(firstCall){
+                        create_rect();
+                        raf = window.requestAnimationFrame(draw);
+                        firstCall = false;
+                    }
                     // console.log(posBall.y);
                 });
             });
@@ -398,3 +421,11 @@ port.postMessage({
     "type": "info",
     "request_uuid": request_uuid
 });
+
+
+function to_haply_frame(x1:number, y1:number) {
+    var x = x1 *canvas_width;
+    var y = y1  *canvas_height;
+    return [x,y];
+  }
+
