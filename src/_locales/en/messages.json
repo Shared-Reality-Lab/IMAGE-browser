@@ -38,5 +38,17 @@
     "segmentAudioButton": {
         "message": "Play Segment",
         "description": "Play the selected audio segment."
+    },
+    "savePreferences": {
+        "message": "Save Preferences",
+        "description": "Label for saving user preferences."
+    },
+    "unicornLabel": {
+        "message": "Unicorn Server",
+        "description": "Label for unicorn server option in extension preferences."
+    },
+    "bachLabel": {
+        "message": "Bach Server",
+        "description": "Label for unicorn server option in extension preferences"
     }
 }

@@ -1,4 +1,4 @@
-import browser, { Runtime } from "webextension-polyfill";
+import browser, { cookies, Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
@@ -6,7 +6,25 @@ import { IMAGERequest } from "./types/request.schema";
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 
-// TODO Update hard coded values
+const servers = {
+    "bach-server": "https://image.a11y.mcgill.ca/",
+    "unicorn-server": "https://unicorn.cim.mcgill.ca/image/"
+};
+
+const bach = servers["bach-server"];
+const unicorn = servers["unicorn-server"];
+var serverUrl : RequestInfo;
+
+function getAllStorageSyncData () {
+    return browser.storage.sync.get(["server"])
+      .then(result => {
+        if (browser.runtime.lastError) { 
+        console.error(browser.runtime.lastError);
+        }
+        return result["server"];
+      })          
+  };
+
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
@@ -57,83 +75,93 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
-    let query: IMAGERequest;
-    switch (message["type"]) {
-        case "info":
-            const value = responseMap.get(message["request_uuid"]);
-            p.postMessage(value);
-            responseMap.delete(message["request_uuid"]);
-            break;
-        case "resource":
-        case "localResource":
-            // Get response and open new window
-            if (message["type"] === "resource") {
-                query = await generateQuery(message);
-            } else {
-                query = generateLocalQuery(message);
-            }
-            if (message["toRender"] === "full") {
-                fetch("https://image.a11y.mcgill.ca/render", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify(query)
-                }).then(async (resp) => {
-                    if (resp.ok) {
-                        return resp.json();
-                    } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/http_error.html"
-                        });
-                        console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
-                        const textContent = await resp.text();
-                        console.error(textContent);
-                        throw new Error(textContent);
+        let query: IMAGERequest;
+        await getAllStorageSyncData().then(async items => {
+        switch (message["type"]) {
+            case "info":
+                const value = responseMap.get(message["request_uuid"]);
+                p.postMessage(value);
+                responseMap.delete(message["request_uuid"]);
+                break;
+            case "resource":
+            case "localResource":
+                // Get response and open new window
+                if (message["type"] === "resource") {
+                    query = await generateQuery(message);
+                } else {
+                    query = generateLocalQuery(message);
+                }
+                if (message["toRender"] === "full") {
+                 // Get URL option from browser storage
+                    var valueFromStorage:String|void;
+                    valueFromStorage = items;
+                    if(valueFromStorage== "bach-server"){
+                        serverUrl = bach;
+                    }else{
+                        serverUrl= unicorn;
                     }
-                }).then((json: IMAGEResponse) => {
-                    if (json["renderings"].length > 0) {
-                        responseMap.set(query["request_uuid"], json);
-                        browser.windows.create({
-                            type: "panel",
-                            url: "info/info.html?" + query["request_uuid"]
-                        });
-                    } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/no_renderings.html"
-                        });
-                        // throw new Error("Received no renderings from test URL!");
-                    }
-                }).catch(err => {
-                    console.error(err);
-                });
-            } else if (message["toRender"] === "preprocess") {
-                browser.downloads.download({
-                    url: "https://image.a11y.mcgill.ca/render/preprocess",
-                    headers: [{ name: "Content-Type", value: "application/json" }],
-                    body: JSON.stringify(query),
-                    method: "POST",
-                    saveAs: true
-                }).catch(err => {
-                    console.error(err);
-                });
-            } else if (message["toRender"] === "none") {
-                const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
-                const blobURL = URL.createObjectURL(blob);
-                browser.downloads.download({
-                    url: blobURL,
-                    saveAs: true
-                }).catch(err => {
-                    console.error(err);
-                });
-            }
-            break;
-        default:
-            console.debug(message["type"]);
-            break;
-    }
+                    fetch(serverUrl + "render", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify(query)
+                    }).then(async (resp) => {
+                        if (resp.ok) {
+                            return resp.json();
+                        } else {
+                            browser.windows.create({
+                                type: "panel",
+                                url: "errors/http_error.html"
+                            });
+                            console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+                            const textContent = await resp.text();
+                            console.error(textContent);
+                            throw new Error(textContent);
+                        }
+                    }).then((json: IMAGEResponse) => {
+                        if (json["renderings"].length > 0) {
+                            responseMap.set(query["request_uuid"], json);
+                            browser.windows.create({
+                                type: "panel",
+                                url: "info/info.html?" + query["request_uuid"]
+                            });
+                        } else {
+                            browser.windows.create({
+                                type: "panel",
+                                url: "errors/no_renderings.html"
+                            });
+                            // throw new Error("Received no renderings from test URL!");
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                } else if (message["toRender"] === "preprocess") {
+                    browser.downloads.download({
+                        url: serverUrl + "render/preprocess",
+                        headers: [{ name: "Content-Type", value: "application/json" }],
+                        body: JSON.stringify(query),
+                        method: "POST",
+                        saveAs: true
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                } else if (message["toRender"] === "none") {
+                    const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
+                    const blobURL = URL.createObjectURL(blob);
+                    browser.downloads.download({
+                        url: blobURL,
+                        saveAs: true
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                }
+                break;
+            default:
+                console.debug(message["type"]);
+                break;
+        }
+    });
 }
 
 function storeConnection(p: Runtime.Port) {

@@ -7,7 +7,6 @@ let port = browser.runtime.connect();
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
 });
-
 port.onMessage.addListener(message => {
     switch (message["type"]) {
         case "resourceRequest":
