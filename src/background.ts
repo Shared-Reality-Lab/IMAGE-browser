@@ -40,6 +40,25 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     });
 }
 
+async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
+    return {
+        "request_uuid": uuidv4(),
+        "timestamp": Math.round(Date.now() / 1000),
+        "url": message.url,
+        "coordinates": {
+                            "latitude": message.coordinates[0],
+                            "longitude": message.coordinates[1]
+                        },
+        "context": message.context,
+        "language": "en",
+        "capabilities": [],
+        "renderers": [
+            "ca.mcgill.a11y.image.renderer.Text",
+            "ca.mcgill.a11y.image.renderer.SimpleAudio",
+        ]
+    } as IMAGERequest;
+}
+
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
@@ -57,6 +76,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
+    console.log("Handling message");
     let query: IMAGERequest;
     switch (message["type"]) {
         case "info":
@@ -66,10 +86,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
             break;
         case "resource":
         case "localResource":
+        case "mapResource":
             // Get response and open new window
             if (message["type"] === "resource") {
                 query = await generateQuery(message);
-            } else {
+            } else if (message["type"] === "mapResource") {
+                console.log("Generating map query");
+                query = await generateMapQuery(message);
+            }else{
                 query = generateLocalQuery(message);
             }
             if (message["toRender"] === true) {
@@ -110,8 +134,9 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     console.error(err);
                 });
             } else {
+                console.log(query);
                 browser.downloads.download({
-                    url: "https://image.a11y.mcgill.ca/render/preprocess",
+                    url: "http://localhost:8080/render/preprocess",
                     headers: [{ name: "Content-Type", value: "application/json" }],
                     body: JSON.stringify(query),
                     method: "POST",
@@ -161,12 +186,6 @@ browser.contextMenus.create({
     contexts: ["image", "link"]
 },
 onCreated);
-browser.contextMenus.create({
-    id: "preprocess-only-map",
-    title: browser.i18n.getMessage("preprocessMap"),
-    contexts: ["image", "link"],
-},
-onCreated);
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     console.debug(info);
@@ -180,11 +199,6 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         } else if (info.menuItemId === "preprocess-only") {
             ports[tab.id].postMessage({
                 "type": "preprocessRequest",
-                "tabId": tab.id
-            });
-        } else if (info.menuItemId === "preprocess-only-map") {
-            ports[tab.id].postMessage({
-                "type": "preprocessMap",
                 "tabId": tab.id
             });
         }

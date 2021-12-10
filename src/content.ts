@@ -58,51 +58,6 @@ port.onMessage.addListener(message => {
                 });
             }
             break;
-        case "preprocessMap":
-            let mapElement: HTMLIFrameElement;
-            if (selectedElement instanceof HTMLIFrameElement) {
-                mapElement = selectedElement;
-            } else {
-                mapElement = selectedElement?.querySelector("iframe") as HTMLIFrameElement;
-            }
-            console.debug(mapElement.src);
-
-            let src = mapElement.getAttribute("src");
-            let q, lat, lon, zoom;
-            let maptype = "roadmap";
-            if(src?.includes("&q=")){
-               let i1 = src.indexOf("&q=") + 3;
-               let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-               q = src.substring(i1, i2);
-            }
-            if(src?.includes("&center=")){
-                let i1 = src.indexOf("&center=") + 8;
-                let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-                let center = src.substring(i1, i2);
-                lat = center.split(",")[0];
-                lon = center.split(",")[1];
-            }
-            if(src?.includes("&zoom=")){
-                let i1 = src.indexOf("&zoom=") + 6;
-                let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-                zoom = src.substring(i1, i2);
-            }
-            if(src?.includes("&maptype=satellite")){
-                maptype = "satellite";
-            }
-            if(lat && lon){
-                port.postMessage({
-                    "type": "resource",
-                    "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                    "coordinates": {
-                        "latitude": lat,
-                        "longitude": lon
-                    },
-                    "url": window.location.href,
-                    "toRender": (message["type"] === "resourceRequest")
-                });
-            }
-            break;
         default:
             console.debug(message["type"]);
             break;
@@ -150,15 +105,13 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                     maptype = "satellite";
                 }
                 if(lat && lon){
+                    console.log("Sending map resource request");
                     port.postMessage({
-                        "type": "resource",
-                        "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                        "coordinates": {
-                            "latitude": lat,
-                            "longitude": lon
-                        },
+                        "type": "mapResource",
+                        "context": map ? serializer.serializeToString(map) : null,
+                        "coordinates": [parseFloat(lat), parseFloat(lon)],
                         "url": window.location.href,
-                        "toRender": true
+                        "toRender": false
                     });
                 }
             });
