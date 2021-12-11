@@ -4,7 +4,12 @@ class Actuator {
     this.direction = 0;
     this.actuatorPort = 0;
   }
-  constructor$3(...args$) {
+  constructor$3(actuator, direction, port) {
+    this.actuator = actuator;
+    this.direction = direction;
+    this.actuatorPort = port;
+  }
+  constructor(...args$) {
     switch (args$.length) {
       case 0:
         return this.constructor$0(...args$);
