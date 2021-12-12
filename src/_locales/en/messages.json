@@ -12,8 +12,12 @@
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
     "preprocessItem": {
-        "message": "Get Preprocessed Data",
+        "message": "DEBUG: Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
+    },
+    "requestItem": {
+        "message": "DEBUG: Get Request Data",
+        "description": "Download request to be sent to server."
     },
     "renderingTitle": {
         "message": "Renderings",

@@ -14,6 +14,8 @@ port.onMessage.addListener(message => {
     switch (message["type"]) {
         case "resourceRequest":
         case "preprocessRequest":
+        case "onlyRequest":
+            const serializer = new XMLSerializer();
             let imageElement: HTMLImageElement;
             if (selectedElement instanceof HTMLImageElement ) {
                 imageElement = selectedElement;
@@ -23,6 +25,15 @@ port.onMessage.addListener(message => {
             console.debug(imageElement.currentSrc);
             console.debug(port);
             const scheme = imageElement.currentSrc.split(":")[0];
+            // Determine amount of rendering to request.
+            let toRender = "";
+            if (message["type"] === "resourceRequest") {
+                toRender = "full";
+            } else if (message["type"] === "preprocessRequest") {
+                toRender = "preprocess";
+            } else if (message["type"] === "onlyRequest") {
+                toRender = "none";
+            }
             if (scheme === "http" || scheme === "https") {
                 port.postMessage({
                     "type": "resource",
@@ -30,7 +41,7 @@ port.onMessage.addListener(message => {
                     "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                     "url": window.location.href,
                     "sourceURL": imageElement.currentSrc,
-                    "toRender": (message["type"] === "resourceRequest")
+                    "toRender": toRender
                 });
             } else if (scheme === "file") {
                 console.debug("File!");

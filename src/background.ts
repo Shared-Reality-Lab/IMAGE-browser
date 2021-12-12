@@ -96,7 +96,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
             }else{
                 query = generateLocalQuery(message);
             }
-            if (message["toRender"] === true) {
+            if (message["toRender"] === "full") {
                 fetch("https://image.a11y.mcgill.ca/render", {
                         "method": "POST",
                         "headers": {
@@ -133,13 +133,21 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 }).catch(err => {
                     console.error(err);
                 });
-            } else {
-                console.log(query);
+            } else if (message["toRender"] === "preprocess") {
                 browser.downloads.download({
                     url: "http://localhost:8080/render/preprocess",
                     headers: [{ name: "Content-Type", value: "application/json" }],
                     body: JSON.stringify(query),
                     method: "POST",
+                    saveAs: true
+                }).catch(err => {
+                    console.error(err);
+                });
+            } else if (message["toRender"] === "none") {
+                const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
+                const blobURL = URL.createObjectURL(blob);
+                browser.downloads.download({
+                    url: blobURL,
                     saveAs: true
                 }).catch(err => {
                     console.error(err);
@@ -166,7 +174,43 @@ function storeConnection(p: Runtime.Port) {
     }
 }
 
+/*Enable the context menu options*/
+function enableContextMenu(){
+    browser.contextMenus.update("mwe-item",{ enabled: true });
+    browser.contextMenus.update("preprocess-only",{ enabled: true });
+    browser.contextMenus.update("request-only",{ enabled: true });
+}
+
+/*Disable the context menu options*/
+function disableContextMenu(){
+    browser.contextMenus.update("mwe-item",{ enabled: false });
+    browser.contextMenus.update("preprocess-only",{ enabled: false });
+    browser.contextMenus.update("request-only",{ enabled: false });
+}
+
+/*Handle the context menu items based on the status of the DOM*/
+function handleUpdated(tabId: any, changeInfo: any) {
+  if (changeInfo.status == "complete"){
+    enableContextMenu();
+  }else if (changeInfo.status == "unloaded" || changeInfo.status == "loading"){
+    disableContextMenu();
+  }
+}
+
+/*Handle context menu items based on DOM for the active Tab*/
+function getCurrentTabInfo(){
+    let currentTab = browser.tabs.query({currentWindow: true, active: true});
+    currentTab.then(
+        function(tabs){
+            handleUpdated(tabs[0].id, tabs[0]);
+        },
+        function(error){console.log(error)}
+    );
+}
+
 browser.runtime.onConnect.addListener(storeConnection);
+browser.tabs.onUpdated.addListener(handleUpdated);
+browser.tabs.onActivated.addListener(getCurrentTabInfo);
 
 function onCreated(): void {
     if (browser.runtime.lastError) {
@@ -177,12 +221,18 @@ function onCreated(): void {
 browser.contextMenus.create({
     id: "mwe-item",
     title: browser.i18n.getMessage("menuItem"),
-    contexts: ["image", "link"],
+    contexts: ["image", "link"]
 },
 onCreated);
 browser.contextMenus.create({
     id: "preprocess-only",
     title: browser.i18n.getMessage("preprocessItem"),
+    contexts: ["image", "link"]
+},
+onCreated);
+browser.contextMenus.create({
+    id: "request-only",
+    title: browser.i18n.getMessage("requestItem"),
     contexts: ["image", "link"]
 },
 onCreated);
@@ -199,6 +249,11 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         } else if (info.menuItemId === "preprocess-only") {
             ports[tab.id].postMessage({
                 "type": "preprocessRequest",
+                "tabId": tab.id
+            });
+        } else if (info.menuItemId === "request-only") {
+            ports[tab.id].postMessage({
+                "type": "onlyRequest",
                 "tabId": tab.id
             });
         }
