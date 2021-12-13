@@ -55,6 +55,7 @@ async function generateMapQuery(message: { context: string, url: string, dims: [
         "renderers": [
             "ca.mcgill.a11y.image.renderer.Text",
             "ca.mcgill.a11y.image.renderer.SimpleAudio",
+            "ca.mcgill.a11y.image.renderer.SegmentAudio"
         ]
     } as IMAGERequest;
 }
@@ -76,7 +77,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
-    console.log("Handling message");
+    console.debug("Handling message");
     let query: IMAGERequest;
     switch (message["type"]) {
         case "info":
@@ -91,7 +92,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
             if (message["type"] === "resource") {
                 query = await generateQuery(message);
             } else if (message["type"] === "mapResource") {
-                console.log("Generating map query");
+                console.debug("Generating map query");
                 query = await generateMapQuery(message);
             }else{
                 query = generateLocalQuery(message);

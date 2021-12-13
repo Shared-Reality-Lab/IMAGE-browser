@@ -95,9 +95,9 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                 let src = map.getAttribute("src");
                 let q, lat, lon, zoom;
                 let maptype = "roadmap";
-                if(src?.includes("&q=")){
+                if(src?.includes("&q=")){ // assume src is not null and then look for a query string
                    let i1 = src.indexOf("&q=") + 3;
-                   let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+                   let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
                    q = src.substring(i1, i2);
                 }
                 if(src?.includes("&center=")){
@@ -116,7 +116,7 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                     maptype = "satellite";
                 }
                 if(lat && lon){
-                    console.log("Sending map resource request");
+                    console.debug("Sending map resource request");
                     port.postMessage({
                         "type": "mapResource",
                         "context": map ? serializer.serializeToString(map) : null,
