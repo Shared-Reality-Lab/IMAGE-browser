@@ -27,7 +27,7 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "info/worker_vib.js",
+        "info/worker.js",
         "info/info.html",
         "info/info.ts",
         "errors/no_renderings.html",
