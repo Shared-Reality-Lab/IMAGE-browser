@@ -33,6 +33,7 @@ var firstCall:boolean = true;
 const canvas_width = 800;
 const canvas_height = 500;
 
+
 const audioCtx = new window.AudioContext();
 port.onMessage.addListener(async (message) => {
     if (message) {
@@ -204,7 +205,21 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-    
+            var array = ["Passive","Active","Passive with vibration"];
+
+            //Create and append select list
+            var selectList = document.createElement("select");
+            selectList.id = "mySelect";
+            contentDiv.appendChild(selectList);
+
+            //Create and append the options
+            for (var i = 0; i < array.length; i++) {
+                var option = document.createElement("option");
+                option.value = array[i];
+                option.text = array[i];
+                selectList.appendChild(option);
+            }
+
 
             let worker;
             
@@ -317,8 +332,8 @@ port.onMessage.addListener(async (message) => {
 
                 xE = pixelsPerMeter * -xE;
                 yE = pixelsPerMeter * yE;
-                console.log("x coord in the main script: ");
-                console.log(xE);
+                // console.log("x coord in the main script: ");
+                // console.log(xE);
 
                 endEffector.x = deviceOrigin.x +xE-x_trans;
                 endEffector.y = deviceOrigin.y+yE;
@@ -330,13 +345,18 @@ port.onMessage.addListener(async (message) => {
     
             // serial comms
             btn.addEventListener("click", _ => {
-                const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
+                const worker = new Worker(browser.runtime.getURL("./info/worker_vib.js"), {type: "module"});
                 let port = navigator.serial.requestPort();
                 // worker.postMessage("test");
-                if(canReceive){
-                    worker.postMessage(data);
-                    canReceive = false;
-                }
+                // if(canReceive){
+                //     worker.postMessage([selectList.value,data])
+                //     canReceive = false;
+                // }
+                selectList.onchange = function(){
+                    console.log(selectList.value);
+                    // worker.terminate()
+                    worker.postMessage([selectList.value,data])
+                };
                 
                
                 worker.addEventListener("message", function(msg){
@@ -375,3 +395,4 @@ function to_haply_frame(x1:number, y1:number) {
     return [x,y];
   }
 
+  
