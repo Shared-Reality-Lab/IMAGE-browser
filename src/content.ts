@@ -90,6 +90,7 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
             map.setAttribute("tabindex", "0");     
             let map_button = document.createElement("button");
             map_button.innerText = "Render Map";
+            // Get all the information about our found map and store the info. Then create a button to render the map
             map_button.addEventListener("click", () => {
                 const serializer = new XMLSerializer();
                 let src = map.getAttribute("src");
@@ -100,22 +101,22 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                    let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
                    q = src.substring(i1, i2);
                 }
-                if(src?.includes("&center=")){
+                if(src?.includes("&center=")){ // try to find center of map
                     let i1 = src.indexOf("&center=") + 8;
                     let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
                     let center = src.substring(i1, i2);
                     lat = center.split(",")[0];
                     lon = center.split(",")[1];
                 }
-                if(src?.includes("&zoom=")){
+                if(src?.includes("&zoom=")){ // try to find zoom of map
                     let i1 = src.indexOf("&zoom=") + 6;
                     let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
                     zoom = src.substring(i1, i2);
                 }
-                if(src?.includes("&maptype=satellite")){
+                if(src?.includes("&maptype=satellite")){ // only important map type right now is satellite
                     maptype = "satellite";
                 }
-                if(lat && lon){
+                if(lat && lon){ // only send the resource request if we have a lat and lon
                     console.debug("Sending map resource request");
                     port.postMessage({
                         "type": "mapResource",
