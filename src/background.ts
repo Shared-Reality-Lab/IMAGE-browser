@@ -135,7 +135,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 });
             } else if (message["toRender"] === "preprocess") {
                 browser.downloads.download({
-                    url: "http://localhost:8080/render/preprocess",
+                    url: "https://image.a11y.mcgill.ca/render/preprocess",
                     headers: [{ name: "Content-Type", value: "application/json" }],
                     body: JSON.stringify(query),
                     method: "POST",
