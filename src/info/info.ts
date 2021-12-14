@@ -177,14 +177,9 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            let btn = document.createElement("button");
-            btn.id = "btn";
-            btn.innerHTML = "Play Haptic Rendering";
-            contentDiv.append(btn);
-
             var array = ["Passive", 
-                        "Active", 
-                        "Vibration"];
+            "Active", 
+            "Vibration"];
 
             //Create and append select list
             var selectList = document.createElement("select");
@@ -197,7 +192,12 @@ port.onMessage.addListener(async (message) => {
                 option.value = array[i];
                 option.text = array[i];
                 selectList.appendChild(option);
-            }
+}
+
+            let btn = document.createElement("button");
+            btn.id = "btn";
+            btn.innerHTML = "Play Haptic Rendering";
+            contentDiv.append(btn);
 
             canvas = document.createElement('canvas');
             canvas.id = "main";
@@ -345,6 +345,7 @@ port.onMessage.addListener(async (message) => {
                 };  
                 
                 worker.addEventListener("message", function(msg){
+                    btn.style.visibility = 'hidden';
 
                     // return end-effector x/y positions and objectData for updating the canvas
                     posEE.x = msg.data.positions.x;
