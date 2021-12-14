@@ -2,7 +2,6 @@ import  browser  from "webextension-polyfill";
 
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
-console.debug("Hello!");
 for (let label of labels) {
     const val = browser.i18n.getMessage(label.id);
     if (val) {
@@ -14,24 +13,25 @@ for (let label of labels) {
 
 function saveOptions() {
     browser.storage.sync.set({
-        server: (<HTMLInputElement>document.getElementById("server")).value
+        inputUrl: (<HTMLInputElement>document.getElementById("inputUrl")).value
     }),
     (function() {
-        // Update status to let user know options were saved.
         var status = (<HTMLInputElement>document.getElementById("status"));
         status.textContent = "Options successfully saved...";
         setTimeout(function() {
           status.textContent = '';
         }, 750);
       })()
-   browser.storage.sync.get("server").then(res => { console.log(res); });   
+   browser.storage.sync.get("inputUrl").then(res => { console.debug(res); });   
 };
 
-//Restores selection using the preferences stored in browser.storage.
+
 function restore_options() {
-    // Use Bach as default sever  
-     browser.storage.sync.get({"server": "bach-server"}).then(items => { 
-        (<HTMLInputElement>document.getElementById('server')).value = items["server"]; 
+     browser.storage.sync.get({
+        // Use Bach as default sever  
+        "inputUrl": "https://image.a11y.mcgill.ca/"
+        }).then(items => { 
+        (<HTMLInputElement>document.getElementById('inputUrl')).value = items["inputUrl"]; 
     });
   }
 

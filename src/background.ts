@@ -5,23 +5,15 @@ import { IMAGERequest } from "./types/request.schema";
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
-
-const servers = {
-    "bach-server": "https://image.a11y.mcgill.ca/",
-    "unicorn-server": "https://unicorn.cim.mcgill.ca/image/"
-};
-
-const bach = servers["bach-server"];
-const unicorn = servers["unicorn-server"];
 var serverUrl : RequestInfo;
 
 function getAllStorageSyncData () {
-    return browser.storage.sync.get(["server"])
+    return browser.storage.sync.get(["inputUrl"])
       .then(result => {
         if (browser.runtime.lastError) { 
         console.error(browser.runtime.lastError);
         }
-        return result["server"];
+        return result["inputUrl"];
       })          
   };
 
@@ -75,31 +67,24 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
-        let query: IMAGERequest;
-        await getAllStorageSyncData().then(async items => {
-        switch (message["type"]) {
-            case "info":
-                const value = responseMap.get(message["request_uuid"]);
-                p.postMessage(value);
-                responseMap.delete(message["request_uuid"]);
-                break;
-            case "resource":
-            case "localResource":
-                // Get response and open new window
-                if (message["type"] === "resource") {
-                    query = await generateQuery(message);
-                } else {
-                    query = generateLocalQuery(message);
-                }
-                if (message["toRender"] === "full") {
-                 // Get URL option from browser storage
-                    var valueFromStorage:String|void;
-                    valueFromStorage = items;
-                    if(valueFromStorage== "bach-server"){
-                        serverUrl = bach;
-                    }else{
-                        serverUrl= unicorn;
-                    }
+    let query: IMAGERequest;
+    switch (message["type"]) {
+        case "info":
+            const value = responseMap.get(message["request_uuid"]);
+            p.postMessage(value);
+            responseMap.delete(message["request_uuid"]);
+            break;
+        case "resource":
+        case "localResource":
+            // Get response and open new window
+            if (message["type"] === "resource") {
+                query = await generateQuery(message);
+            } else {
+                query = generateLocalQuery(message);
+            }
+            if (message["toRender"] === "full") {
+                await getAllStorageSyncData().then(async items => {
+                    serverUrl = items;
                     fetch(serverUrl + "render", {
                             "method": "POST",
                             "headers": {
@@ -136,32 +121,33 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     }).catch(err => {
                         console.error(err);
                     });
-                } else if (message["toRender"] === "preprocess") {
-                    browser.downloads.download({
-                        url: serverUrl + "render/preprocess",
-                        headers: [{ name: "Content-Type", value: "application/json" }],
-                        body: JSON.stringify(query),
-                        method: "POST",
-                        saveAs: true
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                } else if (message["toRender"] === "none") {
-                    const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
-                    const blobURL = URL.createObjectURL(blob);
-                    browser.downloads.download({
-                        url: blobURL,
-                        saveAs: true
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                }
-                break;
-            default:
-                console.debug(message["type"]);
-                break;
-        }
-    });
+                });
+            } 
+            else if (message["toRender"] === "preprocess") {
+                browser.downloads.download({
+                    url: serverUrl + "render/preprocess",
+                    headers: [{ name: "Content-Type", value: "application/json" }],
+                    body: JSON.stringify(query),
+                    method: "POST",
+                    saveAs: true
+                }).catch(err => {
+                    console.error(err);
+                });
+            } else if (message["toRender"] === "none") {
+                const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
+                const blobURL = URL.createObjectURL(blob);
+                browser.downloads.download({
+                    url: blobURL,
+                    saveAs: true
+                }).catch(err => {
+                    console.error(err);
+                });
+            }
+            break;
+        default:
+            console.debug(message["type"]);
+            break;
+    }
 }
 
 function storeConnection(p: Runtime.Port) {
