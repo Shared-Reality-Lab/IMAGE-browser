@@ -184,7 +184,7 @@ port.onMessage.addListener(async (message) => {
 
             var array = ["Passive", 
                         "Active", 
-                        "Passive with vibration"];
+                        "Vibration"];
 
             //Create and append select list
             var selectList = document.createElement("select");

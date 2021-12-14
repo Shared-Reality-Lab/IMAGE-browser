@@ -50,6 +50,8 @@ let doneGuidance;
 
 var mode;
 
+var message_count=0;
+
 class DetectedObject{
   constructor(text, centroid, coords) {
     this.text = text;
@@ -77,7 +79,8 @@ self.addEventListener("message", async function(e) {
   } 
 
   /************ BEGIN SETUP CODE *****************/
-
+  if(message_count <1){
+    message_count++;
   haplyBoard = new Board();
   await haplyBoard.init();
 
@@ -92,6 +95,7 @@ self.addEventListener("message", async function(e) {
   widgetOne.add_encoder(1, 1, 241, 10752, 2);
   widgetOne.add_encoder(2, 0, -61, 10752, 1);
   widgetOne.device_set_parameters();
+  }
 
   /************************ END SETUP CODE ************************* */
 
@@ -131,6 +135,9 @@ self.addEventListener("message", async function(e) {
     else if (mode == "Passive") {
       passiveGuidance();
     }
+    else if(mode == "Vibration"){
+      vib_mode();
+    }
 
     // send required data back
     var data = {
@@ -163,7 +170,7 @@ function activeGuidance() {
 }
 
 function inShape(coords,ee_pos) {
-  if ((ee_pos.x > coords[0] && ee_pos.x < coords[2]) && (ee_pos.y > coords[1] && ee_pos.y < coords[3])) {
+  if ((ee_pos.x >= coords[0] && ee_pos.x <= coords[2]) && (ee_pos.y >= coords[1] && ee_pos.y <= coords[3])) {
     return true;
   }
   else {
@@ -172,11 +179,13 @@ function inShape(coords,ee_pos) {
 }
 
 function passiveGuidance() {
+  console.log(posEE.x);
     // let conv_posEE = new Vector(posEE.x * (-0.1/0.070)+ 0.7*2, (posEE.y- 0.022) *20);
       // let conv_posEE = new Vector(posEE.x * (-0.5/0.070)+ 0.7, (posEE.y -0.022) / 0.078);
       //let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *7.81);
-      let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *8.07-0.21);
-      
+      // let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *8.07-0.21);
+      let conv_posEE = new Vector(posEE.x *5+0.5, posEE.y *8.07 -0.21);
+      console.log(convPosEE);
       var nearestx = 99.9;
       var nearesty = 99.9;
       var nearestObj = "";
@@ -188,9 +197,8 @@ function passiveGuidance() {
         let uly = (objectData[i].coords[1]); // upper-left y coord
         let lrx = (objectData[i].coords[2]); //lower-right x
         let lry = (objectData[i].coords[3]);  //lower right y 
-        let objName  = objectData[i].type;
-        // this.console.log(objName);
-        // this.console.log(lrx);
+        let objName  = objectData[i].text;
+    
 
         /* x direction */
         /* if y coord is between line seg */
@@ -229,15 +237,7 @@ function passiveGuidance() {
         }
 
          
-      if(inShape(objectData[i].coords,conv_posEE)){
-        vib = true;
-        // let temp = Vector.random2D().mult(0.02);
-        let temp = new Vector((Math.random()*100-75)/500, (Math.random()*100-75)/500, 0);
-        // this.console.log("the temp is: ", temp);
-        f.set((Math.random()*100-75)/1000, (Math.random()*100-75)/1000);
-        // this.console.log("the vector f is:" ,f);
-
-      }
+    
 
       }
       // this.console.log(nearestObj);
@@ -286,18 +286,40 @@ function passiveGuidance() {
       fEE_prev3 = fEE_prev2.clone();
       fEE_prev4 = fEE_prev3.clone();
 
-      let f_coef = -35.0;
-      let x_dist = Math.abs(0.5 - conv_posEE.x);
-      let y_dist = conv_posEE.y;
-      let xy_dist = new Vector(conv_posEE.x-0.5, conv_posEE.y).mag();
-      let multiplier = 1;
-      if (xy_dist < 0.3)  {
-        multiplier = 1.0 / ((xy_dist) + 0.5);
-      }
-      let comp_coeff = (1.0 - (y_dist - 0.5) * x_dist) * multiplier;
-      if(vib){
-        fEE = f.multiply(f_coef * comp_coeff);
-      }  
+     
+}
+
+function vib_mode(){
+  vib = false;
+  let conv_posEE = new Vector(posEE.x *5+0.5, posEE.y *8.07 -0.21);
+  let f_coef = -35.0; //-35
+  let x_dist = Math.abs(0.5 - conv_posEE.x);
+  let y_dist = conv_posEE.y;
+  let xy_dist = new Vector(conv_posEE.x-0.5, conv_posEE.y).mag();
+  let multiplier = 1;
+  if (xy_dist < 0.3)  {
+    multiplier = 1.0 / ((xy_dist) + 0.5);
+  }
+  let comp_coeff = (1.0 - (y_dist - 0.5) * x_dist) * multiplier;
+
+  for(let i = 0; i < objectData.length; i++)  {
+    if(inShape(objectData[i].coords,conv_posEE)){
+      console.log(objectData[i].text);
+      f.set((Math.random()*100-75)/1000, (Math.random()*100-75)/1000);
+      vib = true; 
+    }
+   
+    if(vib){
+    fEE.set( f.multiply(f_coef * comp_coeff));
+      console.log(fEE);
+    }
+  }
+
+ 
+
+    
+   
+  
 }
 
 // transform image normalized coordinates into haply frame of reference
