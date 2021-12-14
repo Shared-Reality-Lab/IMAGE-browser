@@ -10,31 +10,12 @@ let request_uuid = window.location.search.substring(1);
 let renderings: IMAGEResponse;
 let port = browser.runtime.connect();
 
-//TODO: set types
-let endEffector: any;
-let ball: any;
-let border: any;
-let box: any;
-let canvas: any;
-let ctx: any;
-let raf: any;
-// let posBall: any;
-let posEE: any;
-let deviceOrigin: any;
-let xB, yB, xE, yE:any;
-let pg: any;
-let x_trans = 100;
-let names:string [] = [""];
-let centroids:[Number,Number][] =[[0,0]];
-let coords:[number,number,number,number][] =[[0,0,0,0]];
-var canReceive = false;
-let objectData: any;
-var firstCall:boolean = true;
-const canvas_width = 800;
-const canvas_height = 500;
-
+// canvas dimensions for haptic rendering
+const canvasWidth = 800;
+const canvasHeight = 500;
 
 const audioCtx = new window.AudioContext();
+
 port.onMessage.addListener(async (message) => {
     if (message) {
         renderings = message;
@@ -42,7 +23,6 @@ port.onMessage.addListener(async (message) => {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
     console.debug(renderings);
-    canReceive = true;
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -171,22 +151,23 @@ port.onMessage.addListener(async (message) => {
         }
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
-
-            const text = rendering["data"]["data"][0]["text"] as string;
-            const imageSrc = rendering["data"]["image"] as string;
-            // const img = rendering["data"]["image"] as string;
-            const data = rendering["data"]["data"] as Array<JSON>;
-            // for (let i=0; i<data.length; i++){
-            //     var length_name= names.push(rendering["data"]["data"][i]["text"] as string);
-            //     var length_cent = centroids.push(rendering["data"]["data"][i]["centroids"] as Array<Number>);
-            //     // length = coords.push(rendering["data"]["data"][i]["coords"] as Array<Number>);
-            // }
             
-            // console.log(centroids[1]);
-            // console.log(names[1]);
-            // console.log(data.length);
-            // console.log(text);
-            // console.log(img);
+            //TODO: set types
+            let endEffector: any;
+            let border: any;
+            let canvas: any;
+            let ctx: any;
+            let raf: any;
+            let posEE: any;
+            let deviceOrigin: any;
+            let xE, yE: any;
+            let x_trans = 100;
+            let objectData: any;
+            var firstCall: boolean = true;
+
+            const imageSrc = rendering["data"]["image"] as string;
+            const data = rendering["data"]["data"] as Array<JSON>;
+
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
@@ -195,10 +176,6 @@ port.onMessage.addListener(async (message) => {
             contentDiv.classList.add("rendering-content");
             contentDiv.id = contentId;
             div.append(contentDiv);
-
-            const p = document.createElement("p");
-            p.textContent = text;
-            contentDiv.append(p);
 
             let btn = document.createElement("button");
             btn.id = "btn";
@@ -221,16 +198,24 @@ port.onMessage.addListener(async (message) => {
             }
 
 
+            canvas = document.createElement('canvas');
+            canvas.id = "main";
+            canvas.width = 800;
+            canvas.height = 500;
+            canvas.style.zIndex = "8";
+            canvas.style.position = "absolute";
+            canvas.style.border = "1px solid";
+            contentDiv.append(document.createElement("br"));
+            contentDiv.append(canvas);
+            ctx = canvas.getContext('2d');
+
+            var img = new Image();
+            img.src = imageSrc;
+
             let worker;
-            
+
             const worldPixelWidth = 1000;
-            const worldPixelHeight = 600;
-            const pixelsPerMeter = 4000.0;
-            const radsPerDegree = 0.01745;
-
-            const screenFactor_x = worldPixelWidth / pixelsPerMeter;
-            const screenFactor_y = worldPixelHeight / pixelsPerMeter;
-
+            const pixelsPerMeter = 4000;
 
             posEE = {
                 x: 0,
@@ -241,26 +226,6 @@ port.onMessage.addListener(async (message) => {
                 x: worldPixelWidth / 2,
                 y: 0
             };
-            // TODO: fix canvas positioning
-            
-            canvas = document.createElement('canvas');
-            canvas.id = "main";
-            canvas.width = 800;
-            canvas.height = 500;
-            canvas.style.zIndex = "8";
-            canvas.style.position = "absolute";
-            canvas.style.border = "1px solid";
-            canvas.style.left = "100px";
-            canvas.style.top = "300px";  
-            
-            contentDiv.append(canvas);
-
-            ctx = canvas.getContext('2d');
-
-            var img = new Image();
-            img.src = imageSrc;
-
-    
 
             border = {
                 draw: function() {
@@ -268,14 +233,13 @@ port.onMessage.addListener(async (message) => {
                 }
             };
 
-
             endEffector = {
-                x: canvas.width/2,
-                y: 25,
+                x: canvas.width / 2,
+                y: 0,
                 vx: 5,
                 vy: 2,
-                radius: 15,
-                color: 'black',
+                radius: 8,
+                color: 'red',
                 draw: function() {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
@@ -295,86 +259,92 @@ port.onMessage.addListener(async (message) => {
 
 
               var rec = [];
+              var centroids = [];
               function create_rect()   {
-                for (var i = 0; i < objectData.length; i++) {
-                    let [ulx, uly] = to_haply_frame(objectData[i].coords[0], objectData[i].coords[1]); 
-                    let [lrx, lry] = to_haply_frame(objectData[i].coords[2], objectData[i].coords[3]);
-                    let objWidth = Math.abs(ulx-lrx);
-                    let objHeight = Math.abs(uly-lry);
-                    rec.push({
-                        x:ulx,
-                        y:uly,
-                        width:objWidth,
-                        height:objHeight,
+                for (var i = 0; i < objectData.length; i++) { 
 
-                    });    
+                    // transform coordinates into haply frame of reference
+                    let [ulx, uly] = img_to_world_frame(objectData[i].coords[0], objectData[i].coords[1]); 
+                    let [lrx, lry] = img_to_world_frame(objectData[i].coords[2], objectData[i].coords[3]);
+                    let [cx, cy] = img_to_world_frame(objectData[i].centroid[0], objectData[i].centroid[1]);
+
+                    let objWidth = Math.abs(ulx - lrx);
+                    let objHeight = Math.abs(uly - lry);
+
+                    rec.push({
+                        x: ulx,
+                        y: uly,
+                        width: objWidth,
+                        height: objHeight,
+                    });  
+                    centroids.push({
+                        x: cx,
+                        y: cy
+                    })  
                 }      
               }
 
-              function draw_rect(){
-                for(var i=0;i<rec.length;i++){
-                    var s=rec[i];
-                    // ctx.fillRect(s.x,s.y,s.width,s.height);
-                    ctx.strokeStyle="red";
-                    ctx.strokeRect(s.x,s.y,s.width,s.height);
+              function draw_boundaries() {
+
+                for (var i = 0;i< rec.length; i++){
+                    var s = rec[i];
+                    ctx.strokeStyle = "red";
+                    ctx.strokeRect(s.x, s.y, s.width, s.height);
+                
+                    var c = centroids[i];
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
+                    ctx.strokeStyle = "white";
+                    ctx.stroke();
                 }   
-                // console.log("drew all my boxes!");
               }
 
               function updateAnimation(){
-
-            
-                draw_rect();
+    
+                // draw bounding boxes and centroids
+                draw_boundaries();
                 border.draw();
                 xE = posEE.x;
                 yE = posEE.y;
-        
 
                 xE = pixelsPerMeter * -xE;
                 yE = pixelsPerMeter * yE;
-                // console.log("x coord in the main script: ");
-                // console.log(xE);
 
-                endEffector.x = deviceOrigin.x +xE-x_trans;
-                endEffector.y = deviceOrigin.y+yE;
+                // set position of virtual avatar in canvas
+                endEffector.x = deviceOrigin.x + xE - x_trans;
+                endEffector.y = deviceOrigin.y + yE - x_trans;
                 endEffector.draw();
              
               }
 
             endEffector.draw();
-    
+
             // serial comms
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
                 let port = navigator.serial.requestPort();
-                // worker.postMessage("test");
-                // if(canReceive){
-                //     worker.postMessage([selectList.value,data])
-                //     canReceive = false;
-                // }
-                selectList.onchange = function(){
-                    console.log(selectList.value);
-                    // worker.terminate()
-                    worker.postMessage([selectList.value,data])
-                };
-                
-               
-                worker.addEventListener("message", function(msg){
-                    // console.log("got a message from the worker");
+        
+                  worker.postMessage([selectList.value,data]);
+                  selectList.onchange = function(){
+                      console.log(selectList.value);
+                      // worker.terminate()
+                      worker.postMessage([selectList.value,data]);
+                  };
 
+                worker.addEventListener("message", function(msg){
+
+                    // return end-effector x/y positions and objectData for updating the canvas
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
                     objectData = msg.data.objectData;
 
-                    if(firstCall){
+                    if(firstCall) {
                         create_rect();
                         raf = window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
-                    // console.log(posBall.y);
                 });
             });
-
         }        
 
         document.body.append(container);
@@ -389,10 +359,8 @@ port.postMessage({
 });
 
 
-function to_haply_frame(x1:number, y1:number) {
-    var x = x1 *canvas_width;
-    var y = y1  *canvas_height;
-    return [x,y];
+function img_to_world_frame(x1: number, y1: number) {
+    var x = x1 * canvasWidth;
+    var y = y1  * canvasHeight;
+    return [x, y];
   }
-
-  
