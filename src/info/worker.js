@@ -6,104 +6,99 @@ import { Sensor } from "../hAPI/libraries/Sensor.ts";
 import { Pwm } from "../hAPI/libraries/Pwm.ts";
 import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
 
-console.log("in worker!");
-  var rendering;
-  var widgetOne;
-  var pantograph;
-  var widgetOneID = 5;
+var widgetOne;
+var pantograph;
+var widgetOneID = 5;
+var haplyBoard;
 
-  var angles = new Vector(0,0);    
-  var positions = new Vector(0, 0);
+var angles = new Vector(0, 0);    
+var positions = new Vector(0, 0);
 
-  var posEE = new Vector(0,0);   
-  var posEELast =new Vector(0,0); 
-  var velEE =new Vector(0,0);
+var objectData = []
 
-  var b_EE = 10.0;
-  var rEE = 0.005;
-  var fEE = new Vector(0, 0);
-  //for force shading
-  var fEE_prev1 = new Vector(0, 0);
-  var fEE_prev2 = new Vector(0, 0);
-  var fEE_prev3 = new Vector(0, 0);
-  var fEE_prev4 = new Vector(0, 0);
+var posEE = new Vector(0, 0); // end-effector x/y coords
+var convPosEE = new Vector(0, 0); // transformed end-effector coordinates
+var targetLoc = new Vector(0, 0); // location of target point
+var force = new Vector(0, 0); // get force needed for torques
+var fEE = new Vector(0, 0);
+var threshold = 0.02;
 
-  var rEE = 0.006;
-  var fDamping = new Vector(0, 0);
+var posEELast =new Vector(0,0); 
+var velEE =new Vector(0,0);
 
-  var fWall = new Vector(0, 0);
-  var kWall = 800; // N/m
-  var penWall = new Vector(0, 0);
+var b_EE = 10.0;
+var rEE = 0.005;
+var fEE = new Vector(0, 0);
 
-  var f = new Vector(0.05,0.001);
-  var vib = false;
-  var value;
+//for force shading
+var fEE_prev1 = new Vector(0, 0);
+var fEE_prev2 = new Vector(0, 0);
+var fEE_prev3 = new Vector(0, 0);
+var fEE_prev4 = new Vector(0, 0);
 
-  var targetLoc = new Vector(0, 0); // location of target point
-  var force = new Vector(0, 0); // get force needed for torques
-  var doneGuidance;
-  var threshold = 0.02;
+var rEE = 0.006;
+var fDamping = new Vector(0, 0);
 
-  var dt = 1/1000.0;
-  var haplyBoard;
-  var objectData = []
+var fWall = new Vector(0, 0);
+var kWall = 800; // N/m
+var penWall = new Vector(0, 0);
 
-  var run_once = false;
-  var message_count =0;
+var f = new Vector(0.05,0.001);
+var vib = false;
 
-  class DetectedObject{
-    constructor(type, centroid, coords) {
-      this.type = type;
-      this.centroid = centroid;
-      this.coords = coords;
-    }
+let doneGuidance;
+
+var mode;
+
+class DetectedObject{
+  constructor(text, centroid, coords) {
+    this.text = text;
+    this.centroid = centroid;
+    this.coords = coords;
   }
+}
 
-  self.addEventListener("message", async function(e) {
-    // this is where we receive the image data from the main script
-    this.console.log(e);
-    if (e) {
-      
-      rendering = e.data[1]; // assinged the data array received from main script
-      value = e.data[0];
-      for (var i = 0; i < rendering.length; i++) {
-        let obj = rendering[i];
-        let centroid = obj.centroids;
-        let coords = obj.coords;
-        let type = obj.text;
-        objectData.push(new DetectedObject(type, centroid, coords));
-      }
-      targetLoc.set(image_to_haply(objectData[0].centroid[0], objectData[0].centroid[1]));
+self.addEventListener("message", async function(e) {
+  // get image data from the main script
+  if (e) {
 
-  } 
-  this.console.log(value);
-  
-    /************ BEGIN SETUP CODE *****************/
-    if(message_count <1){
-      message_count++;
-    haplyBoard = new Board();
-    await haplyBoard.init();
-  
-    widgetOne           = new Device(widgetOneID, haplyBoard);
-    pantograph          = new Pantograph();
-  
-    widgetOne.set_mechanism(pantograph);
-  
-    widgetOne.add_actuator(1, 1, 2); //CCW
-    widgetOne.add_actuator(2, 0, 1); //CW
-  
-    widgetOne.add_encoder(1, 1, 241, 10752, 2);
-    widgetOne.add_encoder(2, 0, -61, 10752, 1);
-    widgetOne.device_set_parameters();
+    mode = e.data.mode;
+    var rendering = e.data.renderingData;
+
+    for (var i = 0; i < rendering.length; i++) {
+      let obj = rendering[i];
+      let centroid = obj.centroids;
+      let coords = obj.coords;
+      let text = obj.text;
+      objectData.push(new DetectedObject(text, centroid, coords));
     }
-    // var g = new Vector(10, 20, 2);
-    /************************ END SETUP CODE ************************* */
-  
-    /**********  BEGIN CONTROL LOOP CODE *********************/
+    //set initial target location first object centroid coordinates
+    targetLoc.set(image_to_haply(objectData[0].centroid[0], objectData[0].centroid[1]));
+  } 
+
+  /************ BEGIN SETUP CODE *****************/
+
+  haplyBoard = new Board();
+  await haplyBoard.init();
+
+  widgetOne = new Device(widgetOneID, haplyBoard);
+  pantograph = new Pantograph();
+
+  widgetOne.set_mechanism(pantograph);
+
+  widgetOne.add_actuator(1, 1, 2); //CCW
+  widgetOne.add_actuator(2, 0, 1); //CW
+
+  widgetOne.add_encoder(1, 1, 241, 10752, 2);
+  widgetOne.add_encoder(2, 0, -61, 10752, 1);
+  widgetOne.device_set_parameters();
+
+  /************************ END SETUP CODE ************************* */
+
+  /**********  BEGIN CONTROL LOOP CODE *********************/
   let func;
-  
-  if(value == "active"){
-    // get new 
+
+  if (mode == "Active") {
     (func = (function*() {
       for (let idx = 1; idx <= objectData.length; idx++) {
         yield setTimeout(() => {
@@ -118,79 +113,69 @@ console.log("in worker!");
       }
     })()).next();
   }
-    // self.importScripts("runLoop.js")
-    while(true) {
-      vib =false;
- 
-      if (!run_once){
-        widgetOne.device_set_parameters();
-        run_once = true;
-        // console.log(objectdata[0]);
 
-      }
-      widgetOne.device_read_data();
-      angles = widgetOne.get_device_angles();
-      positions = widgetOne.get_device_position(angles);
+  while (true) {
 
-      posEELast = posEE;
-      posEE.set(positions);  
-      velEE = posEE.subtract(posEELast);
-      fDamping = velEE.multiply(-b_EE);
- 
-  
-      var data = {
-        positions: {x: positions[0], y: positions[1]},
-        objectData: objectData
-      }
-  
-      this.self.postMessage(data);
+    // find position and angle data
+    widgetOne.device_read_data();
+    angles = widgetOne.get_device_angles();
+    positions = widgetOne.get_device_position(angles);
 
-      
-      if(value == "Passive"){
-        this.console.log("in passive mode");
-        vib_mode();
-      }
-      else if(value == "Active"){
-        this.console.log("in active mode");
-        activeGuidance();
-      }
-      else{
-        this.console.log("not in any mode!");
-      }
-    
+    posEE.set(device_to_graphics(positions));
+    convPosEE = posEE.clone();
 
-      widgetOne.set_device_torques(fEE.toArray());  
-      widgetOne.device_write_torques();   
-  
-      await new Promise(r => setTimeout(r, 1));
+    // compute forces based on existing position
+    if (mode == "Active") {
+      activeGuidance();
     }
-    
-    /**********  END CONTROL LOOP CODE *********************/
-  });
-  
+    else if (mode == "Passive") {
+      passiveGuidance();
+    }
 
-  function to_haply_frame(v) {
-    var x = (v.x - 0.5009) / 6.2895;
-    var y = (v.y + 0.2004) / 10.017;
-    return new Vector(x, y);
+    // send required data back
+    var data = {
+      positions: {x: positions[0], y: positions[1]},
+      objectData: objectData
+    }
+
+    this.self.postMessage(data);
+
+    //calculate and set torques
+    widgetOne.set_device_torques(fEE.toArray());
+    widgetOne.device_write_torques();  
+
+    await new Promise(r => setTimeout(r, 1));
   }
   
-  
-  function inShape(coords,ee_pos){
-    if((ee_pos.x > coords[0] && ee_pos.x < coords[2]) && (ee_pos.y > coords[1] && ee_pos.y < coords[3])) {
-      return true;
-    }
-    else{
-      return false;
-    }
+  /**********  END CONTROL LOOP CODE *********************/
+});
 
+function activeGuidance() {
+  if (!doneGuidance) {
+    var xDiff = (convPosEE).subtract(targetLoc);
+    var multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+
+    force.set(xDiff.multiply(-600).multiply(multiplier));
+    fEE.set(graphics_to_device(force));   
   }
-  
-  function vib_mode(){
-    
+  else
+    fEE.set(0, 0);
+}
+
+function inShape(coords,ee_pos) {
+  if ((ee_pos.x > coords[0] && ee_pos.x < coords[2]) && (ee_pos.y > coords[1] && ee_pos.y < coords[3])) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+function passiveGuidance() {
     // let conv_posEE = new Vector(posEE.x * (-0.1/0.070)+ 0.7*2, (posEE.y- 0.022) *20);
       // let conv_posEE = new Vector(posEE.x * (-0.5/0.070)+ 0.7, (posEE.y -0.022) / 0.078);
-      let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *7.81);
+      //let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *7.81);
+      let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *8.07-0.21);
       
       var nearestx = 99.9;
       var nearesty = 99.9;
@@ -260,10 +245,7 @@ console.log("in worker!");
 
       fWall.set(0,0);
       let threshold = 0.02;
-      // this.console.log("this is the xline: ");
-      // this.console.log(x_line);
-      // this.console.log("this is the corrected ee pos:");
-      // this.console.log(conv_posEE);
+
       if (nearestx < nearesty && nearestx < threshold)  {
         if(x_line < conv_posEE.x) {
           penWall.set(kWall* (threshold-(x_line - conv_posEE.x)), 0);
@@ -315,40 +297,23 @@ console.log("in worker!");
       let comp_coeff = (1.0 - (y_dist - 0.5) * x_dist) * multiplier;
       if(vib){
         fEE = f.multiply(f_coef * comp_coeff);
-      }
+      }  
+}
 
-  }
+// transform image normalized coordinates into haply frame of reference
+// based on calibration on haply from extreme left/right and bottom positions
+function image_to_haply(v) {
+  var x = (v.x - 0.5) / 5.0;
+  var y = (v.y + 0.2) / 8.0;
 
-  function activeGuidance(){
-    let convPosEE = posEE.clone();
+  return new Vector(x, y);
+}
 
-    // compute forces based on existing position
-    if (!doneGuidance) {
-      var xDiff = (convPosEE).subtract(targetLoc);
-      var multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+function device_to_graphics(deviceFrame){
+  return new Vector(-deviceFrame[0], deviceFrame[1]);
+}
 
-      force.set(xDiff.multiply(-600).multiply(multiplier));
-      fEE.set(graphics_to_device(force));   
-    }
-    else
-      fEE.set(0, 0);
-
-  }
-
-
-  function image_to_haply(v) {
-    var x = (v.x - 0.5) / 5.0;
-    var y = (v.y + 0.2) / 8.0;
-  
-    return new Vector(x, y);
-  }
-  
-  function device_to_graphics(deviceFrame){
-    return new Vector(-deviceFrame[0], deviceFrame[1]);
-  }
-  
-  function graphics_to_device(graphicsFrame){
-    return graphicsFrame.set(-graphicsFrame.x, graphicsFrame.y);
-  }
-    
+function graphics_to_device(graphicsFrame){
+  return graphicsFrame.set(-graphicsFrame.x, graphicsFrame.y);
+}
   

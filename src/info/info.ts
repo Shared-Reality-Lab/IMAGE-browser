@@ -182,7 +182,9 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-            var array = ["Passive","Active","Passive with vibration"];
+            var array = ["Passive", 
+                        "Active", 
+                        "Passive with vibration"];
 
             //Create and append select list
             var selectList = document.createElement("select");
@@ -196,7 +198,6 @@ port.onMessage.addListener(async (message) => {
                 option.text = array[i];
                 selectList.appendChild(option);
             }
-
 
             canvas = document.createElement('canvas');
             canvas.id = "main";
@@ -318,18 +319,21 @@ port.onMessage.addListener(async (message) => {
               }
 
             endEffector.draw();
-
+            
+            // document.onkeydown = function (e) {
+            //     e = e || window.event;
+            //     //if (e.key == 's') {
+            //     //    objIndex == objectData.length ? 0 : objIndex + 1;
+            // }; 
+            
             // serial comms
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
                 let port = navigator.serial.requestPort();
-        
-                  worker.postMessage([selectList.value,data]);
-                  selectList.onchange = function(){
-                      console.log(selectList.value);
-                      // worker.terminate()
-                      worker.postMessage([selectList.value,data]);
-                  };
+                    worker.postMessage({
+                        renderingData: data,
+                        mode: selectList.value
+                  });
 
                 worker.addEventListener("message", function(msg){
 
