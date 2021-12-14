@@ -278,8 +278,8 @@ function passiveGuidance() {
       fEE = (fWall.clone()).multiply(-1);
       fEE.add(fDamping);
 
-      fEE.set(0.4 * fEE.x + 0.3 * fEE_prev1.x + 0.15 * fEE_prev2.x + 0.1 * fEE_prev3.x + 0.05 * fEE_prev4.x,
-        0.4 * fEE.y + 0.3 * fEE_prev1.y + 0.15 * fEE_prev2.y + 0.1 * fEE_prev3.y + 0.05 * fEE_prev4.y);
+      fEE.set(0.3 * fEE.x + 0.15 * fEE_prev1.x + 0.075 * fEE_prev2.x + 0.05 * fEE_prev3.x + 0.025 * fEE_prev4.x,
+        0.3 * fEE.y + 0.15 * fEE_prev1.y + 0.075 * fEE_prev2.y + 0.05 * fEE_prev3.y + 0.025 * fEE_prev4.y);
 
       fEE_prev1 = fEE.clone();
       fEE_prev2 = fEE_prev1.clone();
@@ -292,7 +292,7 @@ function passiveGuidance() {
 function vib_mode(){
   vib = false;
   let conv_posEE = new Vector(posEE.x *5+0.5, posEE.y *8.07 -0.21);
-  let f_coef = -35.0; //-35
+  let f_coef = -25.0; //-35
   let x_dist = Math.abs(0.5 - conv_posEE.x);
   let y_dist = conv_posEE.y;
   let xy_dist = new Vector(conv_posEE.x-0.5, conv_posEE.y).mag();

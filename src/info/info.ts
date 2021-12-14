@@ -335,6 +335,15 @@ port.onMessage.addListener(async (message) => {
                         mode: selectList.value
                   });
 
+                  selectList.onchange = function(){
+                    console.log(selectList.value);
+                    // worker.terminate()
+                    worker.postMessage({
+                        renderingData: data,
+                        mode: selectList.value
+                  });
+                };  
+                
                 worker.addEventListener("message", function(msg){
 
                     // return end-effector x/y positions and objectData for updating the canvas
