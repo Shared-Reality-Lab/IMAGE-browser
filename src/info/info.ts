@@ -158,8 +158,8 @@ port.onMessage.addListener(async (message) => {
             // variable declerations for visual components of haptics renderings
             let endEffector: canvasCircle;
             let border: canvasRectangle;
-            let canvas: HTMLCanvasElement;
-            let ctx: CanvasRenderingContext2D;
+            // let canvas: HTMLCanvasElement;
+            // let ctx: CanvasRenderingContext2D;
             let posEE: vector;
             let deviceOrigin: vector;
             let xE, yE: number;
@@ -201,7 +201,7 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-            canvas = document.createElement('canvas');
+            const canvas:HTMLCanvasElement = document.createElement('canvas');
             canvas.id = "main";
             canvas.width = 800;
             canvas.height = 500;
@@ -210,12 +210,17 @@ port.onMessage.addListener(async (message) => {
             canvas.style.border = "1px solid";
             contentDiv.append(document.createElement("br"));
             contentDiv.append(canvas);
-            try{
-                ctx = canvas.getContext('2d');
+            const res = canvas.getContext('2d');
+            if (!res || !(res instanceof CanvasRenderingContext2D)) {
+                throw new Error('Failed to get 2D context');
             }
-            catch{
-                console.log("failed to get 2D context!");
-            }
+            const ctx: CanvasRenderingContext2D = res;
+            // try{
+            //     ctx = canvas.getContext('2d');
+            // }
+            // catch{
+            //     console.log("failed to get 2D context!");
+            // }
             var img = new Image();
             img.src = imageSrc;
 
