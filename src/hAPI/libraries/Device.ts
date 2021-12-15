@@ -196,7 +196,7 @@ class Device{
         let encoderParameters = new Float32Array();
     
         let encoderParams:Uint8Array;
-        let motorParams:Uint8Array;
+        let motorParams:Uint8Array= new Uint8Array();
         let sensorParams:Uint8Array;
         let pwmParams:Uint8Array;
 
@@ -276,6 +276,8 @@ class Device{
     else{
       const motorParams = new Uint8Array(1);
       motorParams[0] = 0;
+      
+      
     }
         
         

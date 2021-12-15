@@ -1,9 +1,9 @@
 class Actuator {
 
-  actuator: number | undefined;
-  direction: number | undefined;
-  actuatorPort: number | undefined;
-  torque: number | undefined;
+  actuator: number;
+  direction: number;
+  actuatorPort: number;
+  torque: number =0;
 
   constructor(actuator?:number, direction?:number, port?:number){
     this.actuator = actuator||0;
@@ -12,24 +12,6 @@ class Actuator {
 
   }
 
-  // constructor$0() {
-  //   this.actuator = 0;
-  //   this.direction = 0;
-  //   this.actuatorPort = 0;
-  // }
-  // constructor$3(actuator:number, direction:number, port:number) {
-  //   this.actuator = actuator;
-  //   this.direction = direction;
-  //   this.actuatorPort = port;
-  // }
-  // constructor(...args$) {
-  //   switch (args$.length) {
-  //     case 0:
-  //       return this.constructor$0(...args$);
-  //     case 3:
-  //       return this.constructor$3(...args$);
-  //   }
-  // }
   set_actuator(actuator:number) {
     this.actuator = actuator;
   }
