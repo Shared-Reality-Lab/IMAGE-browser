@@ -9,9 +9,8 @@ class Board {
 	// prev_data;
 
     constructor() {
-		this.encoder = new TextEncoder("utf-8");
+		this.encoder = new TextEncoder();
 		this.decoder = new TextDecoder("utf-8");
-		
 	}
 	
 	async init(){
