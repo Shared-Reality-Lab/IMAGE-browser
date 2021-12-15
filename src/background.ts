@@ -40,6 +40,26 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     });
 }
 
+async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
+    return {
+        "request_uuid": uuidv4(),
+        "timestamp": Math.round(Date.now() / 1000),
+        "url": message.url,
+        "coordinates": {
+                            "latitude": message.coordinates[0],
+                            "longitude": message.coordinates[1]
+                        },
+        "context": message.context,
+        "language": "en",
+        "capabilities": [],
+        "renderers": [
+            "ca.mcgill.a11y.image.renderer.Text",
+            "ca.mcgill.a11y.image.renderer.SimpleAudio",
+            "ca.mcgill.a11y.image.renderer.SegmentAudio"
+        ]
+    } as IMAGERequest;
+}
+
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
@@ -57,6 +77,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
+    console.debug("Handling message");
     let query: IMAGERequest;
     switch (message["type"]) {
         case "info":
@@ -66,10 +87,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
             break;
         case "resource":
         case "localResource":
+        case "mapResource":
             // Get response and open new window
             if (message["type"] === "resource") {
                 query = await generateQuery(message);
-            } else {
+            } else if (message["type"] === "mapResource") {
+                console.debug("Generating map query");
+                query = await generateMapQuery(message);
+            }else{
                 query = generateLocalQuery(message);
             }
             if (message["toRender"] === "full") {
@@ -94,7 +119,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     }
                 }).then((json: IMAGEResponse) => {
                     if (json["renderings"].length > 0) {
-                        responseMap.set(query["request_uuid"], json);
+                        responseMap.set(query["request_uuid"]!, json);
                         browser.windows.create({
                             type: "panel",
                             url: "info/info.html?" + query["request_uuid"]

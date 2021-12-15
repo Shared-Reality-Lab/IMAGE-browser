@@ -38,5 +38,9 @@
     "segmentAudioButton": {
         "message": "Play Segment",
         "description": "Play the selected audio segment."
+    },
+    "preprocessMap": {
+        "message": "Get Preprocessed Map Data",
+        "description": "Fetch preprocessed JSON data for a map without renderings"
     }
 }
