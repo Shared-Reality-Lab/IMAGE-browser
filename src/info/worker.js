@@ -6,16 +6,16 @@ import { Sensor } from "../hAPI/libraries/Sensor.ts";
 import { Pwm } from "../hAPI/libraries/Pwm.ts";
 import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
 
+// declaration of haply specific variables 
 var widgetOne;
 var pantograph;
 var widgetOneID = 5;
 var haplyBoard;
 
+var objectData = [] //stores the json info received from info.ts
+
 var angles = new Vector(0, 0);    
 var positions = new Vector(0, 0);
-
-var objectData = []
-
 var posEE = new Vector(0, 0); // end-effector x/y coords
 var convPosEE = new Vector(0, 0); // transformed end-effector coordinates
 var targetLoc = new Vector(0, 0); // location of target point
@@ -23,20 +23,13 @@ var force = new Vector(0, 0); // get force needed for torques
 var fEE = new Vector(0, 0);
 var threshold = 0.02;
 
-var posEELast =new Vector(0,0); 
-var velEE =new Vector(0,0);
-
-var b_EE = 10.0;
-var rEE = 0.005;
-var fEE = new Vector(0, 0);
-
 //for force shading
 var fEE_prev1 = new Vector(0, 0);
 var fEE_prev2 = new Vector(0, 0);
 var fEE_prev3 = new Vector(0, 0);
 var fEE_prev4 = new Vector(0, 0);
 
-var rEE = 0.006;
+var rEE = 0.006;// the radius of the end effector
 var fDamping = new Vector(0, 0);
 
 var fWall = new Vector(0, 0);
@@ -44,13 +37,13 @@ var kWall = 800; // N/m
 var penWall = new Vector(0, 0);
 
 var f = new Vector(0.05,0.001);
-var vib = false;
+var vib = false; //boolean to check if vibration condition has been met 
 
-let doneGuidance;
+let doneGuidance; //boolean to indicate we've iterated through all the points in an image
 
-var mode;
+var mode; // to track the status of the drop down menu
 
-var message_count=0;
+var message_count=0; //latch to make sure board is not intsantiated more than once
 
 class DetectedObject{
   constructor(text, centroid, coords) {
@@ -145,6 +138,7 @@ self.addEventListener("message", async function(e) {
       objectData: objectData
     }
 
+  // sending end effector position back to info.ts to update visuals    
     this.self.postMessage(data);
 
     //calculate and set torques
@@ -178,20 +172,20 @@ function inShape(coords,ee_pos) {
   }
 }
 
+// wall rendering
 function passiveGuidance() {
   console.log(posEE.x);
-    // let conv_posEE = new Vector(posEE.x * (-0.1/0.070)+ 0.7*2, (posEE.y- 0.022) *20);
-      // let conv_posEE = new Vector(posEE.x * (-0.5/0.070)+ 0.7, (posEE.y -0.022) / 0.078);
-      //let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *7.81);
-      // let conv_posEE = new Vector(posEE.x *-5+0.5, posEE.y *8.07-0.21);
+      //scaling the end effector position vector to match normalized coordinates from handler
       let conv_posEE = new Vector(posEE.x *5+0.5, posEE.y *8.07 -0.21);
-      console.log(convPosEE);
+
+      //declaration of comparision variables;
       var nearestx = 99.9;
       var nearesty = 99.9;
       var nearestObj = "";
       var x_line;
       var y_line;
 
+       // checking the distances vectros for each bounding box 
       for(let i = 0; i < objectData.length; i++)  {
         let ulx = (objectData[i].coords[0]); //upper-left x coord
         let uly = (objectData[i].coords[1]); // upper-left y coord
@@ -235,13 +229,7 @@ function passiveGuidance() {
               nearestObj = objName;
           }
         }
-
-         
-    
-
       }
-      // this.console.log(nearestObj);
-
 
       fWall.set(0,0);
       let threshold = 0.02;
@@ -284,11 +272,10 @@ function passiveGuidance() {
       fEE_prev1 = fEE.clone();
       fEE_prev2 = fEE_prev1.clone();
       fEE_prev3 = fEE_prev2.clone();
-      fEE_prev4 = fEE_prev3.clone();
-
-     
+      fEE_prev4 = fEE_prev3.clone();     
 }
 
+//vibrates if inside a bounding box
 function vib_mode(){
   vib = false;
   let conv_posEE = new Vector(posEE.x *5+0.5, posEE.y *8.07 -0.21);
@@ -313,12 +300,7 @@ function vib_mode(){
     fEE.set( f.multiply(f_coef * comp_coeff));
       console.log(fEE);
     }
-  }
-
- 
-
-    
-   
+  } 
   
 }
 

@@ -155,16 +155,15 @@ port.onMessage.addListener(async (message) => {
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
             
-            //TODO: set types
+            // variable declerations for visual components of haptics renderings
             let endEffector: canvasCircle;
             let border: canvasRectangle;
             let canvas: HTMLCanvasElement;
             let ctx: CanvasRenderingContext2D;
-            let raf: any;
             let posEE: vector;
             let deviceOrigin: vector;
             let xE, yE: number;
-            let x_trans = 100;
+            const x_trans = 100;
             let objectData: any;
             var firstCall: boolean = true;
 
@@ -180,7 +179,7 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            var array = ["Passive", 
+            var options = ["Passive", 
             "Active", 
             "Vibration"];
 
@@ -190,12 +189,12 @@ port.onMessage.addListener(async (message) => {
             contentDiv.appendChild(selectList);
 
             //Create and append the options
-            for (var i = 0; i < array.length; i++) {
+            for (var i = 0; i < options.length; i++) {
                 var option = document.createElement("option");
-                option.value = array[i];
-                option.text = array[i];
+                option.value = options[i];
+                option.text = options[i];
                 selectList.appendChild(option);
-}
+            }
 
             let btn = document.createElement("button");
             btn.id = "btn";
@@ -212,7 +211,7 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(document.createElement("br"));
             contentDiv.append(canvas);
             try{
-             ctx = canvas.getContext('2d');
+                ctx = canvas.getContext('2d');
             }
             catch{
                 console.log("failed to get 2D context!");
@@ -262,12 +261,13 @@ port.onMessage.addListener(async (message) => {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
                 updateAnimation();
-                raf = window.requestAnimationFrame(draw);
+                window.requestAnimationFrame(draw);
               }
 
 
               var rec:Array<any> = [];
               var centroids:Array<vector> = [];
+              // creating bounding boxes and centroid circles using the coordinates from haptics handler
               function create_rect()   {
                 for (var i = 0; i < objectData.length; i++) { 
 
@@ -285,6 +285,7 @@ port.onMessage.addListener(async (message) => {
                         width: objWidth,
                         height: objHeight,
                     });  
+                
                     centroids.push({
                         x: cx,
                         y: cy
@@ -292,6 +293,7 @@ port.onMessage.addListener(async (message) => {
                 }      
               }
 
+              // drawing the boudning boxes and centroids
               function draw_boundaries() {
 
                 for (var i = 0;i< rec.length; i++){
@@ -309,15 +311,14 @@ port.onMessage.addListener(async (message) => {
 
               function updateAnimation(){
     
-                // draw bounding boxes and centroids
+                // drawing bounding boxes and centroids
                 draw_boundaries();
                 border.draw();
-                xE = posEE.x;
-                yE = posEE.y;
 
-                xE = pixelsPerMeter * -xE;
-                yE = pixelsPerMeter * yE;
-
+                //scaling end effector position to canvas
+                xE = pixelsPerMeter* -posEE.x;
+                yE = pixelsPerMeter* posEE.y;
+        
                 // set position of virtual avatar in canvas
                 endEffector.x = deviceOrigin.x + xE - x_trans;
                 endEffector.y = deviceOrigin.y + yE - x_trans;
@@ -327,13 +328,7 @@ port.onMessage.addListener(async (message) => {
 
             endEffector.draw();
             
-            // document.onkeydown = function (e) {
-            //     e = e || window.event;
-            //     //if (e.key == 's') {
-            //     //    objIndex == objectData.length ? 0 : objIndex + 1;
-            // }; 
-            
-            // serial comms
+            // event listener for serial comm button
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
                 let port = navigator.serial.requestPort();
@@ -341,10 +336,9 @@ port.onMessage.addListener(async (message) => {
                         renderingData: data,
                         mode: selectList.value
                   });
-
+                  //checking for changes in drop down menu
                   selectList.onchange = function(){
                     console.log(selectList.value);
-                    // worker.terminate()
                     worker.postMessage({
                         renderingData: data,
                         mode: selectList.value
@@ -359,9 +353,10 @@ port.onMessage.addListener(async (message) => {
                     posEE.y = msg.data.positions.y;
                     objectData = msg.data.objectData;
 
+                    // a latch to call the refresh of the animation once after which the call is recursive in draw() function
                     if(firstCall) {
                         create_rect();
-                        raf = window.requestAnimationFrame(draw);
+                        window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
                 });
@@ -379,7 +374,7 @@ port.postMessage({
     "request_uuid": request_uuid
 });
 
-
+// scaling of coordiantes to canvas
 function img_to_world_frame(x1: number, y1: number) {
     var x = x1 * canvasWidth;
     var y = y1  * canvasHeight;
