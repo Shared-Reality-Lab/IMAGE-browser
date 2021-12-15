@@ -35,7 +35,6 @@
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
     "uuid": "^8.3.2",
-    "webextension-polyfill": "^0.8.0",
-    "web-serial":
+    "webextension-polyfill": "^0.8.0"
   }
 }
