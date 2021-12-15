@@ -1,45 +1,39 @@
 class Sensor {
-  constructor$0() {
-    this.encoder = 0;
-    this.direction = 0;
-    this.encoder = 0;
-    this.encoder_offset = 0;
+  encoder:number;
+  direction:number;
+  encoder_resolution: number;
+  encoder_offset: number;
+  value: number;
+  port:number;
+
+
+  constructor(encoder?:number, direction?:number, offset?:number, resolution?:number, port?:number){
+    this.encoder = encoder||0;
+    this.direction = direction||0;
+    this.encoder_offset = offset||0;
+    this.encoder_resolution = resolution||0;
     this.value = 0;
-    this.port = 0;
+    this.port = port||0;
+
   }
 
-  constructor$5(encoder, direction, offset, resolution, port) {
-    this.encoder = encoder;
-    this.direction = direction;
-    this.encoder_offset = offset;
-    this.encoder_resolution = resolution;
-    this.port = port;
-  }
-
-  constructor(...args$) {
-    switch (args$.length) {
-      case 0:
-        return this.constructor$0(...args$);
-      case 5:
-        return this.constructor$5(...args$);
-    }
-  }
-  set_encoder(encoder) {
+  
+  set_encoder(encoder:number) {
     this.encoder = encoder;
   }
-  set_direction(direction) {
+  set_direction(direction:number) {
     this.direction = direction;
   }
-  set_offset(offset) {
+  set_offset(offset:number) {
     this.encoder_offset = offset;
   }
-  set_resolution(resolution) {
+  set_resolution(resolution:number) {
     this.encoder_resolution = resolution;
   }
-  set_port(port) {
+  set_port(port:number) {
     this.port = port;
   }
-  set_value(value) {
+  set_value(value:number) {
     this.value = value;
   }
   get_encoder() {

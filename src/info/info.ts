@@ -171,21 +171,9 @@ port.onMessage.addListener(async (message) => {
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
 
-            const text = rendering["data"]["data"][0]["text"] as string;
-            const imageSrc = rendering["data"]["image"] as string;
-            // const img = rendering["data"]["image"] as string;
+             const imageSrc = rendering["data"]["image"] as string;
             const data = rendering["data"]["data"] as Array<JSON>;
-            // for (let i=0; i<data.length; i++){
-            //     var length_name= names.push(rendering["data"]["data"][i]["text"] as string);
-            //     var length_cent = centroids.push(rendering["data"]["data"][i]["centroids"] as Array<Number>);
-            //     // length = coords.push(rendering["data"]["data"][i]["coords"] as Array<Number>);
-            // }
-            
-            // console.log(centroids[1]);
-            // console.log(names[1]);
-            // console.log(data.length);
-            // console.log(text);
-            // console.log(img);
+
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
@@ -195,16 +183,26 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            const p = document.createElement("p");
-            p.textContent = text;
-            contentDiv.append(p);
-
             let btn = document.createElement("button");
             btn.id = "btn";
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-    
+            const canvas:HTMLCanvasElement = document.createElement('canvas');
+            canvas.id = "main";
+            canvas.width = 800;
+            canvas.height = 500;
+            canvas.style.zIndex = "8";
+            canvas.style.position = "absolute";
+            canvas.style.border = "1px solid";
+            contentDiv.append(document.createElement("br"));
+            contentDiv.append(canvas);
+            const res = canvas.getContext('2d');
+            if (!res || !(res instanceof CanvasRenderingContext2D)) {
+                throw new Error('Failed to get 2D context');
+            }
+            const ctx: CanvasRenderingContext2D = res;
+
 
             let worker;
             
@@ -226,21 +224,6 @@ port.onMessage.addListener(async (message) => {
                 x: worldPixelWidth / 2,
                 y: 0
             };
-            // TODO: fix canvas positioning
-            
-            canvas = document.createElement('canvas');
-            canvas.id = "main";
-            canvas.width = 800;
-            canvas.height = 500;
-            canvas.style.zIndex = "8";
-            canvas.style.position = "absolute";
-            canvas.style.border = "1px solid";
-            canvas.style.left = "100px";
-            canvas.style.top = "300px";  
-            
-            contentDiv.append(canvas);
-
-            ctx = canvas.getContext('2d');
 
             var img = new Image();
             img.src = imageSrc;
@@ -279,7 +262,7 @@ port.onMessage.addListener(async (message) => {
               }
 
 
-              var rec = [];
+              var rec:Array<any> = [];
               function create_rect()   {
                 for (var i = 0; i < objectData.length; i++) {
                     let [ulx, uly] = to_haply_frame(objectData[i].coords[0], objectData[i].coords[1]); 
@@ -299,11 +282,9 @@ port.onMessage.addListener(async (message) => {
               function draw_rect(){
                 for(var i=0;i<rec.length;i++){
                     var s=rec[i];
-                    // ctx.fillRect(s.x,s.y,s.width,s.height);
                     ctx.strokeStyle="red";
                     ctx.strokeRect(s.x,s.y,s.width,s.height);
                 }   
-                // console.log("drew all my boxes!");
               }
 
               function updateAnimation(){
@@ -317,8 +298,6 @@ port.onMessage.addListener(async (message) => {
 
                 xE = pixelsPerMeter * -xE;
                 yE = pixelsPerMeter * yE;
-                console.log("x coord in the main script: ");
-                console.log(xE);
 
                 endEffector.x = deviceOrigin.x +xE-x_trans;
                 endEffector.y = deviceOrigin.y+yE;
@@ -332,7 +311,6 @@ port.onMessage.addListener(async (message) => {
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
                 let port = navigator.serial.requestPort();
-                // worker.postMessage("test");
                 if(canReceive){
                     worker.postMessage(data);
                     canReceive = false;
@@ -340,8 +318,7 @@ port.onMessage.addListener(async (message) => {
                 
                
                 worker.addEventListener("message", function(msg){
-                    // console.log("got a message from the worker");
-
+ 
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
                     objectData = msg.data.objectData;
@@ -351,7 +328,7 @@ port.onMessage.addListener(async (message) => {
                         raf = window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
-                    // console.log(posBall.y);
+                    
                 });
             });
 

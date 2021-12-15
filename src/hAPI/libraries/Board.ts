@@ -1,14 +1,15 @@
 class Board {
   
-	port;
-	reader;
-	writer;
-	encoder;
-	decoder;
-	prev_data;
+	port:any;
+	reader:any;
+	writer:any;
+	encoder:any;
+	decoder:any;
+	
+	// prev_data;
 
     constructor() {
-		this.encoder = new TextEncoder("utf-8");
+		this.encoder = new TextEncoder();
 		this.decoder = new TextDecoder("utf-8");
 	}
 	
@@ -34,16 +35,16 @@ class Board {
 		  }
 	}
 
-    async transmit(communicationType, deviceID, bData, fData) {
+    async transmit(communicationType:number, deviceID:number, bData:Uint8Array, fData:Float32Array) {
 
 		//bData length is 8, fData length is 4
-        let outData = new Uint8Array(2 + bData.length + 4 * fData.length);
-		let segments = new Uint8Array(4);
+        let outData:Uint8Array = new Uint8Array(2 + bData.length + 4 * fData.length);
+		let segments:Uint8Array = new Uint8Array(4);
 		
 		outData[0] = communicationType;
 		outData[1] = deviceID;
 
-		 this.deviceID = deviceID;
+		//  this.deviceID = deviceID;
 		
 		 this.arraycopy(bData, 0, outData, 2, bData.length);
 		
@@ -58,12 +59,12 @@ class Board {
 		return;
     }
 
-    async receive(communicationType, deviceID, expected) {
+    async receive(communicationType:number, deviceID:number, expected:number) {
 
 	let segments = new Uint8Array(4);
 	
 	let inData = new Uint8Array(1 + 4 * expected);
-	let data = new Float32Array(expected);	
+	let data:Float32Array = new Float32Array(expected);	
 
 	try {
 		const readerData = await this.reader.read();
@@ -90,6 +91,7 @@ class Board {
 	  } catch (err) {
 		const errorMessage = `error reading data: ${err}`;
 		console.error(errorMessage);
+		return data;
 	  }
 }
 
@@ -107,17 +109,17 @@ class Board {
 		let communicationType = 0;
 		let deviceID = 0;
 		let bData = new Uint8Array(0);
-		let fData = new Float32Array(0);
+		let fData:Float32Array = new Float32Array(0);
 		
 		this.transmit(communicationType, deviceID, bData, fData);
 	}
 
-    set_buffer(length) {
-	}
+    // set_buffer(length) {
+	// }
 
-    FloatToBytes(val){
+    FloatToBytes(val:number){
 
-		let segments = new ArrayBuffer(4);
+		let segments:Uint8Array = new Uint8Array(4);
 		let temp = this.floatToRawIntBits(val);
 		segments[3] = ((temp >> 24) & 0xff);
 		segments[2] = ((temp >> 16) & 0xff);
@@ -128,7 +130,7 @@ class Board {
 	}
 
 
-    BytesToFloat(segment){
+    BytesToFloat(segment:Uint8Array){
   
 		let temp = 0;
   
@@ -142,7 +144,7 @@ class Board {
 		return val;
 	}
 	
-	floatToRawIntBits(f)
+	floatToRawIntBits(f:number)
 	{
 		var buf = new ArrayBuffer(4);
 		(new Float32Array(buf))[0] = f;
@@ -150,7 +152,7 @@ class Board {
 	}
 
 	//JS version of intBitsToFloat
-	intBitsToFloat(f) {
+	intBitsToFloat(f:number) {
 		var int8 = new Int8Array(4);
 		var int32 = new Int32Array(int8.buffer, 0, 1);
 		int32[0] = f;
@@ -158,11 +160,12 @@ class Board {
 		return float32[0];
 	  }	
   
-    arraycopy(src, srcPos, dst, dstPos, length) {
+    arraycopy(src:Uint8Array, srcPos:number, dst:Uint8Array, dstPos:number, length:number) {
     while (length--) dst[dstPos++] = src[srcPos++]; return dst;
 }
   serverConnected() {
-  print("Connected to server");
+  console.log("Connected to server");
+//   print("Connected to server");
 }
     
 }

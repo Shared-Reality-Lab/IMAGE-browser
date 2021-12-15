@@ -1,6 +1,24 @@
 
 class Pantograph
 {
+    l:number;
+    L:number;
+    d:number;
+    th1:number;
+    th2:number;
+    tau1:number;
+    tau2:number;
+    f_x:number;
+    f_y:number;
+    x_E:number;
+    y_E:number;
+    pi:number;
+    JT11:number;
+    JT12:number;
+    JT21:number;
+    JT22:number;
+    gain:number;
+
     constructor() {
         this.l = 0.07;
         this.L = 0.09;
@@ -23,7 +41,7 @@ class Pantograph
         this.gain = 1.0;      
     }
 
-    torqueCalculation(force) {
+    torqueCalculation(force:Float32Array) {
         this.f_x = force[0];
 		this.f_y = force[1];
 
@@ -34,7 +52,7 @@ class Pantograph
 		this.tau2 = this.tau2*this.gain;
     }
 
-    forwardKinematics(angles) {
+    forwardKinematics(angles:Float32Array) {
 
     let l1 = this.l;
     let l2 = this.l;
@@ -142,14 +160,14 @@ class Pantograph
 	}
 	
 	
-	set_mechanism_parameters(parameters) {
+	set_mechanism_parameters(parameters:Float32Array) {
 		this.l = parameters[0];
 		this.L = parameters[1];
 		this.d = parameters[2];
 	}
 	
 	
-	set_sensor_data(data){
+	set_sensor_data(data:Float32Array){
 	}
 	
 	get_coordinate(){
