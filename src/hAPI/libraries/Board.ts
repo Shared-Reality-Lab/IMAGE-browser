@@ -13,7 +13,7 @@ class Board {
 		this.decoder = new TextDecoder("utf-8");
 	}
 	async init(){
-		if ('serial' in navigator) {
+		if ('serial' in navigator as any) {
 			try {
 			  this.port = (await navigator.serial.getPorts())[0];
 			  await this.port.open({ baudRate: 57600}); // `baudRate` was `baudrate` in previous versions.
