@@ -1,38 +1,42 @@
-import { Actuator } from "./Actuator.ts";
-import { Sensor } from "./Sensor.ts";
-import { Pwm } from "./Pwm.ts";
+// import { Actuator } from "./Actuator.ts";
+// import { Sensor } from "./Sensor.ts";
+import { Pwm } from "./Pwm";
+import { Actuator } from "./Actuator";
+import { Sensor } from "./Sensor";
+import { Board } from "./Board";
+import { Pantograph } from "./Pantograph";
 
 class Device{
 
-    deviceLink;
+    deviceLink:Board;
 
-	deviceID;
-	mechanism;
+	deviceID:number;
+	mechanism:any;
 	
-	communicationType;
+	communicationType:number|undefined;
 	
 	actuatorsActive    = 0;
-	motors             = [];
+	motors: Array<Actuator>             = [];
 	
 	encodersActive     = 0;
-	encoders           = [];
+	encoders:Array<Sensor>           = [];
 	
-	sensorsActive      = 0;
-	sensors            = [];
+	sensorsActive:number      = 0;
+	sensors:Array<Sensor>            = [];
 	
-	pwmsActive		    = 0;
-    pwms 			    = [];
+	pwmsActive:number		    = 0;
+    pwms:Array<Pwm> 			    = [];
     
     actuatorPositions  = [0, 0, 0, 0];
     encoderPositions   = [0, 0, 0, 0];
     
-    constructor(deviceID, deviceLink){
+    constructor(deviceID:number, deviceLink:Board){
         this.deviceID = deviceID;
 		this.deviceLink = deviceLink;
 
     }
 
-    add_actuator(actuator, rotation, port){
+    add_actuator(actuator:number, rotation:number, port:number){
         let error = false;
         
             if(port < 1 || port > 4){
@@ -73,7 +77,7 @@ class Device{
             }
         }
     
-    add_encoder(encoder, rotation, offset, resolution, port){
+    add_encoder(encoder:number, rotation:number, offset:number, resolution:number, port:number){
         let error = false;
     
         if(port < 1 || port > 4){
@@ -115,14 +119,14 @@ class Device{
         }
     }
 
-    add_analog_sensor(pin) {
+    add_analog_sensor(pin:string) {
         // set sensor to be size zero
         let error = false;
         
         let port = pin.charAt(0);
         let number = pin.substring(1);
         
-        let value = Integer.parseInt(number);
+        let value = parseInt(number);
         value = value + 54;
         
         for(let i = 0; i < this.sensorsActive; i++){
@@ -138,7 +142,8 @@ class Device{
         }
         
         if(!error) {
-            let temp = Arrays.copyOf(this.sensors, this.sensors.length + 1);
+            // let temp = Arrays.copyOf(this.sensors, this.sensors.length + 1);
+            let temp = this.sensors//, this.sensors.length + 1);
             temp[this.sensorsActive] = new Sensor();
             temp[this.sensorsActive].set_port(value);
             this.sensors = temp;
@@ -146,7 +151,7 @@ class Device{
         }
     }
     
-    add_pwm_pin(pin) {
+    add_pwm_pin(pin:number) {
             
         let error = false;
         
@@ -168,7 +173,8 @@ class Device{
         
         
         if(!error){
-            const temp = Arrays.copyOf(this.pwms, this.pwms.length + 1);
+            // const temp = Arrays.copyOf(this.pwms, this.pwms.length + 1);
+            const temp = this.pwms; //, this.pwms.length + 1);
             temp[this.pwmsActive] = new Pwm();
             temp[this.pwmsActive].set_pin(pin);
             this.pwms = temp;
@@ -176,7 +182,7 @@ class Device{
         }
     }
     
-    set_mechanism (mechanism){
+    set_mechanism (mechanism:any){
         console.log(mechanism);
         this.mechanism = mechanism;
     }
@@ -189,12 +195,12 @@ class Device{
         
         let encoderParameters = new Float32Array();
     
-        let encoderParams = [];
-        let motorParams = [];
-        let sensorParams = [];
-        let pwmParams = [];
+        let encoderParams:Uint8Array;
+        let motorParams:Uint8Array;
+        let sensorParams:Uint8Array;
+        let pwmParams:Uint8Array;
 
-        console.log(encoderParams.length);
+        // console.log(encoderParams.length);
         
         if(this.encodersActive > 0){	
             encoderParams = new Uint8Array(this.encodersActive + 1);
@@ -274,14 +280,15 @@ class Device{
         
         
         if(this.sensorsActive > 0){
-            sensorParams = new Uint8Array[this.sensorsActive + 1];
+            sensorParams = new Uint8Array(this.sensorsActive + 1);
             sensorParams[0] = this.sensorsActive;
             
             for(let i = 0; i < this.sensorsActive; i++){
                 sensorParams[i+1] = this.sensors[i].get_port();
             }
             
-            Arrays.sort(sensorParams);
+            // Arrays.sort(sensorParams);
+            sensorParams.sort();
             
             for(let i = 0; i < this.sensorsActive; i++){
                 this.sensors[i].set_port(sensorParams[i+1]);
@@ -305,7 +312,8 @@ class Device{
         temp[i] = this.pwms[i].get_pin();
       }
       
-      Arrays.sort(temp);
+    //   Arrays.sort(temp);
+    temp.sort();
       
       for(let i = 0; i < this.pwmsActive; i++){
         this.pwms[i].set_pin(temp[i]);
@@ -327,7 +335,7 @@ class Device{
         this.deviceLink.transmit(this.communicationType, this.deviceID, encMtrSenPwm, encoderParameters);	
     }
 
-    actuator_assignment(actuator, port){
+    actuator_assignment(actuator:number, port:number){
 		if(this.actuatorPositions[port - 1] > 0){
 			console.log("warning, double check actuator port usage");
 		}
@@ -336,14 +344,14 @@ class Device{
 	}
 
     
-    arraycopy(src, srcPos, dst, dstPos, length) {
+    arraycopy(src:Uint8Array, srcPos:number, dst:Uint8Array, dstPos:number, length:number) {
         while (length--) dst[dstPos++] = src[srcPos++]; return dst;
     }
 
  /**
   * assigns encoder positions based on actuator port
   */	
-	encoder_assignment(encoder, port){
+	encoder_assignment(encoder:number, port:number){
 		
 		if(this.encoderPositions[port - 1] > 0){
 			console.log("warning, double check encoder port usage");
@@ -378,11 +386,11 @@ class Device{
     
     device_read_request (){
         let communicationType = 2;
-        const pulses = new Uint8Array(pwmsActive);
-        const encoderRequest = new Float32Array(actuatorsActive);
+        const pulses = new Uint8Array(this.pwmsActive);
+        const encoderRequest = new Float32Array(this.actuatorsActive);
         
-    for(let i = 0; i < pwms.length; i++){
-      pulses[i] = pwms[i].get_value();
+    for(let i = 0; i < this.pwms.length; i++){
+      pulses[i] = this.pwms[i].get_value();
     }
     
         let j = 0;
@@ -393,7 +401,7 @@ class Device{
             }
         }
         
-        deviceLink.transmit(communicationType, this.deviceID, pulses, encoderRequest);
+        this.deviceLink.transmit(communicationType, this.deviceID, pulses, encoderRequest);
     }
     
     device_write_torques(){
@@ -416,7 +424,7 @@ class Device{
         this.deviceLink.transmit(communicationType, this.deviceID, pulses, deviceTorques);
     }
     
-    set_pwm_pulse (pin, pulse){
+    set_pwm_pulse (pin:number, pulse:number){
         
         for(let i = 0; i < this.pwms.length; i++){
           if(this.pwms[i].get_pin() == pin){
@@ -425,7 +433,7 @@ class Device{
         }
       }	
     
-    get_pwm_pulse (pin){
+    get_pwm_pulse (pin:number){
        
         let pulse = 0;
         
@@ -458,14 +466,14 @@ class Device{
         return data;
     }
     
-    get_device_position (angles){
+    get_device_position (angles: Float32Array){
         this.mechanism.forwardKinematics(angles);
         var endEffectorPosition = this.mechanism.get_coordinate();
         
         return endEffectorPosition;
     }
     
-    set_device_torques (forces){
+    set_device_torques (forces: Float32Array){
         this.mechanism.torqueCalculation(forces);
         var torques = this.mechanism.get_torque();
 

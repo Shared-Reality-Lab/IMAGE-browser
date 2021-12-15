@@ -5,6 +5,9 @@ import "./info.scss";
 import browser from "webextension-polyfill";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
+import { vector } from '../types/vector';
+import { canvasCircle } from '../types/canvas-circle';
+import { canvasRectangle } from '../types/canvas-rectangle';
 
 let request_uuid = window.location.search.substring(1);
 let renderings: IMAGEResponse;
@@ -153,14 +156,14 @@ port.onMessage.addListener(async (message) => {
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
             
             //TODO: set types
-            let endEffector: any;
-            let border: any;
-            let canvas: any;
-            let ctx: any;
+            let endEffector: canvasCircle;
+            let border: canvasRectangle;
+            let canvas: HTMLCanvasElement;
+            let ctx: CanvasRenderingContext2D;
             let raf: any;
-            let posEE: any;
-            let deviceOrigin: any;
-            let xE, yE: any;
+            let posEE: vector;
+            let deviceOrigin: vector;
+            let xE, yE: number;
             let x_trans = 100;
             let objectData: any;
             var firstCall: boolean = true;
@@ -208,8 +211,12 @@ port.onMessage.addListener(async (message) => {
             canvas.style.border = "1px solid";
             contentDiv.append(document.createElement("br"));
             contentDiv.append(canvas);
-            ctx = canvas.getContext('2d');
-
+            try{
+             ctx = canvas.getContext('2d');
+            }
+            catch{
+                console.log("failed to get 2D context!");
+            }
             var img = new Image();
             img.src = imageSrc;
 
@@ -259,8 +266,8 @@ port.onMessage.addListener(async (message) => {
               }
 
 
-              var rec = [];
-              var centroids = [];
+              var rec:Array<any> = [];
+              var centroids:Array<vector> = [];
               function create_rect()   {
                 for (var i = 0; i < objectData.length; i++) { 
 

@@ -26,11 +26,13 @@
     "@parcel/validator-typescript": "^2.0.0-beta.3.1",
     "@types/uuid": "^8.3.3",
     "@types/webextension-polyfill": "^0.8.2",
+    "@types/w3c-web-serial": "^1.0.2" ,
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.0.0-beta.3.1",
     "web-ext": "^6.0.0"
   },
   "dependencies": {
+    "@types/w3c-web-serial": "^1.0.2",
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
     "uuid": "^8.3.2",

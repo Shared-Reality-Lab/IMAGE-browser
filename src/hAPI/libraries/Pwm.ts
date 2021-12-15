@@ -1,10 +1,13 @@
 class Pwm {
+  pin:number |undefined;
+  value:number |undefined;
+
   constructor$0() {
     this.pin = 0;
     this.value = 0;
   }
 
-  constructor$2(pin, pulseWidth) {
+  constructor$2(pin:number, pulseWidth:number) {
     this.pin = pin;
     if (pulseWidth > 100.0) {
       this.value = 255;
@@ -12,7 +15,7 @@ class Pwm {
       this.value = (pulseWidth * 255 / 100);
     }
   }
-  constructor(...args$) {
+  constructor(...args$:any[]) {
     switch (args$.length) {
       case 0:
         return this.constructor$0(...args$);
@@ -20,10 +23,10 @@ class Pwm {
         return this.constructor$2(...args$);
     }
   }
-  set_pin(pin) {
+  set_pin(pin:number) {
     this.pin = pin;
   }
-  set_pulse(percent) {
+  set_pulse(percent:number) {
     if (percent > 100.0) {
       this.value = 255;
     } else {
@@ -41,8 +44,11 @@ class Pwm {
     return this.value;
   }
   get_pulse() {
+    if(this.value != undefined){
     let percent = this.value * 100 / 255;
     return percent;
+    } else
+      return -1;
   }
 }
 
