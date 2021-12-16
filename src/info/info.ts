@@ -129,8 +129,8 @@ port.onMessage.addListener(async (message) => {
                 return audioCtx.decodeAudioData(buffer);
             }).catch(e => { console.error(e); throw e; });
 
-            let currentOffset: number|undefined;
-            let currentDuration: number|undefined;
+            let currentOffset: number | undefined;
+            let currentDuration: number | undefined;
 
             select.addEventListener("input", (e) => {
                 const evt = e as InputEvent;
@@ -154,22 +154,25 @@ port.onMessage.addListener(async (message) => {
         }
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
-            
-            // variable declerations for visual components of haptics renderings
+
             let endEffector: canvasCircle;
             let border: canvasRectangle;
-            // let canvas: HTMLCanvasElement;
-            // let ctx: CanvasRenderingContext2D;
+
+            // end effector x/y coordinates
             let posEE: vector;
-            let deviceOrigin: vector;
+            // transformed canvas coordinates
             let xE, yE: number;
-            const x_trans = 100;
+            let deviceOrigin: vector;
+            // virtual end effector avatar offset
+            const offset = 100;
             let objectData: any;
             var firstCall: boolean = true;
 
+            // get data from the handler
             const imageSrc = rendering["data"]["image"] as string;
             const data = rendering["data"]["data"] as Array<JSON>;
 
+            // add rendering button
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
@@ -179,9 +182,9 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            var options = ["Passive", 
-            "Active", 
-            "Vibration"];
+            var options = ["Passive",
+                "Active",
+                "Vibration"];
 
             //Create and append select list
             var selectList = document.createElement("select");
@@ -201,7 +204,8 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
-            const canvas:HTMLCanvasElement = document.createElement('canvas');
+            // set canvas properties
+            const canvas: HTMLCanvasElement = document.createElement('canvas');
             canvas.id = "main";
             canvas.width = 800;
             canvas.height = 500;
@@ -215,17 +219,13 @@ port.onMessage.addListener(async (message) => {
                 throw new Error('Failed to get 2D context');
             }
             const ctx: CanvasRenderingContext2D = res;
-            // try{
-            //     ctx = canvas.getContext('2d');
-            // }
-            // catch{
-            //     console.log("failed to get 2D context!");
-            // }
+
             var img = new Image();
             img.src = imageSrc;
 
             let worker;
 
+            // world resolution properties
             const worldPixelWidth = 1000;
             const pixelsPerMeter = 4000;
 
@@ -234,17 +234,19 @@ port.onMessage.addListener(async (message) => {
                 y: 0
             };
 
+            // initial position of end effector avatar
             deviceOrigin = {
                 x: worldPixelWidth / 2,
                 y: 0
             };
 
             border = {
-                draw: function() {
+                draw: function () {
                     ctx.strokeRect(0, 0, canvas.width, canvas.height);
                 }
             };
 
+            // draw end effector
             endEffector = {
                 x: canvas.width / 2,
                 y: 0,
@@ -252,7 +254,7 @@ port.onMessage.addListener(async (message) => {
                 vy: 2,
                 radius: 8,
                 color: 'red',
-                draw: function() {
+                draw: function () {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
                     ctx.closePath();
@@ -263,94 +265,95 @@ port.onMessage.addListener(async (message) => {
             };
 
             function draw() {
-                ctx.clearRect(0,0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 updateAnimation();
                 window.requestAnimationFrame(draw);
-              }
+            }
 
-
-              var rec:Array<any> = [];
-              var centroids:Array<vector> = [];
-              // creating bounding boxes and centroid circles using the coordinates from haptics handler
-              function create_rect()   {
-                for (var i = 0; i < objectData.length; i++) { 
+            var rec: Array<any> = [];
+            var centroids: Array<vector> = [];
+            // creating bounding boxes and centroid circles using the coordinates from haptics handler
+            function createRect() {
+                for (var i = 0; i < objectData.length; i++) {
 
                     // transform coordinates into haply frame of reference
-                    let [ulx, uly] = img_to_world_frame(objectData[i].coords[0], objectData[i].coords[1]); 
-                    let [lrx, lry] = img_to_world_frame(objectData[i].coords[2], objectData[i].coords[3]);
-                    let [cx, cy] = img_to_world_frame(objectData[i].centroid[0], objectData[i].centroid[1]);
+                    // horizontal/vertical positions
+                    let [uLX, uLY] = imgToWorldFrame(objectData[i].coords[0], objectData[i].coords[1]);
+                    let [lRX, lRY] = imgToWorldFrame(objectData[i].coords[2], objectData[i].coords[3]);
+                    // centroid
+                    let [cX, cY] = imgToWorldFrame(objectData[i].centroid[0], objectData[i].centroid[1]);
 
-                    let objWidth = Math.abs(ulx - lrx);
-                    let objHeight = Math.abs(uly - lry);
+                    let objWidth = Math.abs(uLX - lRX);
+                    let objHeight = Math.abs(uLY - lRY);
 
                     rec.push({
-                        x: ulx,
-                        y: uly,
+                        x: uLX,
+                        y: uLY,
                         width: objWidth,
                         height: objHeight,
-                    });  
-                
+                    });
+
                     centroids.push({
-                        x: cx,
-                        y: cy
-                    })  
-                }      
-              }
+                        x: cX,
+                        y: cY
+                    })
+                }
+            }
 
-              // drawing the boudning boxes and centroids
-              function draw_boundaries() {
+            function drawBoundaries() {
 
-                for (var i = 0;i< rec.length; i++){
+                for (var i = 0; i < rec.length; i++) {
                     var s = rec[i];
                     ctx.strokeStyle = "red";
                     ctx.strokeRect(s.x, s.y, s.width, s.height);
-                
+
                     var c = centroids[i];
                     ctx.beginPath();
                     ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
                     ctx.strokeStyle = "white";
                     ctx.stroke();
-                }   
-              }
+                }
+            }
 
-              function updateAnimation(){
-    
+            function updateAnimation() {
+
                 // drawing bounding boxes and centroids
-                draw_boundaries();
+                drawBoundaries();
                 border.draw();
 
                 //scaling end effector position to canvas
-                xE = pixelsPerMeter* -posEE.x;
-                yE = pixelsPerMeter* posEE.y;
-        
+                xE = pixelsPerMeter * -posEE.x;
+                yE = pixelsPerMeter * posEE.y;
+
                 // set position of virtual avatar in canvas
-                endEffector.x = deviceOrigin.x + xE - x_trans;
-                endEffector.y = deviceOrigin.y + yE - x_trans;
+                endEffector.x = deviceOrigin.x + xE - offset;
+                endEffector.y = deviceOrigin.y + yE - offset;
                 endEffector.draw();
-             
-              }
+
+            }
 
             endEffector.draw();
-            
+
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
-                const worker = new Worker(browser.runtime.getURL("./info/worker.js"), {type: "module"});
+                const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
                 let port = navigator.serial.requestPort();
+                worker.postMessage({
+                    renderingData: data,
+                    mode: selectList.value
+                });
+                //checking for changes in drop down menu
+                selectList.onchange = function () {
                     worker.postMessage({
                         renderingData: data,
                         mode: selectList.value
-                  });
-                  //checking for changes in drop down menu
-                  selectList.onchange = function(){
-                    console.log(selectList.value);
-                    worker.postMessage({
-                        renderingData: data,
-                        mode: selectList.value
-                  });
-                };  
-                
-                worker.addEventListener("message", function(msg){
+                    });
+                };
+
+                worker.addEventListener("message", function (msg) {
+
+                    // we've selected the COM port
                     btn.style.visibility = 'hidden';
 
                     // return end-effector x/y positions and objectData for updating the canvas
@@ -358,15 +361,15 @@ port.onMessage.addListener(async (message) => {
                     posEE.y = msg.data.positions.y;
                     objectData = msg.data.objectData;
 
-                    // a latch to call the refresh of the animation once after which the call is recursive in draw() function
-                    if(firstCall) {
-                        create_rect();
+                    // latch to call the refresh of the animation once after which the call is recursive in draw() function
+                    if (firstCall) {
+                        createRect();
                         window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
                 });
             });
-        }        
+        }
 
         document.body.append(container);
         count++;
@@ -379,9 +382,9 @@ port.postMessage({
     "request_uuid": request_uuid
 });
 
-// scaling of coordiantes to canvas
-function img_to_world_frame(x1: number, y1: number) {
+// scaling of coordinates to canvas
+function imgToWorldFrame(x1: number, y1: number) {
     var x = x1 * canvasWidth;
-    var y = y1  * canvasHeight;
+    var y = y1 * canvasHeight;
     return [x, y];
-  }
+}
