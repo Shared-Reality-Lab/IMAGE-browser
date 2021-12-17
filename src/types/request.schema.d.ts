@@ -6,29 +6,42 @@
  */
 
 /**
- * Request for renderings of an image given certain conditions.
+ * Request for renderings of an image or a map given certain conditions.
  */
-export interface IMAGERequest {
+export type IMAGERequest = IMAGERequest1 & IMAGERequest2;
+export type IMAGERequest2 = {
+  [k: string]: unknown;
+};
+
+export interface IMAGERequest1 {
   /**
    * UUID v4 identifying the request.
    */
-  request_uuid: string;
+  request_uuid?: string;
   /**
    * Time the preprocessor was run in Unix time.
    */
-  timestamp: number;
+  timestamp?: number;
   /**
    * Data URL of the base 64 image being handled.
    */
-  image: string;
+  image?: string;
   /**
    * The width and height of the image as requested in pixels.
    */
-  dimensions: [number, number];
+  dimensions?: [number, number];
+  /**
+   * WGS 84 representation of the location identified in a map
+   */
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+    [k: string]: unknown;
+  };
   /**
    * Serialized XML of the image node and possibly related nodes.
    */
-  context: string;
+  context?: string;
   /**
    * URL of the page the request was generated from.
    */
@@ -36,15 +49,15 @@ export interface IMAGERequest {
   /**
    * Language requested by the user as ISO 639-1.
    */
-  language: string;
+  language?: string;
   /**
    * The capabilities available to handlers based on the user, hardware, and software.
    */
-  capabilities: string[];
+  capabilities?: string[];
   /**
    * Renderers supported by the client.
    */
-  renderers: string[];
+  renderers?: string[];
   /**
    * Additional data added by preprocessors AFTER the request is sent. Preprocessor data are indexed via a reverse domain name identifier
    */
