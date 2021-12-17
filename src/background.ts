@@ -5,8 +5,18 @@ import { IMAGERequest } from "./types/request.schema";
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
+var serverUrl : RequestInfo;
 
-// TODO Update hard coded values
+function getAllStorageSyncData () {
+    return browser.storage.sync.get(["inputUrl"])
+      .then(result => {
+        if (browser.runtime.lastError) { 
+        console.error(browser.runtime.lastError);
+        }
+        return result["inputUrl"];
+      })          
+  };
+
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
@@ -41,6 +51,26 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     });
 }
 
+async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
+    return {
+        "request_uuid": uuidv4(),
+        "timestamp": Math.round(Date.now() / 1000),
+        "url": message.url,
+        "coordinates": {
+                            "latitude": message.coordinates[0],
+                            "longitude": message.coordinates[1]
+                        },
+        "context": message.context,
+        "language": "en",
+        "capabilities": [],
+        "renderers": [
+            "ca.mcgill.a11y.image.renderer.Text",
+            "ca.mcgill.a11y.image.renderer.SimpleAudio",
+            "ca.mcgill.a11y.image.renderer.SegmentAudio"
+        ]
+    } as IMAGERequest;
+}
+
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
@@ -59,6 +89,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
+    console.debug("Handling message");
     let query: IMAGERequest;
     switch (message["type"]) {
         case "info":
@@ -68,52 +99,63 @@ async function handleMessage(p: Runtime.Port, message: any) {
             break;
         case "resource":
         case "localResource":
+        case "mapResource":
             // Get response and open new window
             if (message["type"] === "resource") {
                 query = await generateQuery(message);
-            } else {
+            } else if (message["type"] === "mapResource") {
+                console.debug("Generating map query");
+                query = await generateMapQuery(message);
+            }else{
                 query = generateLocalQuery(message);
             }
             if (message["toRender"] === "full") {
-                fetch("https://image.a11y.mcgill.ca/render", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify(query)
-                }).then(async (resp) => {
-                    if (resp.ok) {
-                        return resp.json();
-                    } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/http_error.html"
-                        });
-                        console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
-                        const textContent = await resp.text();
-                        console.error(textContent);
-                        throw new Error(textContent);
-                    }
-                }).then((json: IMAGEResponse) => {
-                    if (json["renderings"].length > 0) {
-                        responseMap.set(query["request_uuid"], json);
-                        browser.windows.create({
-                            type: "panel",
-                            url: "info/info.html?" + query["request_uuid"]
-                        });
-                    } else {
-                        browser.windows.create({
-                            type: "panel",
-                            url: "errors/no_renderings.html"
-                        });
-                        // throw new Error("Received no renderings from test URL!");
-                    }
-                }).catch(err => {
-                    console.error(err);
+                await getAllStorageSyncData().then(async items => {
+                    serverUrl = items;
+                    fetch(serverUrl + "render", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify(query)
+                    }).then(async (resp) => {
+                        if (resp.ok) {
+                            return resp.json();
+                        } else {
+                            browser.windows.create({
+                                type: "panel",
+                                url: "errors/http_error.html"
+                            });
+                            console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+                            const textContent = await resp.text();
+                            console.error(textContent);
+                            throw new Error(textContent);
+                        }
+                    }).then((json: IMAGEResponse) => {
+                        if (json["renderings"].length > 0) {
+                            if(query["request_uuid"] !== undefined){
+                                responseMap.set(query["request_uuid"], json);  
+                                browser.windows.create({
+                                    type: "panel",
+                                    url: "info/info.html?" + query["request_uuid"]
+                                });
+                            }
+                            // How to handle if request_uuid was undefined??
+                        } else {
+                            browser.windows.create({
+                                type: "panel",
+                                url: "errors/no_renderings.html"
+                            });
+                            // throw new Error("Received no renderings from test URL!");
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                    });
                 });
-            } else if (message["toRender"] === "preprocess") {
+            } 
+            else if (message["toRender"] === "preprocess") {
                 browser.downloads.download({
-                    url: "https://image.a11y.mcgill.ca/render/preprocess",
+                    url: serverUrl + "render/preprocess",
                     headers: [{ name: "Content-Type", value: "application/json" }],
                     body: JSON.stringify(query),
                     method: "POST",
