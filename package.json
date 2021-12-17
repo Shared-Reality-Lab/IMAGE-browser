@@ -31,6 +31,7 @@
     "web-ext": "^6.0.0"
   },
   "dependencies": {
+    "@types/chrome": "^0.0.164",
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
     "uuid": "^8.3.2",

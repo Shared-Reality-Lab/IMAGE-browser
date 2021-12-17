@@ -39,6 +39,10 @@
         "message": "Play Segment",
         "description": "Play the selected audio segment."
     },
+    "savePreferences": {
+        "message": "Save Preferences",
+        "description": "Label for saving user preferences."
+    },
     "preprocessMap": {
         "message": "Get Preprocessed Map Data",
         "description": "Fetch preprocessed JSON data for a map without renderings"

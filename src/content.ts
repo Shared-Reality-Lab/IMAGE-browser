@@ -8,7 +8,6 @@ document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
     console.debug(selectedElement.id);
 });
-
 port.onMessage.addListener(message => {
     const serializer = new XMLSerializer();
     switch (message["type"]) {
