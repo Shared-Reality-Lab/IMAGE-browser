@@ -131,11 +131,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         }
                     }).then((json: IMAGEResponse) => {
                         if (json["renderings"].length > 0) {
-                            responseMap.set(query["request_uuid"], json);
-                            browser.windows.create({
-                                type: "panel",
-                                url: "info/info.html?" + query["request_uuid"]
-                            });
+                            if(query["request_uuid"] !== undefined){
+                                responseMap.set(query["request_uuid"], json);  
+                                browser.windows.create({
+                                    type: "panel",
+                                    url: "info/info.html?" + query["request_uuid"]
+                                });
+                            }
+                            // How to handle if request_uuid was undefined??
                         } else {
                             browser.windows.create({
                                 type: "panel",
