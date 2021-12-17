@@ -3,25 +3,24 @@ class Actuator {
   actuator: number;
   direction: number;
   actuatorPort: number;
-  torque: number =0;
+  torque: number = 0;
 
-  constructor(actuator?:number, direction?:number, port?:number){
-    this.actuator = actuator||0;
-    this.direction = direction|| 0;
-    this.actuatorPort = port|| 0;
-
+  constructor(actuator?: number, direction?: number, port?: number) {
+    this.actuator = actuator || 0;
+    this.direction = direction || 0;
+    this.actuatorPort = port || 0;
   }
 
-  set_actuator(actuator:number) {
+  set_actuator(actuator: number) {
     this.actuator = actuator;
   }
-  set_direction(direction:number) {
+  set_direction(direction: number) {
     this.direction = direction;
   }
-  set_port(port:number) {
+  set_port(port: number) {
     this.actuatorPort = port;
   }
-  set_torque(torque:number) {
+  set_torque(torque: number) {
     this.torque = torque;
   }
   get_actuator() {
@@ -38,4 +37,4 @@ class Actuator {
   }
 }
 
-export {Actuator}
+export { Actuator }
