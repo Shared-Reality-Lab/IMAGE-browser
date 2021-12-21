@@ -115,10 +115,10 @@ self.addEventListener("message", async function (event) {
         yield setTimeout(() => {
           if (idx === objectData.length) {
             doneGuidance = true;
-          }
-          else
+          } else {
             // set next target location
             targetLoc.set(imageToHaply(new Vector(objectData[idx].centroid[0], objectData[idx].centroid[1])));
+          }
           func.next();
         }, 2000);
 
