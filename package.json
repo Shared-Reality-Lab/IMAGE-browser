@@ -32,6 +32,7 @@
     "web-ext": "^6.0.0"
   },
   "dependencies": {
+    "@types/w3c-web-serial": "1.0.2",
     "@types/chrome": "^0.0.164",
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
