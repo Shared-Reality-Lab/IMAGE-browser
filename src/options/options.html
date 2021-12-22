@@ -1,13 +1,30 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="./options.css">
     </head>
-    <body>
-        <form>
-        <h2> Sever Url: <input type= "text" id = "inputUrl"></h2>
-        </form>
+    <body> 
+        <div id="wrapperDiv">
+            <div id = "divText"><h2>Developer Mode</h2></div>
+            <div id= "divToggleButton" class="toggle-container">
+                <input type="checkbox" id = "toggle"/>
+                <div class="slider round"></div>
+            </div>
+       </div>
+        <div id="developerSettingsDiv" style="display: none;">
+            <h2> Sever Url: <input type= "text" id = "inputUrl"></h2>
+            <div class="browser-style">
+                <input type="checkbox" id="preprocess-item" name="preprocess-item">
+                <label for="preprocess-item" id="preprocessItem"></label>
+            </div>
+            <div class="browser-style">
+                <input type="checkbox" id="request-item" name="request-item">
+                <label for="request-item" id="requestItem"></label>
+            </div>
+            </div>
+        </div>
         <button class="browser-style" type="submit" id="preferences-submit"></button>
         <div id="status"></div>
-        <script type="module" src="./options.ts"></script>
     </body>
+    <script type="module" src="./options.ts"></script>
 </html>
