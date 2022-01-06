@@ -53,7 +53,6 @@ function saveOptions() {
     preprocessedItem: checkOptions["preprocessItem"],
     requestedItem: checkOptions["requestItem"],
   }),
-  console.log(checkOptions);
     (function () {
       var status = <HTMLInputElement>document.getElementById("status");
       window.alert("Preferences Saved!");
@@ -73,7 +72,6 @@ function restore_options() {
       requestedItem: false,
     })
     .then((items) => {
-      console.log("items", items);
       (<HTMLInputElement>document.getElementById("inputUrl")).value =
         items["inputUrl"];
       (<HTMLInputElement>document.getElementById("preprocessItem")).checked =
