@@ -29,29 +29,14 @@ function showDeveloperSettings() {
   }
 }
 
-let checkOptions = {
-  "preprocessItem" : false,
-  "requestItem" :false
-}
-
-const preproSettings = <HTMLInputElement>(
-  document.getElementById("preprocessItem")
-);
-const requestSetting = <HTMLInputElement>document.getElementById("requestItem");
-
-preproSettings.addEventListener("click", () => {
-  checkOptions["preprocessItem"] = !checkOptions["preprocessItem"];
-});
-
-requestSetting.addEventListener("click", () => {
-  checkOptions["requestItem"] = !checkOptions["requestItem"];
-});
+const preproSettings = <HTMLInputElement>(document.getElementById("preprocessItem"));
+const requestSetting = <HTMLInputElement>(document.getElementById("requestItem"));
 
 function saveOptions() {
   browser.storage.sync.set({
     inputUrl: (<HTMLInputElement>document.getElementById("inputUrl")).value,
-    preprocessedItem: checkOptions["preprocessItem"],
-    requestedItem: checkOptions["requestItem"],
+    preprocessedItem: preproSettings.checked,
+    requestedItem: requestSetting.checked
   }),
     (function () {
       var status = <HTMLInputElement>document.getElementById("status");
@@ -74,18 +59,17 @@ function restore_options() {
     .then((items) => {
       (<HTMLInputElement>document.getElementById("inputUrl")).value =
         items["inputUrl"];
-      (<HTMLInputElement>document.getElementById("preprocessItem")).checked =
-        items["preprocessedItem"] ;
-      (<HTMLInputElement>document.getElementById("requestItem")).checked =
-        items["requestedItem"];
+        preproSettings.checked = items["preprocessedItem"] ;
+        requestSetting.checked = items["requestedItem"];
     });
 }
 
+document.addEventListener("DOMContentLoaded", restore_options);
+
 const submit = document.getElementById("preferences-submit");
 if (submit) {
-  document.addEventListener("DOMContentLoaded", restore_options);
   submit.textContent = browser.i18n.getMessage("savePreferences");
-  submit?.addEventListener("click", () => saveOptions());
+  submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
 }
