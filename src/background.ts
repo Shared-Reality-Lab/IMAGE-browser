@@ -9,7 +9,6 @@ var serverUrl : RequestInfo;
 
 function getAllStorageSyncData() {
   var keys: String[] = ["inputUrl", "preprocessedItem", "requestedItem"];
-
   return browser.storage.sync.get(keys).then((result) => {
     if (browser.runtime.lastError) {
       console.error(browser.runtime.lastError);
@@ -259,9 +258,6 @@ onCreated);
 getAllStorageSyncData().then((items) => {
   var showPrepro: Boolean = items["preprocessedItem"];
   var showRequested: Boolean = items["requestedItem"];
-
-  console.log("updated value preprocesssed " + showPrepro);
-  console.log("updated value requested  " + showRequested);
 
   if (showPrepro == false) {
     browser.contextMenus.remove("preprocess-only");
