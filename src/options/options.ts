@@ -29,22 +29,18 @@ function showDeveloperSettings() {
   }
 }
 
-const preproSettings = <HTMLInputElement>(document.getElementById("preprocessItem"));
-const requestSetting = <HTMLInputElement>(document.getElementById("requestItem"));
+const preproSettings = <HTMLInputElement>(document.getElementById("preprocess-item"));
+const requestSetting = <HTMLInputElement>(document.getElementById("request-item"));
 
 function saveOptions() {
   browser.storage.sync.set({
-    inputUrl: (<HTMLInputElement>document.getElementById("inputUrl")).value,
+    inputUrl: (<HTMLInputElement>document.getElementById("input-url")).value,
     preprocessedItem: preproSettings.checked,
     requestedItem: requestSetting.checked
   }),
     (function () {
-      var status = <HTMLInputElement>document.getElementById("status");
       window.alert("Preferences Saved!");
       browser.runtime.reload();
-      setTimeout(function () {
-        status.textContent = "";
-      }, 750);
     })();
 }
 
@@ -57,7 +53,7 @@ function restore_options() {
       requestedItem: false,
     })
     .then((items) => {
-      (<HTMLInputElement>document.getElementById("inputUrl")).value =
+      (<HTMLInputElement>document.getElementById("input-url")).value =
         items["inputUrl"];
         preproSettings.checked = items["preprocessedItem"] ;
         requestSetting.checked = items["requestedItem"];

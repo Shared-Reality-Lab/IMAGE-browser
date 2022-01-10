@@ -13,32 +13,32 @@
     height: 40px; 
 }
 
-#inputUrl{
+#input-url{
     height: 10px;
     width: 250px;
     font-size:12pt;
 }
 
-#wrapperDiv{
+#wrapper-div{
     position:relative;
     top:0px; 
     overflow:auto;
 }
 
-#divText{
+#div-text{
     float: left;
 }
 
-#divToggleButton{
+#div-togglebutton{
     margin-top: 9px;
     left: 10px;
 }
 
-#preprocessItem{
+#preprocess-item{
     font-size:11pt;
 }
 
-#requestItem{
+#request-item{
     font-size:11pt;
 }
 
