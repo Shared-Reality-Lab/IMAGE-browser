@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * and our Additional Terms along with this program.
+ * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
+ */
 import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
@@ -10,11 +26,11 @@ var serverUrl : RequestInfo;
 function getAllStorageSyncData () {
     return browser.storage.sync.get(["inputUrl"])
       .then(result => {
-        if (browser.runtime.lastError) { 
+        if (browser.runtime.lastError) {
         console.error(browser.runtime.lastError);
         }
         return result["inputUrl"];
-      })          
+      })
   };
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
@@ -134,7 +150,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     }).then((json: IMAGEResponse) => {
                         if (json["renderings"].length > 0) {
                             if(query["request_uuid"] !== undefined){
-                                responseMap.set(query["request_uuid"], json);  
+                                responseMap.set(query["request_uuid"], json);
                                 browser.windows.create({
                                     type: "panel",
                                     url: "info/info.html?" + query["request_uuid"]
@@ -152,7 +168,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         console.error(err);
                     });
                 });
-            } 
+            }
             else if (message["toRender"] === "preprocess") {
                 browser.downloads.download({
                     url: serverUrl + "render/preprocess",
