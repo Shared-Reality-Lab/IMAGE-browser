@@ -242,31 +242,33 @@ browser.contextMenus.create({
     contexts: ["image", "link"]
 },
 onCreated);
-browser.contextMenus.create({
-    id: "preprocess-only",
-    title: browser.i18n.getMessage("preprocessItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
-browser.contextMenus.create({
-    id: "request-only",
-    title: browser.i18n.getMessage("requestItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
 
 getAllStorageSyncData().then((items) => {
   var showPrepro: Boolean = items["preprocessedItem"];
   var showRequested: Boolean = items["requestedItem"];
 
-  if (showPrepro == false) {
+  if (showPrepro == true) {
+    browser.contextMenus.create({
+      id: "preprocess-only",
+      title: browser.i18n.getMessage("preprocessItem"),
+      contexts: ["image", "link"]
+    },
+  onCreated);
+  }else if(showPrepro == false) {
     browser.contextMenus.remove("preprocess-only");
   }
-  if (showRequested == false) {
+
+  if (showRequested == true) {
+    browser.contextMenus.create({
+      id: "request-only",
+      title: browser.i18n.getMessage("requestItem"),
+      contexts: ["image", "link"]
+    },
+  onCreated);
+  }else if(showPrepro == false) {
     browser.contextMenus.remove("request-only");
   }
 });
-
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     console.debug(info);
