@@ -7,15 +7,15 @@ let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 var serverUrl : RequestInfo;
 
-function getAllStorageSyncData () {
-    return browser.storage.sync.get(["inputUrl"])
-      .then(result => {
-        if (browser.runtime.lastError) { 
-        console.error(browser.runtime.lastError);
-        }
-        return result["inputUrl"];
-      })          
-  };
+function getAllStorageSyncData() {
+  var keys: String[] = ["inputUrl", "preprocessedItem", "requestedItem"];
+  return browser.storage.sync.get(keys).then((result) => {
+    if (browser.runtime.lastError) {
+      console.error(browser.runtime.lastError);
+    }
+    return result;
+  });
+}
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
     return fetch(message.sourceURL).then(resp => {
@@ -89,95 +89,95 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
-    console.debug("Handling message");
-    let query: IMAGERequest;
-    switch (message["type"]) {
-        case "info":
-            const value = responseMap.get(message["request_uuid"]);
-            p.postMessage(value);
-            responseMap.delete(message["request_uuid"]);
-            break;
-        case "resource":
-        case "localResource":
-        case "mapResource":
-            // Get response and open new window
-            if (message["type"] === "resource") {
-                query = await generateQuery(message);
-            } else if (message["type"] === "mapResource") {
-                console.debug("Generating map query");
-                query = await generateMapQuery(message);
-            }else{
-                query = generateLocalQuery(message);
-            }
-            if (message["toRender"] === "full") {
-                await getAllStorageSyncData().then(async items => {
-                    serverUrl = items;
-                    fetch(serverUrl + "render", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify(query)
-                    }).then(async (resp) => {
-                        if (resp.ok) {
-                            return resp.json();
-                        } else {
-                            browser.windows.create({
-                                type: "panel",
-                                url: "errors/http_error.html"
-                            });
-                            console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
-                            const textContent = await resp.text();
-                            console.error(textContent);
-                            throw new Error(textContent);
-                        }
-                    }).then((json: IMAGEResponse) => {
-                        if (json["renderings"].length > 0) {
-                            if(query["request_uuid"] !== undefined){
-                                responseMap.set(query["request_uuid"], json);  
-                                browser.windows.create({
-                                    type: "panel",
-                                    url: "info/info.html?" + query["request_uuid"]
-                                });
-                            }
-                            // How to handle if request_uuid was undefined??
-                        } else {
-                            browser.windows.create({
-                                type: "panel",
-                                url: "errors/no_renderings.html"
-                            });
-                            // throw new Error("Received no renderings from test URL!");
-                        }
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                });
-            } 
-            else if (message["toRender"] === "preprocess") {
-                browser.downloads.download({
-                    url: serverUrl + "render/preprocess",
-                    headers: [{ name: "Content-Type", value: "application/json" }],
-                    body: JSON.stringify(query),
-                    method: "POST",
-                    saveAs: true
-                }).catch(err => {
-                    console.error(err);
-                });
-            } else if (message["toRender"] === "none") {
-                const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
-                const blobURL = URL.createObjectURL(blob);
-                browser.downloads.download({
-                    url: blobURL,
-                    saveAs: true
-                }).catch(err => {
-                    console.error(err);
-                });
-            }
-            break;
-        default:
-            console.debug(message["type"]);
-            break;
-    }
+  console.debug("Handling message");
+  let query: IMAGERequest;
+  switch (message["type"]) {
+    case "info":
+      const value = responseMap.get(message["request_uuid"]);
+      p.postMessage(value);
+      responseMap.delete(message["request_uuid"]);
+      break;
+    case "resource":
+    case "localResource":
+    case "mapResource":
+      // Get response and open new window
+      if (message["type"] === "resource") {
+        query = await generateQuery(message);
+      } else if (message["type"] === "mapResource") {
+        console.debug("Generating map query");
+        query = await generateMapQuery(message);
+      }else{
+        query = generateLocalQuery(message);
+      }
+      if (message["toRender"] === "full") {
+        await getAllStorageSyncData().then(async items => {
+          serverUrl = items["inputUrl"];;
+          fetch(serverUrl + "render", {
+            "method": "POST",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": JSON.stringify(query)
+          }).then(async (resp) => {
+              if (resp.ok) {
+                return resp.json();
+              } else {
+                  browser.windows.create({
+                    type: "panel",
+                    url: "errors/http_error.html"
+                  });
+                  console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+                  const textContent = await resp.text();
+                  console.error(textContent);
+                  throw new Error(textContent);
+                }
+              }).then((json: IMAGEResponse) => {
+                  if (json["renderings"].length > 0) {
+                    if(query["request_uuid"] !== undefined){
+                      responseMap.set(query["request_uuid"], json);  
+                      browser.windows.create({
+                        type: "panel",
+                        url: "info/info.html?" + query["request_uuid"]
+                     });
+                    }
+                      // How to handle if request_uuid was undefined??
+                  } else {
+                      browser.windows.create({
+                        type: "panel",
+                        url: "errors/no_renderings.html"
+                      });
+                    // throw new Error("Received no renderings from test URL!");
+                    }
+              }).catch(err => {
+              console.error(err);
+            });
+        });
+      } 
+      else if (message["toRender"] === "preprocess") {
+        browser.downloads.download({
+          url: serverUrl + "render/preprocess",
+          headers: [{ name: "Content-Type", value: "application/json" }],
+          body: JSON.stringify(query),
+          method: "POST",
+          saveAs: true
+        }).catch(err => {
+            console.error(err);
+        });
+      } else if (message["toRender"] === "none") {
+        const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
+        const blobURL = URL.createObjectURL(blob);
+        browser.downloads.download({
+            url: blobURL,
+            saveAs: true
+        }).catch(err => {
+            console.error(err);
+        });
+      }
+      break;
+    default:
+      console.debug(message["type"]);
+      break;
+  }
 }
 
 function storeConnection(p: Runtime.Port) {
@@ -244,18 +244,33 @@ browser.contextMenus.create({
     contexts: ["image", "link"]
 },
 onCreated);
-browser.contextMenus.create({
-    id: "preprocess-only",
-    title: browser.i18n.getMessage("preprocessItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
-browser.contextMenus.create({
-    id: "request-only",
-    title: browser.i18n.getMessage("requestItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
+
+getAllStorageSyncData().then((items) => {
+  var showPrepro: Boolean = items["preprocessedItem"];
+  var showRequested: Boolean = items["requestedItem"];
+
+  if (showPrepro == true) {
+    browser.contextMenus.create({
+      id: "preprocess-only",
+      title: browser.i18n.getMessage("preprocessItem"),
+      contexts: ["image", "link"]
+    },
+  onCreated);
+  }else if(showPrepro == false) {
+    browser.contextMenus.remove("preprocess-only");
+  }
+
+  if (showRequested == true) {
+    browser.contextMenus.create({
+      id: "request-only",
+      title: browser.i18n.getMessage("requestItem"),
+      contexts: ["image", "link"]
+    },
+  onCreated);
+  }else if(showPrepro == false) {
+    browser.contextMenus.remove("request-only");
+  }
+});
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     console.debug(info);
