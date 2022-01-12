@@ -124,6 +124,15 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                         "url": window.location.href,
                         "toRender": false
                     });
+                }else if(q){ // if we don't have a lat and lon, but we have a query, send a search request
+                    console.debug("Sending map search request");
+                    port.postMessage({
+                        "type": "mapSearch",
+                        "context": map ? serializer.serializeToString(map) : null,
+                        "query": q,
+                        "url": window.location.href,
+                        "toRender": false
+                    });
                 }
             });
             map_button.setAttribute("tabindex", "0");

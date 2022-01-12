@@ -71,6 +71,23 @@ async function generateMapQuery(message: { context: string, url: string, dims: [
     } as IMAGERequest;
 }
 
+async function generateMapSearchQuery(message: { context: string, url: string, query: string, coordinates: [number, number] }): Promise<IMAGERequest> {
+  return {
+      "request_uuid": uuidv4(),
+      "timestamp": Math.round(Date.now() / 1000),
+      "url": message.url,
+      "placeID": message.query,
+      "context": message.context,
+      "language": "en",
+      "capabilities": [],
+      "renderers": [
+          "ca.mcgill.a11y.image.renderer.Text",
+          "ca.mcgill.a11y.image.renderer.SimpleAudio",
+          "ca.mcgill.a11y.image.renderer.SegmentAudio"
+      ]
+  } as IMAGERequest;
+}
+
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     return {
         "request_uuid": uuidv4(),
@@ -106,6 +123,9 @@ async function handleMessage(p: Runtime.Port, message: any) {
       } else if (message["type"] === "mapResource") {
         console.debug("Generating map query");
         query = await generateMapQuery(message);
+      }else if (message["type"] === "mapSearch") {
+        console.debug("Generating map query");
+        query = await generateMapSearchQuery(message);
       }else{
         query = generateLocalQuery(message);
       }
