@@ -195,15 +195,23 @@ function storeConnection(p: Runtime.Port) {
 /*Enable the context menu options*/
 function enableContextMenu(){
     browser.contextMenus.update("mwe-item",{ enabled: true });
-    browser.contextMenus.update("preprocess-only",{ enabled: true });
-    browser.contextMenus.update("request-only",{ enabled: true });
+    if(showPreprocessedItem){
+      browser.contextMenus.update("preprocess-only",{ enabled: true })
+    }
+    if(showRequestedItem){
+      browser.contextMenus.update("request-only",{ enabled: true });
+    }
 }
 
 /*Disable the context menu options*/
 function disableContextMenu(){
     browser.contextMenus.update("mwe-item",{ enabled: false });
-    browser.contextMenus.update("preprocess-only",{ enabled: false });
-    browser.contextMenus.update("request-only",{ enabled: false });
+    if(showPreprocessedItem){
+      browser.contextMenus.update("preprocess-only",{ enabled: false });
+    }
+    if(showRequestedItem){
+      browser.contextMenus.update("request-only",{ enabled: false });
+    }
 }
 
 /*Handle the context menu items based on the status of the DOM*/
@@ -243,30 +251,37 @@ browser.contextMenus.create({
 },
 onCreated);
 
-getAllStorageSyncData().then((items) => {
-  var showPrepro: Boolean = items["preprocessedItem"];
-  var showRequested: Boolean = items["requestedItem"];
+var showPreprocessedItem: Boolean 
+var showRequestedItem: Boolean 
+var contextMap = new Map<String, number | string>();
 
-  if (showPrepro == true) {
-    browser.contextMenus.create({
+getAllStorageSyncData().then((items) => {
+  showPreprocessedItem = items["preprocessedItem"];
+  showRequestedItem = items["requestedItem"];
+  if (showPreprocessedItem) {
+   const id : string | number =  browser.contextMenus.create({
       id: "preprocess-only",
       title: browser.i18n.getMessage("preprocessItem"),
       contexts: ["image", "link"]
     },
   onCreated);
-  }else if(showPrepro == false) {
-    browser.contextMenus.remove("preprocess-only");
+  contextMap.set("preprocess-only", id);
+  }
+  else if(showPreprocessedItem === false && contextMap.get("preprocess-only") !== undefined) {
+    browser.contextMenus.remove("preprocess-only")
   }
 
-  if (showRequested == true) {
-    browser.contextMenus.create({
+  if (showRequestedItem) {
+    const id: string | number = browser.contextMenus.create({
       id: "request-only",
       title: browser.i18n.getMessage("requestItem"),
       contexts: ["image", "link"]
     },
   onCreated);
-  }else if(showPrepro == false) {
-    browser.contextMenus.remove("request-only");
+  contextMap.set("request-only", id);
+  }
+  else if(showRequestedItem === false && contextMap.get("request-only") !== undefined) {
+    browser.contextMenus.remove("request-only")
   }
 });
 
@@ -291,6 +306,6 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
             });
         }
     } else {
-        console.error("No tab passed to context menu listener!");
+      console.error("No tab passed to context menu listener!");
     }
 });
