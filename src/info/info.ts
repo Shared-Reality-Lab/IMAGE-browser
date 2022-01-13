@@ -80,6 +80,7 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(audio);
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audio"] as string);
+            download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
         }
