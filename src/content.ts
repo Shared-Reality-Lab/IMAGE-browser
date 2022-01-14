@@ -129,7 +129,7 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                     port.postMessage({
                         "type": "mapSearch",
                         "context": map ? serializer.serializeToString(map) : null,
-                        "query": q,
+                        "placeID": q,
                         "url": window.location.href,
                         "toRender": false
                     });
