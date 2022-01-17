@@ -14,14 +14,6 @@ function getAllStorageSyncData() {
     preprocessedItem: false,
     requestedItem: false,
   });
-
-    // var keys: String[] = ["inputUrl", "preprocessedItem", "requestedItem"];
-    // return browser.storage.sync.get(keys).then((result) => {
-    //   if (browser.runtime.lastError) {
-    //     console.error(browser.runtime.lastError);
-    //   }
-    //   return result;
-    // });
 }
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
@@ -117,8 +109,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
       if (message["toRender"] === "full") {
         await getAllStorageSyncData().then(async items => {
           serverUrl = items["inputUrl"];;
-          console.log("item ", items);
-          console.log("server before ", serverUrl)
           fetch(serverUrl + "render", {
             "method": "POST",
             "headers": {
