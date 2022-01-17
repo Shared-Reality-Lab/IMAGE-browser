@@ -108,7 +108,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }
       if (message["toRender"] === "full") {
         await getAllStorageSyncData().then(async items => {
-          serverUrl = items["inputUrl"];;
+          serverUrl = items["inputUrl"];
           fetch(serverUrl + "render", {
             "method": "POST",
             "headers": {
@@ -151,15 +151,18 @@ async function handleMessage(p: Runtime.Port, message: any) {
         });
       } 
       else if (message["toRender"] === "preprocess") {
-        browser.downloads.download({
-          url: serverUrl + "render/preprocess",
-          headers: [{ name: "Content-Type", value: "application/json" }],
-          body: JSON.stringify(query),
-          method: "POST",
-          saveAs: true
-        }).catch(err => {
-            console.error(err);
-        });
+          await getAllStorageSyncData().then(async items => {
+            serverUrl = items["inputUrl"];
+            browser.downloads.download({
+            url: serverUrl + "render/preprocess",
+            headers: [{ name: "Content-Type", value: "application/json" }],
+            body: JSON.stringify(query),
+            method: "POST",
+            saveAs: true
+          }).catch(err => {
+              console.error(err);
+          });
+       });
       } else if (message["toRender"] === "none") {
         const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
         const blobURL = URL.createObjectURL(blob);
