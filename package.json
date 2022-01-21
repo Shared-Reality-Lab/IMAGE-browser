@@ -20,15 +20,15 @@
     "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.0.0-beta.3.1",
+    "@parcel/config-webextension": "2.2.1",
     "@parcel/transformer-sass": "^2.0.1",
     "@parcel/transformer-typescript-tsc": "^2.0.1",
-    "@parcel/validator-typescript": "^2.0.0-beta.3.1",
+    "@parcel/validator-typescript": "2.2.1",
     "@types/uuid": "^8.3.3",
     "@types/webextension-polyfill": "^0.8.2",
     "@types/w3c-web-serial":"1.0.2" ,
     "json-schema-to-typescript": "^10.1.4",
-    "parcel": "^2.0.0-beta.3.1",
+    "parcel": "2.2.1",
     "web-ext": "^6.0.0"
   },
   "dependencies": {
