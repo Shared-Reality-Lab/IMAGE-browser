@@ -1,6 +1,8 @@
 # IMAGE-browser
 IMAGE browser extensions &amp; client-side code
 
+To install the latest development version of the extension you'll need to follow [https://github.com/Shared-Reality-Lab/IMAGE-browser/wiki/Installing-Development-Extensions](these instructions), using this [https://nightly.link/Shared-Reality-Lab/IMAGE-browser/workflows/typescript-check/main/extension.zip](packaged extension file).
+
 ## Set Up
 
 Clone this repository. Note that the schemas are a submodule, so you need to either get them in the initial clone, e.g.,
