@@ -51,11 +51,10 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     });
 }
 
-async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
+async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
-        "url": message.url,
         "coordinates": {
                             "latitude": message.coordinates[0],
                             "longitude": message.coordinates[1]
@@ -71,12 +70,11 @@ async function generateMapQuery(message: { context: string, url: string, dims: [
     } as IMAGERequest;
 }
 
-async function generateMapSearchQuery(message: { context: string, url: string, query: string, coordinates: [number, number] }): Promise<IMAGERequest> {
+async function generateMapSearchQuery(message: { context: string, placeID: string,}): Promise<IMAGERequest> {
   return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
-      "url": message.url,
-      "placeID": message.query,
+      "placeID": message.placeID,
       "context": message.context,
       "language": "en",
       "capabilities": [],
@@ -117,6 +115,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "resource":
     case "localResource":
     case "mapResource":
+    case "mapSearch":
       // Get response and open new window
       if (message["type"] === "resource") {
         query = await generateQuery(message);
@@ -174,6 +173,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
         });
       } 
       else if (message["toRender"] === "preprocess") {
+        console.debug("Preprocess request");
         browser.downloads.download({
           url: serverUrl + "render/preprocess",
           headers: [{ name: "Content-Type", value: "application/json" }],
@@ -181,6 +181,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
           method: "POST",
           saveAs: true
         }).catch(err => {
+            console.error("URL = " + serverUrl + "render/preprocess");
             console.error(err);
         });
       } else if (message["toRender"] === "none") {
