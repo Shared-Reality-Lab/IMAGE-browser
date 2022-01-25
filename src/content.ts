@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * and our Additional Terms along with this program.
+ * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
+ */
 import browser from "webextension-polyfill";
 
 var selectedElement: HTMLElement | null = null;
@@ -86,7 +102,7 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
 Array.from(document.getElementsByTagName("iframe")).forEach(map => {
     if (!map.hasAttribute("tabindex") && !map.closest("a")) {
         if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
-            map.setAttribute("tabindex", "0");     
+            map.setAttribute("tabindex", "0");
             let map_button = document.createElement("button");
             map_button.innerText = "Render Map";
             // Get all the information about our found map and store the info. Then create a button to render the map

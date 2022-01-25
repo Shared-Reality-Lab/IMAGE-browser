@@ -1,9 +1,25 @@
+/*
+ * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * and our Additional Terms along with this program.
+ * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
+ */
 import { Vector } from "../hAPI/libraries/vector.js";
 import { Board } from "../hAPI/libraries/Board.ts";
 import { Device } from "../hAPI/libraries/Device.ts";
 import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
 
-// declaration of haply specific variables 
+// declaration of haply specific variables
 const widgetOneID = 5;
 let widgetOne;
 let pantograph;
@@ -53,7 +69,7 @@ let fWall = new Vector(0, 0);
 
 // gets assinged a random force vector for vibration mode
 let randForce = new Vector(0, 0);
-let applyVibration = false; //boolean to check if vibration condition has been met 
+let applyVibration = false; //boolean to check if vibration condition has been met
 
 // indicate we've iterated through all the points in an image
 let doneGuidance;
@@ -153,7 +169,7 @@ self.addEventListener("message", async function (event) {
       objectData: objectData
     }
 
-    // sending end effector position back to info.ts to update visuals    
+    // sending end effector position back to info.ts to update visuals
     this.self.postMessage(data);
 
     //calculate and set torques
@@ -194,7 +210,7 @@ function passiveGuidance() {
   let wallXLine; // rendering a vertical line
   let wallYLine; //rendering a horizontal line
 
-  // checking the distances vectros for each bounding box 
+  // checking the distances vectros for each bounding box
   for (let i = 0; i < objectData.length; i++) {
     let upperLeftX = (objectData[i].coords[0]);
     let upperLeftY = (objectData[i].coords[1]);
@@ -273,7 +289,7 @@ function passiveGuidance() {
       fWall.set(0, 0);
     }
   }
-  //asigning the forces calculated in fWall to the end effector 
+  //asigning the forces calculated in fWall to the end effector
   fEE = (fWall.clone()).multiply(-1);
   fEE.add(fDamping);
 
@@ -315,8 +331,8 @@ function vib_mode() {
   //computed coefficient for force calcualtion
   let compCoeff = (1.0 - (yDist - 0.5) * xDist) * forceMultiplier;
 
-  /*** Iterating through all the boudning boxes to check if we are in one 
-       and if we are in a shape we break out of the for loop and assign the 
+  /*** Iterating through all the boudning boxes to check if we are in one
+       and if we are in a shape we break out of the for loop and assign the
        random force to cause vibration***/
   for (let i = 0; i < objectData.length; i++) {
 
