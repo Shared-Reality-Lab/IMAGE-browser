@@ -24,7 +24,7 @@
         "description": "Header of popup window"
     },
     "renderingLabel": {
-        "message": "Rendering",
+        "message": "Interpretation",
         "description": "Label for each rendering returned from the server"
     },
     "segmentAudioSelLabel": {
