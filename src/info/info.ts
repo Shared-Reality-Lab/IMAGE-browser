@@ -388,7 +388,7 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        document.getElementById("renderings-container").appendChild(container)
+        document.getElementById("renderings-container")!.appendChild(container)
         count++;
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
