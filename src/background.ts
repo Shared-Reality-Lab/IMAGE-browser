@@ -181,7 +181,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }
       else if (message["toRender"] === "preprocess") {
           await getAllStorageSyncData().then(async items => {
-            serverUrl = items["inputUrl"];
+            if(items["mcgillServer"]===true){
+              serverUrl = "https://image.a11y.mcgill.ca/";
+            }else{
+              if(items["inputUrl"]!== "" && items["customServer"]===true){
+              serverUrl = items["inputUrl"];
+              }
+            }
             browser.downloads.download({
             url: serverUrl + "render/preprocess",
             headers: [{ name: "Content-Type", value: "application/json" }],
@@ -316,6 +322,10 @@ getAllStorageSyncData().then((items) => {
     browser.contextMenus.remove("preprocess-only");
     browser.contextMenus.remove("request-only");
     browser.storage.sync.set({previousToggleState : false});
+    browser.storage.sync.set({
+      processItem: "",
+      requestItem: "",
+    })
   }
 });
 
