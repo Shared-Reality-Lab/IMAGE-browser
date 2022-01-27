@@ -30,7 +30,10 @@ function getAllStorageSyncData() {
     customServer:false,
     mcgillServer: true, 
     developerMode: false,
-    previousToggleState:false
+    previousToggleState:false,
+    processItem: "",
+    requestItem: "",
+    mweItem: ""
   });
 }
 
@@ -267,35 +270,48 @@ function onCreated(): void {
         console.error(browser.runtime.lastError);
     }
 }
-
-browser.contextMenus.create({
-    id: "mwe-item",
-    title: browser.i18n.getMessage("menuItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
-
 var showDebugOptions: Boolean;
 
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   const previousToggleState = items["previousToggleState"];
-  
-  if (showDebugOptions) {
+
+  if(items["mweItem"] === ""){
     browser.contextMenus.create({
-      id: "preprocess-only",
-      title: browser.i18n.getMessage("preprocessItem"),
-      contexts: ["image", "link"]
+        id: "mwe-item",
+        title: browser.i18n.getMessage("menuItem"),
+        contexts: ["image", "link"]
     },
-  onCreated);
-  browser.contextMenus.create({
-    id: "request-only",
-    title: browser.i18n.getMessage("requestItem"),
-    contexts: ["image", "link"]
-  },
-onCreated);
-  browser.storage.sync.set({previousToggleState : true})
+    onCreated);
+    browser.storage.sync.set({
+      mweItem:"mwe-item"
+    })
   }
+ 
+
+  if (showDebugOptions) {
+    if(items["processItem"] === "" && items["requestItem"] === ""){
+        browser.contextMenus.create({
+          id: "preprocess-only",
+          title: browser.i18n.getMessage("preprocessItem"),
+          contexts: ["image", "link"]
+        },
+      onCreated);
+      browser.contextMenus.create({
+        id: "request-only",
+        title: browser.i18n.getMessage("requestItem"),
+        contexts: ["image", "link"]
+      },
+      onCreated);
+    }
+
+  browser.storage.sync.set({
+    previousToggleState : true,
+    processItem: "preprocess-only",
+    requestItem: "request-only",
+  })
+}
+
   else if(showDebugOptions === false && previousToggleState) {
     browser.contextMenus.remove("preprocess-only");
     browser.contextMenus.remove("request-only");
