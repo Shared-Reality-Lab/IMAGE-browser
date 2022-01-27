@@ -109,18 +109,28 @@ input:checked + .slider:after {
   border-radius: 50%;
 }
 
-#renderings-header{
-  color: grey;
-  font-size: x-large;
-  font-weight: 400;
-}
-
 #advanced-options{
   color: grey;
   font-size: x-large;
   font-weight: 400;
 }
 
+/*#renderings-header{
+  color: grey;
+  font-size: x-large;
+  font-weight: 400;
+}
+#noHaptics{
+  color: grey;
+  font-size: medium;
+  font-weight: 400; 
+}
+
+#Haply2diy{
+  color: grey;
+  font-size: medium;
+  font-weight: 400; 
+}
 #audioRenderingsLabel{
   color: grey;
   font-size: medium;
@@ -132,7 +142,7 @@ input:checked + .slider:after {
   font-size: medium;
   font-weight: 400;
   line-height: 30pt;
-}
+}*/
 
 #server-options{
   color: grey;
@@ -160,15 +170,5 @@ input:checked + .slider:after {
   font-weight: 400; 
 }
 
-#noHaptics{
-  color: grey;
-  font-size: medium;
-  font-weight: 400; 
-}
 
-#Haply2diy{
-  color: grey;
-  font-size: medium;
-  font-weight: 400; 
-}
 
