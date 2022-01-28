@@ -3,28 +3,57 @@
         <meta charset="utf-8">
         <link rel="stylesheet" href="./options.css">
     </head>
-    <body> 
+    <body>
+        
+        <div>
+           <h1 id="renderings-header">Rendering Options</h1> 
+            <div class="browser-style">
+                <input type="checkbox" id="audio-renderings" name="audio-renderings">
+                <label for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
+            </div>
+            <div class="browser-style">
+                <input type="checkbox" id="text-renderings" name="text-renderings">
+                <label for="textRenderingsLabel" id="textRenderingsLabel"></label>
+            </div>
+        </div>
+
         <div id="wrapper-div">
-            <h2> Server URL: <input type= "text" id = "input-url"></h2>
-            <div id = "div-text"><h2>Developer Mode</h2></div>
+            <h1 id="advanced-options">Advanced Options</h1> 
+            <h3 id="server-options">Server</h3>
+            <div class="browser-style">
+                <input type="radio" id="mcgill-server" name="serverOptions" checked>
+                <label for="mcgillServerLabel" id="mcgillServerLabel"></label>
+            </div>  
+            <div class="browser-style">
+                <input type="radio" id="custom-server" name="serverOptions">
+                <label for="customServerLabel" id="customServerLabel"></label>
+                <div>
+                    <input type= "text" id = "input-url">
+                </div>
+            </div> 
+             
+            <div id = "developer-mode"><h1>Developer Mode</h1></div>
             <div id= "div-togglebutton" class="toggle-container">
                 <input type="checkbox" id = "toggle"/>
                 <div class="slider round"></div>
             </div>
+            <div>
+                <h3 id="debugText">Enabling developer mode allows access to debug options from the context menu in the browser.</h1>
+            </div>
        </div>
-        <div id="developerSettingsDiv" style="display: none;">
+
+        <div id="developerSettingsDiv" style="display: none;"> 
             <div class="browser-style">
-                <input type="checkbox" id="preprocess-item" name="preprocess-item">
-                <label for="preprocessItem" id="preprocessItem"></label>
+                <input type="radio" id="none-option" name="hapticsOptions" checked>
+                <label for="noHaptics" id="noHaptics"></label>
             </div>
             <div class="browser-style">
-                <input type="checkbox" id="request-item" name="request-item">
-                <label for="requestItem" id="requestItem"></label>
-            </div>
+                <input type="radio" id="haply-option" name="hapticsOptions">
+                <label for="Haply2diy" id="Haply2diy"></label>
             </div>
         </div>
-        <button class="browser-style" type="submit" id="preferences-submit"></button>
-        <div id="status"></div>
+        <button class="cancel button" type="button" id="cancel-button">Cancel</button>
+        <button class="save button" type="button" id="preferences-submit">Save Changes</button>
     </body>
     <script type="module" src="./options.ts"></script>
 </html>

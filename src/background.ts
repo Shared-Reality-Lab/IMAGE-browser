@@ -26,13 +26,42 @@ var serverUrl : RequestInfo;
 function getAllStorageSyncData() {
   return browser.storage.sync.get({
     //Default values
-    inputUrl: "https://image.a11y.mcgill.ca/",
-    preprocessedItem: false,
-    requestedItem: false,
+    inputUrl: "",
+    customServer:false,
+    mcgillServer: true, 
+    developerMode: false,
+    previousToggleState:false,
+    noHaptics: true,
+    haply2diy: false,
+    audio: true,
+    text: false,
+    processItem: "",
+    requestItem: "",
+    mweItem: ""
   });
 }
 
+var renderers : string[] = [];
+
+async function getRenderers(){
+  getAllStorageSyncData().then(async items => {
+    if(items["audio"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.SegmentAudio");
+      renderers.push("ca.mcgill.a11y.image.renderer.SimpleAudio");
+    }
+    if(items["text"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.Text");
+    }
+    if(items["haply2diy"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
+    }
+  });
+  console.log('insiders', renderers)
+}
+  console.log('outside', renderers)
+
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
+  getRenderers();
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -47,6 +76,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
+
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
@@ -56,17 +86,13 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             "context": message.context,
             "language": "en",
             "capabilities": [],
-            "renderers": [
-                "ca.mcgill.a11y.image.renderer.Text",
-                "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                "ca.mcgill.a11y.image.renderer.SimpleHaptics"
-            ],
+            "renderers": renderers
         } as IMAGERequest;
     });
 }
 
 async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
+  getRenderers();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -78,11 +104,7 @@ async function generateMapQuery(message: { context: string, url: string, dims: [
         "context": message.context,
         "language": "en",
         "capabilities": [],
-        "renderers": [
-            "ca.mcgill.a11y.image.renderer.Text",
-            "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "ca.mcgill.a11y.image.renderer.SegmentAudio"
-        ]
+        "renderers": renderers
     } as IMAGERequest;
 }
 
@@ -95,11 +117,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
         "context": message.context,
         "language": "en",
         "capabilities": [],
-        "renderers": [
-            "ca.mcgill.a11y.image.renderer.Text",
-            "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "ca.mcgill.a11y.image.renderer.SimpleHaptics"
-        ],
+        "renderers": renderers
     } as IMAGERequest;
 }
 
@@ -126,7 +144,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }
       if (message["toRender"] === "full") {
         await getAllStorageSyncData().then(async items => {
-          serverUrl = items["inputUrl"];
+          if(items["mcgillServer"]){
+            serverUrl = "https://image.a11y.mcgill.ca/";
+          }else{
+            if(items["inputUrl"]!== "" && items["customServer"]){
+            serverUrl = items["inputUrl"];
+            }
+          }
+          console.log("items in background", items);
           fetch(serverUrl + "render", {
             "method": "POST",
             "headers": {
@@ -170,7 +195,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }
       else if (message["toRender"] === "preprocess") {
           await getAllStorageSyncData().then(async items => {
-            serverUrl = items["inputUrl"];
+            if(items["mcgillServer"]){
+              serverUrl = "https://image.a11y.mcgill.ca/";
+            }else{
+              if(items["inputUrl"]!== "" && items["customServer"]){
+              serverUrl = items["inputUrl"];
+              }
+            }
             browser.downloads.download({
             url: serverUrl + "render/preprocess",
             headers: [{ name: "Content-Type", value: "application/json" }],
@@ -214,24 +245,20 @@ function storeConnection(p: Runtime.Port) {
 
 /*Enable the context menu options*/
 function enableContextMenu(){
-    browser.contextMenus.update("mwe-item",{ enabled: true });
-    if(showPreprocessedItem){
-      browser.contextMenus.update("preprocess-only",{ enabled: true })
-    }
-    if(showRequestedItem){
-      browser.contextMenus.update("request-only",{ enabled: true });
-    }
+  browser.contextMenus.update("mwe-item",{ enabled: true });
+  if(showDebugOptions){
+    browser.contextMenus.update("preprocess-only",{ enabled: true })
+    browser.contextMenus.update("request-only",{ enabled: true });
+  }
 }
 
 /*Disable the context menu options*/
 function disableContextMenu(){
-    browser.contextMenus.update("mwe-item",{ enabled: false });
-    if(showPreprocessedItem){
-      browser.contextMenus.update("preprocess-only",{ enabled: false });
-    }
-    if(showRequestedItem){
-      browser.contextMenus.update("request-only",{ enabled: false });
-    }
+  browser.contextMenus.update("mwe-item",{ enabled: false });
+  if(showDebugOptions){
+    browser.contextMenus.update("preprocess-only",{ enabled: false });
+    browser.contextMenus.update("request-only",{ enabled: false });
+  }
 }
 
 /*Handle the context menu items based on the status of the DOM*/
@@ -263,45 +290,56 @@ function onCreated(): void {
         console.error(browser.runtime.lastError);
     }
 }
-
-browser.contextMenus.create({
-    id: "mwe-item",
-    title: browser.i18n.getMessage("menuItem"),
-    contexts: ["image", "link"]
-},
-onCreated);
-
-var showPreprocessedItem: Boolean 
-var showRequestedItem: Boolean 
-var contextMap = new Map<String, number | string>();
+var showDebugOptions: Boolean;
 
 getAllStorageSyncData().then((items) => {
-  showPreprocessedItem = items["preprocessedItem"];
-  showRequestedItem = items["requestedItem"];
-  if (showPreprocessedItem) {
-   const id : string | number =  browser.contextMenus.create({
-      id: "preprocess-only",
-      title: browser.i18n.getMessage("preprocessItem"),
-      contexts: ["image", "link"]
-    },
-  onCreated);
-  contextMap.set("preprocess-only", id);
-  }
-  else if(showPreprocessedItem === false && contextMap.get("preprocess-only") !== undefined) {
-    browser.contextMenus.remove("preprocess-only")
-  }
+  showDebugOptions = items["developerMode"];
+  const previousToggleState = items["previousToggleState"];
 
-  if (showRequestedItem) {
-    const id: string | number = browser.contextMenus.create({
-      id: "request-only",
-      title: browser.i18n.getMessage("requestItem"),
-      contexts: ["image", "link"]
+  if(items["mweItem"] === ""){
+    browser.contextMenus.create({
+        id: "mwe-item",
+        title: browser.i18n.getMessage("menuItem"),
+        contexts: ["image", "link"]
     },
-  onCreated);
-  contextMap.set("request-only", id);
+    onCreated);
+    browser.storage.sync.set({
+      mweItem:"mwe-item"
+    })
   }
-  else if(showRequestedItem === false && contextMap.get("request-only") !== undefined) {
-    browser.contextMenus.remove("request-only")
+ 
+
+  if (showDebugOptions) {
+    if(items["processItem"] === "" && items["requestItem"] === ""){
+        browser.contextMenus.create({
+          id: "preprocess-only",
+          title: browser.i18n.getMessage("preprocessItem"),
+          contexts: ["image", "link"]
+        },
+      onCreated);
+      browser.contextMenus.create({
+        id: "request-only",
+        title: browser.i18n.getMessage("requestItem"),
+        contexts: ["image", "link"]
+      },
+      onCreated);
+    }
+
+  browser.storage.sync.set({
+    previousToggleState : true,
+    processItem: "preprocess-only",
+    requestItem: "request-only",
+  })
+}
+
+  else if(showDebugOptions === false && previousToggleState) {
+    browser.contextMenus.remove("preprocess-only");
+    browser.contextMenus.remove("request-only");
+    browser.storage.sync.set({previousToggleState : false});
+    browser.storage.sync.set({
+      processItem: "",
+      requestItem: "",
+    })
   }
 });
 

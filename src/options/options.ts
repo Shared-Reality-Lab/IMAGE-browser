@@ -27,7 +27,15 @@ for (let label of labels) {
   }
 }
 
-const toggleButton = document.getElementById("toggle");
+const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
+const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));
+const customServerSetting = <HTMLInputElement>(document.getElementById("custom-server"));
+const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
+const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
+const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
+const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
+const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
+
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
 } else {
@@ -35,28 +43,29 @@ if (toggleButton) {
 }
 
 function showDeveloperSettings() {
-  var developerSettings = <HTMLInputElement>(
-    document.getElementById("developerSettingsDiv")
-  );
-  if (developerSettings.style.display === "none") {
+if (toggleButton.checked) {
     developerSettings.style.display = "block";
   } else {
     developerSettings.style.display = "none";
   }
 }
 
-const preproSettings = <HTMLInputElement>(document.getElementById("preprocess-item"));
-const requestSetting = <HTMLInputElement>(document.getElementById("request-item"));
-
 function saveOptions() {
   browser.storage.sync.set({
     inputUrl: (<HTMLInputElement>document.getElementById("input-url")).value,
-    preprocessedItem: preproSettings.checked,
-    requestedItem: requestSetting.checked
+    mcgillServer: mcgillServerSetting.checked,
+    customServer: customServerSetting.checked,
+    developerMode: toggleButton.checked,
+    noHaptics: noHapticsSetting.checked,
+    haply2diy: haply2diySetting.checked,
+    audio:audioRenderingsSetting.checked,
+    text:textRenderingsSetting.checked
   }),
     (function () {
-      window.alert("Preferences Saved!");
-      browser.runtime.reload();
+   window.alert("Preferences Saved!");
+      browser.runtime.getBackgroundPage().then((res) => {
+        res.location.reload();
+      })
     })();
 }
 
@@ -64,24 +73,49 @@ function restore_options() {
   browser.storage.sync
     .get({
       //Default values
-      inputUrl: "https://image.a11y.mcgill.ca/",
-      preprocessedItem: false,
-      requestedItem: false,
+      inputUrl: "",
+      mcgillServer: true,
+      customServer:false,
+      previousToggleState:false,
+      developerMode: false,
+      noHaptics:true,
+      haply2diy:false,
+      audio:true,
+      text:false
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
         items["inputUrl"];
-        preproSettings.checked = items["preprocessedItem"] ;
-        requestSetting.checked = items["requestedItem"];
-    });
+        mcgillServerSetting.checked = items["mcgillServer"];
+        customServerSetting.checked = items["customServer"];
+        toggleButton.checked = items["developerMode"];
+        noHapticsSetting.checked= items["noHaptics"];
+        haply2diySetting.checked= items["haply2diy"];
+        audioRenderingsSetting.checked = items["audio"];
+        textRenderingsSetting.checked = items["text"];
+console.log("current items", items);
+        if (toggleButton.checked) {
+          developerSettings.style.display = "block"; 
+        }
+    }); 
 }
 
 document.addEventListener("DOMContentLoaded", restore_options);
 
 const submit = document.getElementById("preferences-submit");
+const cancel = document.getElementById("cancel-button");
+
 if (submit) {
-  submit.textContent = browser.i18n.getMessage("savePreferences");
+  submit.textContent = browser.i18n.getMessage("saveChanges");
   submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
+}
+
+function reload(){
+  window.location.reload();
+}
+if(cancel){
+  cancel?.addEventListener("click", reload
+  );
 }

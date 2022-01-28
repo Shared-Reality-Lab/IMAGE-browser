@@ -24,7 +24,7 @@
         "description": "Header of popup window"
     },
     "renderingLabel": {
-        "message": "Interpretation",
+        "message": "Rendering",
         "description": "Label for each rendering returned from the server"
     },
     "segmentAudioSelLabel": {
@@ -35,12 +35,36 @@
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
     },
-    "segmentAudioButton": {
-        "message": "Play Segment",
-        "description": "Play the selected audio segment."
+    "audioRenderingsLabel": {
+        "message": "Audio (Specialized renderings, best experienced with stereo headphones)",
+        "description": "Audio Renderings"
     },
-    "savePreferences": {
-        "message": "Save Preferences",
+    "textRenderingsLabel": {
+        "message": "Text (for screenreaders)",
+        "description": "Text Renderings"
+    },
+    "monoSoundLabel": {
+        "message": "Mono Audio",
+        "description": "Label for mono audio option in extension preferences."
+    },
+    "mcgillServerLabel": {
+        "message": "McGill Server",
+        "description": "Label for mcgill server."
+    },
+    "customServerLabel": {
+        "message": "Custom (enter server URL)",
+        "description": "Label for custom server"
+    },
+    "noHaptics": {
+        "message": "None",
+        "description": "Label for no haptics option"
+    },
+    "Haply2diy": {
+        "message": "Haply 2diy",
+        "description": "Label for Haply 2diy option"
+    },
+    "saveChanges": {
+        "message": "Save Changes",
         "description": "Label for saving user preferences."
     },
     "preprocessMap": {
