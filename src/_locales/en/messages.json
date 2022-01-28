@@ -35,6 +35,10 @@
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
     },
+    "segmentAudioButton":{
+        "message": "Play",
+        "description": "Label for playing audio renderings of selected audio segment."
+    },
     "audioRenderingsLabel": {
         "message": "Audio (Specialized renderings, best experienced with stereo headphones)",
         "description": "Audio Renderings"
@@ -57,18 +61,18 @@
     },
     "customServerLabel": {
         "message": "Custom (enter server URL)",
-        "description": "Label for custom server"
+        "description": "Label for custom server."
     },
     "noHaptics": {
         "message": "None",
-        "description": "Label for no haptics option"
+        "description": "Label for no haptics option."
     },
     "Haply2diy": {
         "message": "Haply 2diy",
-        "description": "Label for Haply 2diy option"
+        "description": "Label for Haply 2diy option."
     },
     "preprocessMap": {
         "message": "Get Preprocessed Map Data",
-        "description": "Fetch preprocessed JSON data for a map without renderings"
+        "description": "Fetch preprocessed JSON data for a map without renderings."
     }
 }
