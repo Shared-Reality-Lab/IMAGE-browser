@@ -104,7 +104,7 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
         if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
             map.setAttribute("tabindex", "0");
             let map_button = document.createElement("button");
-            map_button.innerText = "Render Map";
+            map_button.innerText = "Get IMAGE Map Rendering";
             // Get all the information about our found map and store the info. Then create a button to render the map
             map_button.addEventListener("click", () => {
                 const serializer = new XMLSerializer();
