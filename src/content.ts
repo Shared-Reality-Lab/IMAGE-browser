@@ -75,17 +75,27 @@ port.onMessage.addListener(message => {
     return true;
 });
 
+console.log("hello");
 // Process images on page
 Array.from(document.getElementsByTagName("img")).forEach(image => {
     if (!image.hasAttribute("tabindex") && !image.closest("a")) {
         image.setAttribute("tabindex", "0");
     }
 });
-
+// regex to find source urls for embedded google maps
+const googleMapRegex = /https:\/\/www.google.com\/maps\/embed\?/;
+// regex to find source urls from google maps
+const map_regex = /src="(https:\/\/maps\.googleapis\.com\/maps\/api\/staticmap)"/g;
+//https://maps.google.com/maps/api/staticmap?&channel=ta.desktop.restaurant_review&zoom=15&size=347x137&scale=1&client=gme-tripadvisorinc&format=jpg&sensor=false&language=en_CA&center=45.524441,-73.575737&maptype=roadmap&&markers=icon:http%3A%2F%2Fc1.tacdn.com%2F%2Fimg2%2Fmaps%2Ficons%2Fcomponent_map_pins_v1%2FR_Pin_Small.png|45.524441,-73.575737&signature=kq0D9vxdXPGUoWK8iXw3JvStp14=
 // Process maps on page
 Array.from(document.getElementsByTagName("iframe")).forEach(map => {
+    console.info("world");
     if (!map.hasAttribute("tabindex") && !map.closest("a")) {
-        if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
+        // Get list of matches for regex in map
+        const matches = googleMapRegex.exec(map.src);
+        console.info(matches);
+        console.info("hello");
+        if (matches!=null) {
             map.setAttribute("tabindex", "0");     
             let map_button = document.createElement("button");
             map_button.innerText = "Render Map";
