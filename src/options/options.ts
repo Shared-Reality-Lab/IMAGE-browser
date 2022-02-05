@@ -16,6 +16,8 @@
  */
 import  browser  from "webextension-polyfill";
 
+let port = browser.runtime.connect();
+
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -48,6 +50,22 @@ const customServerSetting = <HTMLInputElement>(document.getElementById("custom-s
 //   }
 // }
 
+var result : String|null;
+
+function customUrlCheck(){
+  browser.storage.sync.get({
+    inputUrl: "",
+    customServer:false,
+  })
+  .then((items)=>{
+    if(items["inputUrl"]==="" && items["customServer"]=== true){
+    window.alert("Continuing without entering Custom URL will not give any renderings");
+    }else{
+     window.alert("Preferences Saved!");
+    }
+  });
+}
+
 function saveOptions() {
   browser.storage.sync.set({
     inputUrl: (<HTMLInputElement>document.getElementById("input-url")).value,
@@ -58,11 +76,11 @@ function saveOptions() {
     //haply2diy: haply2diySetting.checked
   }),
     (function () {
-   window.alert("Preferences Saved!");
-      browser.runtime.getBackgroundPage().then((res) => {
-        res.location.reload();
-      })
-    })();
+    customUrlCheck();
+    port.postMessage({
+      type: "settingsSaved"
+    });
+  })();
 }
 
 function restore_options() {
