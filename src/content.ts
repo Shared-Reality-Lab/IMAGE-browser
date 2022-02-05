@@ -137,8 +137,15 @@ Array.from(document.getElementsByTagName("iframe")).forEach(map => {
                         "type": "mapResource",
                         "context": map ? serializer.serializeToString(map) : null,
                         "coordinates": [parseFloat(lat), parseFloat(lon)],
-                        "url": window.location.href,
-                        "toRender": false
+                        "toRender": "preprocess"
+                    });
+                }else if(q){ // if we don't have a lat and lon, but we have a query, send a search request
+                    console.debug("Sending map search request");
+                    port.postMessage({
+                        "type": "mapSearch",
+                        "context": map ? serializer.serializeToString(map) : null,
+                        "placeID": q,
+                        "toRender": "preprocess"
                     });
                 }
             });
