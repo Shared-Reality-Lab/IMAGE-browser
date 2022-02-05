@@ -50,8 +50,6 @@ const customServerSetting = <HTMLInputElement>(document.getElementById("custom-s
 //   }
 // }
 
-var result : String|null;
-
 function customUrlCheck(){
   browser.storage.sync.get({
     inputUrl: "",
@@ -59,7 +57,7 @@ function customUrlCheck(){
   })
   .then((items)=>{
     if(items["inputUrl"]==="" && items["customServer"]=== true){
-    window.alert("Continuing without entering Custom URL will not give any renderings");
+    window.alert("Continuing without entering Custom URL will not give any renderings.");
     }else{
      window.alert("Preferences Saved!");
     }
