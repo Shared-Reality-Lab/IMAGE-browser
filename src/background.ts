@@ -151,7 +151,9 @@ async function handleMessage(p: Runtime.Port, message: any) {
       if (message["toRender"] === "full") {
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
-            serverUrl = "https://image.a11y.mcgill.ca/";
+            /*NOTE: The default server was changed for testing! 
+            Change it back before merging!! */
+            serverUrl = "https://unicorn.cim.mcgill.ca/image/";
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
