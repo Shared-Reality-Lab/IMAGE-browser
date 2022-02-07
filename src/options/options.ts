@@ -16,6 +16,8 @@
  */
 import  browser  from "webextension-polyfill";
 
+let port = browser.runtime.connect();
+
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -50,6 +52,27 @@ if (toggleButton.checked) {
   }
 }
 
+function optionsCheck(){
+  browser.storage.sync.get({
+    inputUrl: "",
+    customServer:false,
+    noHaptics:true,
+    audio:false,
+    text:false
+  })
+  .then((items)=>{
+    if(items["inputUrl"]==="" && items["customServer"]=== true){
+    window.alert("Continuing without entering Custom URL will not give any renderings.");
+    } 
+    else if(items["noHaptics"]===true && items["audio"]===false && items["text"]===false ){
+      window.alert("Continuing without selecting a Rendering/Haptics option will not give any renderings.");
+    }
+    else{
+     window.alert("Preferences Saved!");
+    }
+  });
+}
+
 function saveOptions() {
   browser.storage.sync.set({
     inputUrl: (<HTMLInputElement>document.getElementById("input-url")).value,
@@ -62,10 +85,10 @@ function saveOptions() {
     text:textRenderingsSetting.checked
   }),
     (function () {
-   window.alert("Preferences Saved!");
-      browser.runtime.getBackgroundPage().then((res) => {
-        res.location.reload();
-      })
+      optionsCheck();
+      port.postMessage({
+        type: "settingsSaved"
+      });
     })();
 }
 
@@ -93,7 +116,7 @@ function restore_options() {
         haply2diySetting.checked= items["haply2diy"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
-console.log("current items", items);
+
         if (toggleButton.checked) {
           developerSettings.style.display = "block"; 
         }
@@ -115,6 +138,7 @@ if (submit) {
 function reload(){
   window.location.reload();
 }
+
 if(cancel){
   cancel?.addEventListener("click", reload
   );

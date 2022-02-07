@@ -44,6 +44,7 @@ function getAllStorageSyncData() {
 var renderers : string[] = [];
 
 async function getRenderers(){
+  renderers = [];
   getAllStorageSyncData().then(async items => {
     if(items["audio"]){
       renderers.push("ca.mcgill.a11y.image.renderer.SegmentAudio");
@@ -56,9 +57,7 @@ async function getRenderers(){
       renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
     }
   });
-  console.log('insiders', renderers)
 }
-  console.log('outside', renderers)
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
@@ -133,6 +132,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "resource":
     case "localResource":
     case "mapResource":
+    case "settingsSaved":
       // Get response and open new window
       if (message["type"] === "resource") {
         query = await generateQuery(message);
@@ -151,7 +151,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
             serverUrl = items["inputUrl"];
             }
           }
-          console.log("items in background", items);
           fetch(serverUrl + "render", {
             "method": "POST",
             "headers": {
@@ -222,11 +221,53 @@ async function handleMessage(p: Runtime.Port, message: any) {
             console.error(err);
         });
       }
+      if(message["type"]==="settingsSaved"){
+        updateDebugContextMenu();
+      }
       break;
     default:
       console.debug(message["type"]);
       break;
   }
+}
+
+function updateDebugContextMenu(){
+  getAllStorageSyncData().then((items) => {
+    showDebugOptions = items["developerMode"];
+    previousToggleState = items["previousToggleState"];
+
+    if (showDebugOptions) {
+      if(items["processItem"] === "" && items["requestItem"] === ""){
+          browser.contextMenus.create({
+            id: "preprocess-only",
+            title: browser.i18n.getMessage("preprocessItem"),
+            contexts: ["image", "link"]
+          },
+        onCreated);
+        browser.contextMenus.create({
+          id: "request-only",
+          title: browser.i18n.getMessage("requestItem"),
+          contexts: ["image", "link"]
+        },
+        onCreated);
+      }
+
+      browser.storage.sync.set({
+        previousToggleState : true,
+        processItem: "preprocess-only",
+        requestItem: "request-only",
+      })
+    }
+    else if(showDebugOptions === false && previousToggleState) {
+      browser.contextMenus.remove("preprocess-only");
+      browser.contextMenus.remove("request-only");
+      browser.storage.sync.set({previousToggleState : false});
+      browser.storage.sync.set({
+        processItem: "",
+        requestItem: "",
+      })
+    }
+  });
 }
 
 function storeConnection(p: Runtime.Port) {
@@ -290,56 +331,36 @@ function onCreated(): void {
         console.error(browser.runtime.lastError);
     }
 }
+browser.contextMenus.create({
+    id: "mwe-item",
+    title: browser.i18n.getMessage("menuItem"),
+    contexts: ["image", "link"]
+},
+onCreated);
+browser.storage.sync.set({
+  mweItem:"mwe-item"
+})
+
 var showDebugOptions: Boolean;
+var previousToggleState: Boolean;
 
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
-  const previousToggleState = items["previousToggleState"];
-
-  if(items["mweItem"] === ""){
-    browser.contextMenus.create({
-        id: "mwe-item",
-        title: browser.i18n.getMessage("menuItem"),
-        contexts: ["image", "link"]
-    },
-    onCreated);
-    browser.storage.sync.set({
-      mweItem:"mwe-item"
-    })
-  }
- 
+  previousToggleState = items["previousToggleState"];
 
   if (showDebugOptions) {
-    if(items["processItem"] === "" && items["requestItem"] === ""){
-        browser.contextMenus.create({
-          id: "preprocess-only",
-          title: browser.i18n.getMessage("preprocessItem"),
-          contexts: ["image", "link"]
-        },
-      onCreated);
       browser.contextMenus.create({
-        id: "request-only",
-        title: browser.i18n.getMessage("requestItem"),
+        id: "preprocess-only",
+        title: browser.i18n.getMessage("preprocessItem"),
         contexts: ["image", "link"]
       },
-      onCreated);
-    }
-
-  browser.storage.sync.set({
-    previousToggleState : true,
-    processItem: "preprocess-only",
-    requestItem: "request-only",
-  })
-}
-
-  else if(showDebugOptions === false && previousToggleState) {
-    browser.contextMenus.remove("preprocess-only");
-    browser.contextMenus.remove("request-only");
-    browser.storage.sync.set({previousToggleState : false});
-    browser.storage.sync.set({
-      processItem: "",
-      requestItem: "",
-    })
+    onCreated);
+    browser.contextMenus.create({
+      id: "request-only",
+      title: browser.i18n.getMessage("requestItem"),
+      contexts: ["image", "link"]
+    },
+    onCreated);
   }
 });
 
