@@ -39,6 +39,10 @@ export interface IMAGERequest1 {
     [k: string]: unknown;
   };
   /**
+   * The Google place ID of the location identified in a map.
+   */
+  placeID?: string;
+  /**
    * Serialized XML of the image node and possibly related nodes.
    */
   context?: string;

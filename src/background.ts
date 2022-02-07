@@ -90,12 +90,10 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     });
 }
 
-async function generateMapQuery(message: { context: string, url: string, dims: [number, number], coordinates: [number, number] }): Promise<IMAGERequest> {
-  getRenderers();
+async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
-        "url": message.url,
         "coordinates": {
                             "latitude": message.coordinates[0],
                             "longitude": message.coordinates[1]
@@ -105,6 +103,22 @@ async function generateMapQuery(message: { context: string, url: string, dims: [
         "capabilities": [],
         "renderers": renderers
     } as IMAGERequest;
+}
+
+async function generateMapSearchQuery(message: { context: string, placeID: string,}): Promise<IMAGERequest> {
+  return {
+      "request_uuid": uuidv4(),
+      "timestamp": Math.round(Date.now() / 1000),
+      "placeID": message.placeID,
+      "context": message.context,
+      "language": "en",
+      "capabilities": [],
+      "renderers": [
+          "ca.mcgill.a11y.image.renderer.Text",
+          "ca.mcgill.a11y.image.renderer.SimpleAudio",
+          "ca.mcgill.a11y.image.renderer.SegmentAudio"
+      ]
+  } as IMAGERequest;
 }
 
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
@@ -133,21 +147,25 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "localResource":
     case "mapResource":
     case "settingsSaved":
+    case "mapSearch":
       // Get response and open new window
       if (message["type"] === "resource") {
         query = await generateQuery(message);
       } else if (message["type"] === "mapResource") {
         console.debug("Generating map query");
         query = await generateMapQuery(message);
+      }else if (message["type"] === "mapSearch") {
+        console.debug("Generating map query");
+        query = await generateMapSearchQuery(message);
       }else{
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
         await getAllStorageSyncData().then(async items => {
-          if(items["mcgillServer"]){
+          if(items["mcgillServer"]===true){
             serverUrl = "https://image.a11y.mcgill.ca/";
           }else{
-            if(items["inputUrl"]!== "" && items["customServer"]){
+            if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
             }
           }
@@ -194,10 +212,10 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }
       else if (message["toRender"] === "preprocess") {
           await getAllStorageSyncData().then(async items => {
-            if(items["mcgillServer"]){
+            if(items["mcgillServer"]===true){
               serverUrl = "https://image.a11y.mcgill.ca/";
             }else{
-              if(items["inputUrl"]!== "" && items["customServer"]){
+              if(items["inputUrl"]!== "" && items["customServer"]===true){
               serverUrl = items["inputUrl"];
               }
             }
