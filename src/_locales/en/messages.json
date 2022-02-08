@@ -4,7 +4,7 @@
         "description": "Extension name"
     },
     "extensionDescription": {
-        "message": "Extension for the McGill IMAGE project. This is a very, very, early alpha.",
+        "message": "Extension for the McGill IMAGE project. This is a beta release.",
         "description": "Brief description of the extension. Will be expanded eventually."
     },
     "menuItem": {
