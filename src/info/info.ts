@@ -109,68 +109,39 @@ port.onMessage.addListener(async (message) => {
             contentDiv.classList.add("rendering-content");
             contentDiv.id = contentId;
             div.append(contentDiv);
-            const selectDiv = document.createElement("div");
-            selectDiv.classList.add("form-floating");
-            contentDiv.append(selectDiv);
-            const label = document.createElement("label");
-            label.textContent = browser.i18n.getMessage("segmentAudioSelLabel");
-            label.classList.add("form-label");
-            const select = document.createElement("select");
-            select.classList.add("form-select");
-            select.setAttribute("id", "m-" + uuidv4());
-            label.setAttribute("for", select.id);
-            const fullOption = document.createElement("option");
-            fullOption.setAttribute("value", "full");
-            fullOption.setAttribute("selected", "true");
-            fullOption.textContent = browser.i18n.getMessage("segmentAudioFullRendering");
-            select.append(fullOption);
+            const audio = document.createElement("audio");
+            audio.setAttribute("controls", "");
+            audio.setAttribute("src", rendering["data"]["audioFile"] as string);
+            contentDiv.append(audio);
+            const player = new Plyr(audio, { seekTime: 0 });
+            const download = document.createElement("a");
+            download.setAttribute("href", rendering["data"]["audioFile"] as string);
+            download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
+            download.textContent = "Download Audio File";
+            contentDiv.append(download);
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
-            for (let idx = 0; idx < audioInfo.length; idx++) {
-                const opt = document.createElement("option");
-                opt.setAttribute("value", idx.toString());
-                const val = audioInfo[idx];
-                opt.textContent = val["name"];
-                select.append(opt);
-            }
-            selectDiv.append(select);
-            selectDiv.append(label);
-
-            const button = document.createElement("button");
-            button.textContent = browser.i18n.getMessage("segmentAudioButton");
-            button.classList.add("btn", "btn-secondary");
-            selectDiv.append(button);
-
-            const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
-                return resp.arrayBuffer();
-            }).then(buffer => {
-                return audioCtx.decodeAudioData(buffer);
-            }).catch(e => { console.error(e); throw e; });
-
-            let currentOffset: number | undefined;
-            let currentDuration: number | undefined;
-
-            select.addEventListener("input", (e) => {
-                const evt = e as InputEvent;
-                const target = evt.target as HTMLSelectElement;
-                if (target.value === "full") {
-                    currentOffset = undefined;
-                    currentDuration = undefined;
-                } else {
-                    const idx = parseInt(target.value);
-                    const data = audioInfo[idx];
-                    currentOffset = data["offset"] as number;
-                    currentDuration = data["duration"] as number;
+            player.on("keydown", (e: KeyboardEvent) => {
+                if (e.key === "ArrowLeft") {
+                    // Get previous segment
+                    let i = 0;
+                    // Include 1 second grace period
+                    for (; audioInfo[i].offset + 1 < player.currentTime && i < audioInfo.length; i++) {}
+                    if (i > 0) {
+                        // Move to previous
+                        player.currentTime = audioInfo[i - 1].offset;
+                    }
+                } else if (e.key === "ArrowRight") {
+                    // Get next segment
+                    let i = 0;
+                    for (; audioInfo[i].offset < player.currentTime && i < audioInfo.length; i++) {}
+                    if (i < audioInfo.length) {
+                        // Good segment, move to next
+                        player.currentTime = audioInfo[i].offset;
+                    }
                 }
             });
-            button.addEventListener("click", _ => {
-                const sourceNode = audioCtx.createBufferSource();
-                sourceNode.buffer = audioBuffer;
-                sourceNode.connect(audioCtx.destination);
-                sourceNode.start(0, currentOffset, currentDuration);
-            });
         }
-
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
+        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
