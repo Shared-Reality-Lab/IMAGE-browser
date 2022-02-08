@@ -170,7 +170,7 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
+        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
@@ -196,6 +196,7 @@ port.onMessage.addListener(async (message) => {
             let contentDiv = document.createElement("div");
             contentDiv.classList.add("collapse");
             contentDiv.classList.add("rendering-content");
+            
             contentDiv.id = contentId;
             div.append(contentDiv);
 

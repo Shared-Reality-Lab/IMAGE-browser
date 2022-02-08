@@ -65,7 +65,8 @@ async function generateQuery(message: { context: string, url: string, dims: [num
                 "ca.mcgill.a11y.image.renderer.Text",
                 "ca.mcgill.a11y.image.renderer.SimpleAudio",
                 "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                "ca.mcgill.a11y.image.renderer.SimpleHaptics"
+                "ca.mcgill.a11y.image.renderer.SimpleHaptics",
+                "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics"
             ],
         } as IMAGERequest;
     });
@@ -118,7 +119,8 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
         "renderers": [
             "ca.mcgill.a11y.image.renderer.Text",
             "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "ca.mcgill.a11y.image.renderer.SimpleHaptics"
+            "ca.mcgill.a11y.image.renderer.SimpleHaptics",
+            "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics"
         ],
     } as IMAGERequest;
 }
