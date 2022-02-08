@@ -6,7 +6,7 @@
  */
 
 /**
- * Response of renderings of an image given certain conditions.
+ * Response of renderings of a graphic given certain conditions.
  */
 export interface IMAGEResponse {
   /**

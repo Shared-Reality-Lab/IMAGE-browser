@@ -28,7 +28,7 @@ function getAllStorageSyncData() {
     //Default values
     inputUrl: "",
     customServer:false,
-    mcgillServer: true, 
+    mcgillServer: true,
     developerMode: false,
     previousToggleState:false,
     processItem: "",
@@ -56,7 +56,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
             "URL": message.url,
-            "image": image,
+            "graphic": image,
             "dimensions": message.dims,
             "context": message.context,
             "language": "en",
@@ -110,7 +110,7 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
-        "image": message.image,
+        "graphic": message.image,
         "dimensions": message.dims,
         "context": message.context,
         "language": "en",
@@ -259,7 +259,7 @@ function updateDebugContextMenu(){
         },
         onCreated);
       }
-  
+
       browser.storage.sync.set({
         previousToggleState : true,
         processItem: "preprocess-only",

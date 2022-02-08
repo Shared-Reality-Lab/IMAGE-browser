@@ -6,7 +6,7 @@
  */
 
 /**
- * Request for renderings of an image or a map given certain conditions.
+ * Request for renderings of a graphic or a map given certain conditions.
  */
 export type IMAGERequest = IMAGERequest1 & IMAGERequest2;
 export type IMAGERequest2 = {
@@ -23,11 +23,11 @@ export interface IMAGERequest1 {
    */
   timestamp?: number;
   /**
-   * Data URL of the base 64 image being handled.
+   * Data URL of the base 64 graphic being handled.
    */
-  image?: string;
+  graphic?: string;
   /**
-   * The width and height of the image as requested in pixels.
+   * The width and height of the graphic as requested in pixels.
    */
   dimensions?: [number, number];
   /**
@@ -43,7 +43,7 @@ export interface IMAGERequest1 {
    */
   placeID?: string;
   /**
-   * Serialized XML of the image node and possibly related nodes.
+   * Serialized XML of the source node and possibly related nodes.
    */
   context?: string;
   /**
