@@ -91,6 +91,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
 }
 
 async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
+    getRenderers();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -106,6 +107,7 @@ async function generateMapQuery(message: { context: string, coordinates: [number
 }
 
 async function generateMapSearchQuery(message: { context: string, placeID: string,}): Promise<IMAGERequest> {
+  getRenderers();
   return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
@@ -113,15 +115,12 @@ async function generateMapSearchQuery(message: { context: string, placeID: strin
       "context": message.context,
       "language": "en",
       "capabilities": [],
-      "renderers": [
-          "ca.mcgill.a11y.image.renderer.Text",
-          "ca.mcgill.a11y.image.renderer.SimpleAudio",
-          "ca.mcgill.a11y.image.renderer.SegmentAudio"
-      ]
+      "renderers": renderers
   } as IMAGERequest;
 }
 
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
+    getRenderers();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),

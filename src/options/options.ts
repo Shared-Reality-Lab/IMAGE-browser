@@ -65,7 +65,7 @@ function optionsCheck(){
     window.alert("Continuing without entering Custom URL will not give any renderings.");
     } 
     else if(items["noHaptics"]===true && items["audio"]===false && items["text"]===false ){
-      window.alert("Continuing without selecting a Rendering/Haptics option will not give any renderings.");
+      window.alert("No interpretations will appear when both Audio and Text are unchecked!");
     }
     else{
      window.alert("Preferences Saved!");
