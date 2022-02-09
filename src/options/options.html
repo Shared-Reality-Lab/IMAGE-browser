@@ -4,11 +4,8 @@
         <link rel="stylesheet" href="./options.css">
     </head>
     <body>
-
-    <!--
         <div>
            <h1 id="renderings-header">Rendering Options</h1> 
-            <h3>(Not yet Implemented)</h3> 
             <div class="browser-style">
                 <input type="checkbox" id="audio-renderings" name="audio-renderings">
                 <label for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
@@ -18,7 +15,6 @@
                 <label for="textRenderingsLabel" id="textRenderingsLabel"></label>
             </div>
         </div>
-    -->
 
         <div id="wrapper-div">
             <h1 id="advanced-options">Advanced Options</h1> 
@@ -35,19 +31,19 @@
                 </div>
             </div> 
              
-            <div id = "developer-mode"><h1>Developer Mode</h1></div>
+            <div id = "developer-mode">
+                <h1 id = "developer-mode-text">Developer Mode</h1>
+            </div>
             <div id= "div-togglebutton" class="toggle-container">
                 <input type="checkbox" id = "toggle"/>
                 <div class="slider round"></div>
             </div>
-            <div>
+            <div id = "debug-text-div">
                 <h3 id="debugText">Enabling developer mode allows access to debug options from the context menu in the browser.</h1>
             </div>
        </div>
 
-    <!--
         <div id="developerSettingsDiv" style="display: none;">
-          <h3>(Not yet Implemented)</h3> 
             <div class="browser-style">
                 <input type="radio" id="none-option" name="none-option" checked>
                 <label for="noHaptics" id="noHaptics"></label>
@@ -57,7 +53,7 @@
                 <label for="Haply2diy" id="Haply2diy"></label>
             </div>
         </div>
-    -->
+    
         <button class="browser-style" type="submit" id="preferences-submit"></button>
         <div id="status"></div>
     </body>
