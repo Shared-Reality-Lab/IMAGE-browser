@@ -367,8 +367,8 @@ getAllStorageSyncData().then((items) => {
 
   if (showDebugOptions) {
         browser.contextMenus.create({
-          id: "preprocess-only",
-          title: browser.i18n.getMessage("preprocessItem"),
+          id: "request-only",
+          title: browser.i18n.getMessage("requestItem"),
           contexts: ["image", "link"]
         },
       onCreated);
