@@ -75,7 +75,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
-
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
@@ -366,19 +365,19 @@ getAllStorageSyncData().then((items) => {
   previousToggleState = items["previousToggleState"];
 
   if (showDebugOptions) {
-        browser.contextMenus.create({
-          id: "request-only",
-          title: browser.i18n.getMessage("requestItem"),
-          contexts: ["image", "link"]
-        },
-      onCreated);
-      browser.contextMenus.create({
-        id: "preprocess-only",
-        title: browser.i18n.getMessage("preprocessItem"),
-        contexts: ["image", "link"]
-      },
-      onCreated);
-    }
+    browser.contextMenus.create({
+      id: "preprocess-only",
+      title: browser.i18n.getMessage("preprocessItem"),
+      contexts: ["image", "link"]
+    },
+  onCreated);
+    browser.contextMenus.create({
+    id: "request-only",
+    title: browser.i18n.getMessage("requestItem"),
+    contexts: ["image", "link"]
+    },
+  onCreated);
+  }
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
