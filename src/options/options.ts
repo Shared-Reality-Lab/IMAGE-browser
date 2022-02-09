@@ -32,23 +32,28 @@ for (let label of labels) {
 const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
 const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));
 const customServerSetting = <HTMLInputElement>(document.getElementById("custom-server"));
-//const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
-//const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
-//const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
+const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
+const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
+const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
 
-// if (toggleButton) {
-//   toggleButton?.addEventListener("click", showDeveloperSettings);
-// } else {
-//   console.warn('Could not find toggle button with ID "toggle"');
-// }
+if (toggleButton) {
+  toggleButton?.addEventListener("click", showDeveloperSettings);
+} else {
+  console.warn('Could not find toggle button with ID "toggle"');
+}
 
-// function showDeveloperSettings() {
-// if (toggleButton.checked) {
-//     developerSettings.style.display = "block";
-//   } else {
-//     developerSettings.style.display = "none";
-//   }
-// }
+function showDeveloperSettings() {
+if (toggleButton.checked && chromeAgent===true) {
+    developerSettings.style.display = "block";
+  } else {
+    developerSettings.style.display = "none";
+  }
+}
+let userAgentString = navigator.userAgent;
+
+let chromeAgent = userAgentString.indexOf("Chrome") > -1;
+
+console.log("chrome browser", chromeAgent);
 
 function customUrlCheck(){
   browser.storage.sync.get({
@@ -70,8 +75,8 @@ function saveOptions() {
     mcgillServer: mcgillServerSetting.checked,
     customServer: customServerSetting.checked,
     developerMode: toggleButton.checked,
-    //noHaptics: noHapticsSetting.checked,
-    //haply2diy: haply2diySetting.checked
+    noHaptics: noHapticsSetting.checked,
+    haply2diy: haply2diySetting.checked
   }),
     (function () {
     customUrlCheck();
@@ -90,8 +95,8 @@ function restore_options() {
       customServer:false,
       previousToggleState:false,
       developerMode: false,
-      //noHaptics:true,
-      //haply2diy:false
+      noHaptics:true,
+      haply2diy:false
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -99,18 +104,18 @@ function restore_options() {
         mcgillServerSetting.checked = items["mcgillServer"];
         customServerSetting.checked = items["customServer"];
         toggleButton.checked = items["developerMode"];
-        //noHapticsSetting.checked= items["noHaptics"];
-        //haply2diySetting.checked= items["haply2diy"];
+        noHapticsSetting.checked= items["noHaptics"];
+        haply2diySetting.checked= items["haply2diy"];
 
-        // if (toggleButton.checked) {
-        //   developerSettings.style.display = "block"; 
-        // }
+        if (toggleButton.checked && chromeAgent===true) {
+          developerSettings.style.display = "block"; 
+        }
     }); 
 }
 
 document.addEventListener("DOMContentLoaded", restore_options);
 
-const submit = document.getElementById("preferences-submit");
+const submit = <HTMLInputElement>(document.getElementById("preferences-submit"));
 
 if (submit) {
   submit.textContent = browser.i18n.getMessage("savePreferences");
