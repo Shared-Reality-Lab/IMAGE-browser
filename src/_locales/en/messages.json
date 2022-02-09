@@ -35,7 +35,7 @@
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
     },
-    "segmentAudioButton":{
+    "segmentAudioButton": {
         "message": "Play",
         "description": "Label for playing audio renderings of selected audio segment."
     },
@@ -47,8 +47,8 @@
         "message": "Text (for screenreaders)",
         "description": "Text Renderings"
     },
-    "savePreferences": {
-        "message": "Save Preferences",
+    "saveChanges": {
+        "message": "Save Changes",
         "description": "Label for saving user preferences."
     },
     "monoSoundLabel": {
