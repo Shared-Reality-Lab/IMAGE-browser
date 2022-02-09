@@ -122,7 +122,7 @@ port.onMessage.addListener(async (message) => {
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
             // eslint-disable-next-line
             // @ts-ignore
-            player.on("keypress", (e: KeyboardEvent) => {
+            player.on("keydown", (e: KeyboardEvent) => {
                 if (e.key === "ArrowLeft") {
                     // Get previous segment
                     let i = 0;
