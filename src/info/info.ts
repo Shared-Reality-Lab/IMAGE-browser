@@ -186,7 +186,7 @@ port.onMessage.addListener(async (message) => {
             var firstCall: boolean = true;
 
             // get data from the handler
-            const imageSrc = rendering["data"]["image"] as string;
+            const imageSrc = rendering["data"]["graphic"] as string;
             const data = rendering["data"]["data"] as Array<JSON>;
 
             // add rendering button
