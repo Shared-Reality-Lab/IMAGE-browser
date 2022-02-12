@@ -27,6 +27,7 @@ let haplyBoard;
 
 // store required handler json
 let objectData = []
+let segmentData = []
 
 // threshold used for force calculation
 const threshold = 0.02;
@@ -77,7 +78,7 @@ let doneGuidance;
 // to track the status of the drop down menu
 let hapticMode;
 
-//keeps track of many times a message has been received in the worker
+// keeps track of many times a message has been received in the worker
 let messageCount = 0;
 
 self.addEventListener("message", async function (event) {
@@ -85,19 +86,27 @@ self.addEventListener("message", async function (event) {
   if (event) {
 
     hapticMode = event.data.mode;
-    let rendering = event.data.renderingData;
+    let rendering = event.data.renderingData.entityInfo;
 
-    for (var i = 0; i < rendering.length; i++) {
+    let objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex(x => x.name === "Text");//rendering.indexOf(x => x.name == "Text", 1);
+    rendering.reverse();
+    for (var i = 1; i < objHeaderIndex; i++) {
+      let seg = {
+        centroid: rendering[i].centroid,
+        coords: rendering[i].contourPoints
+      }
+      segmentData.push(seg);
+    }
+    for (var i = objHeaderIndex + 1; i < rendering.length; i++) {
       let obj = {
-        centroid: rendering[i].centroids,
-        coords: rendering[i].coords,
-        text: rendering[i].text
+        name: rendering[i].name,
+        centroid: rendering[i].centroid,
+        coords: rendering[i].contourPoints
       }
       objectData.push(obj);
     }
-
     //set initial target location first object centroid coordinates
-    targetLoc.set(imageToHaply(objectData[0].centroid[0], objectData[0].centroid[1]));
+    //targetLoc.set(imageToHaply(objectData[0].centroid[0], objectData[0].centroid[1]));
   }
 
   /************ BEGIN SETUP CODE *****************/
@@ -152,27 +161,28 @@ self.addEventListener("message", async function (event) {
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
 
-    // compute forces based on existing position
-    if (hapticMode === "Active") {
-      activeGuidance();
-    }
-    else if (hapticMode === "Passive") {
-      passiveGuidance();
-    }
-    else if (hapticMode === "Vibration") {
-      vib_mode();
-    }
+    // // compute forces based on existing position
+    // if (hapticMode === "Active") {
+    //   activeGuidance();
+    // }
+    // else if (hapticMode === "Passive") {
+    //   passiveGuidance();
+    // }
+    // else if (hapticMode === "Vibration") {
+    //   vib_mode();
+    // }
 
-    // send required data back
+    // // send required data back
     var data = {
       positions: { x: positions[0], y: positions[1] },
-      objectData: objectData
+      objectData: objectData,
+      segmentData: segmentData
     }
 
-    // sending end effector position back to info.ts to update visuals
+    // // sending end effector position back to info.ts to update visuals
     this.self.postMessage(data);
 
-    //calculate and set torques
+    // calculate and set torques
     widgetOne.set_device_torques(fEE.toArray());
     widgetOne.device_write_torques();
 

@@ -41,7 +41,6 @@ port.onMessage.addListener(async (message) => {
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
-    console.debug(renderings);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -183,11 +182,16 @@ port.onMessage.addListener(async (message) => {
             // virtual end effector avatar offset
             const offset = 100;
             let objectData: any;
-            var firstCall: boolean = true;
+            let segmentData: any;
+            let firstCall: boolean = true;
 
             // get data from the handler
-            const imageSrc = rendering["data"]["image"] as string;
-            const data = rendering["data"]["data"] as Array<JSON>;
+            const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg"
+            //rendering["data"]["image"] as string;
+            //const data = rendering["data"]["data"] as Array<JSON>;
+            const data = rendering["data"]["info"] as Array<JSON>;
+
+            console.log(data);
 
             // add rendering button
             let div = document.createElement("div");
@@ -196,22 +200,22 @@ port.onMessage.addListener(async (message) => {
             let contentDiv = document.createElement("div");
             contentDiv.classList.add("collapse");
             contentDiv.classList.add("rendering-content");
-            
+
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            var options = ["Passive",
+            let options = ["Passive",
                 "Active",
                 "Vibration"];
 
             //Create and append select list
-            var selectList = document.createElement("select");
+            const selectList = document.createElement("select");
             selectList.id = "mySelect";
             contentDiv.appendChild(selectList);
 
             //Create and append the options
-            for (var i = 0; i < options.length; i++) {
-                var option = document.createElement("option");
+            for (let i = 0; i < options.length; i++) {
+                const option = document.createElement("option");
                 option.value = options[i];
                 option.text = options[i];
                 selectList.appendChild(option);
@@ -238,7 +242,7 @@ port.onMessage.addListener(async (message) => {
             }
             const ctx: CanvasRenderingContext2D = res;
 
-            var img = new Image();
+            const img = new Image();
             img.src = imageSrc;
 
             let worker;
@@ -289,48 +293,93 @@ port.onMessage.addListener(async (message) => {
                 window.requestAnimationFrame(draw);
             }
 
-            var rec: Array<any> = [];
-            var centroids: Array<vector> = [];
+            const rec: Array<any> = [];
+            const centroids: Array<vector> = [];
+
+            type Segment = {
+                coordinates: number[][]
+            }
+
+            const segments: Segment[][] = [];
+
+            
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
             function createRect() {
-                for (var i = 0; i < objectData.length; i++) {
-
+                //for (let i = 0; i < objectData.length; i++) {
+                for (const obj of objectData) {
                     // transform coordinates into haply frame of reference
                     // horizontal/vertical positions
-                    let [uLX, uLY] = imgToWorldFrame(objectData[i].coords[0], objectData[i].coords[1]);
-                    let [lRX, lRY] = imgToWorldFrame(objectData[i].coords[2], objectData[i].coords[3]);
-                    // centroid
-                    let [cX, cY] = imgToWorldFrame(objectData[i].centroid[0], objectData[i].centroid[1]);
+                    for (let j = 0; j < obj['centroid'].length; j++) {
 
-                    let objWidth = Math.abs(uLX - lRX);
-                    let objHeight = Math.abs(uLY - lRY);
+                        let bounds = obj['coords'][j];
+                        let centroid = obj['centroid'][j];
 
-                    rec.push({
-                        x: uLX,
-                        y: uLY,
-                        width: objWidth,
-                        height: objHeight,
-                    });
+                        let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
+                        let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
 
-                    centroids.push({
-                        x: cX,
-                        y: cY
-                    })
+                        // centroid     
+                        let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
+
+                        let objWidth = Math.abs(uLX - lRX);
+                        let objHeight = Math.abs(uLY - lRY);
+
+                        rec.push({
+                            x: uLX,
+                            y: uLY,
+                            width: objWidth,
+                            height: objHeight,
+                        });
+
+                        centroids.push({
+                            x: cX,
+                            y: cY
+                        })
+                    }
+                }
+            }
+
+            function createSegs() {
+                for (const item of segmentData) {
+                   const segment: Array<Segment> = [];
+                    const itemSegments = item['coords'][0];
+                    // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
+                    // each part of the segment
+                    for (let i = 0; i < itemSegments.length; i++) {
+                        let coordinates = itemSegments[i]['coordinates'] as number[][];
+                        segment[i] = { coordinates };
+                    }
+                    segments.push(segment);
                 }
             }
 
             function drawBoundaries() {
 
-                for (var i = 0; i < rec.length; i++) {
-                    var s = rec[i];
+                for (let i = 0; i < rec.length; i++) {
+                    const s = rec[i];
                     ctx.strokeStyle = "red";
                     ctx.strokeRect(s.x, s.y, s.width, s.height);
 
-                    var c = centroids[i];
+                    const c = centroids[i];
                     ctx.beginPath();
                     ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
                     ctx.strokeStyle = "white";
                     ctx.stroke();
+                }
+
+                ctx.strokeStyle = "blue";
+
+                for (const segmentItem of segments) {
+                    for (const segment of segmentItem) {
+                        const coordinates = segment['coordinates'];
+                        for (let i = 0; i < coordinates.length; i++) {
+
+                            const pX = coordinates[i][0];
+                            const pY = coordinates[i][1];
+                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
+
+                            ctx.strokeRect(pointX, pointY, 1, 1);
+                        }
+                    }
                 }
             }
 
@@ -378,10 +427,12 @@ port.onMessage.addListener(async (message) => {
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
                     objectData = msg.data.objectData;
+                    segmentData = msg.data.segmentData;
 
                     // latch to call the refresh of the animation once after which the call is recursive in draw() function
                     if (firstCall) {
                         createRect();
+                        createSegs();
                         window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
@@ -402,7 +453,7 @@ port.postMessage({
 
 // scaling of coordinates to canvas
 function imgToWorldFrame(x1: number, y1: number) {
-    var x = x1 * canvasWidth;
-    var y = y1 * canvasHeight;
+    const x = x1 * canvasWidth;
+    const y = y1 * canvasHeight;
     return [x, y];
 }
