@@ -17,9 +17,7 @@
 import  browser  from "webextension-polyfill";
 
 let port = browser.runtime.connect();
-let userAgentString = navigator.userAgent;
-let chromeAgent = userAgentString.indexOf("Chrome") > -1;
-
+let navigatorSerial =navigator.serial;
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -45,7 +43,7 @@ if (toggleButton) {
 }
 
 function showDeveloperSettings() {
-if (toggleButton.checked && chromeAgent===true) {
+if (toggleButton.checked && navigatorSerial !== undefined) {
     developerSettings.style.display = "block";
   } else {
     developerSettings.style.display = "none";
@@ -97,18 +95,18 @@ function restore_options() {
       haply2diy:false
     })
     .then((items) => {
-      (<HTMLInputElement>document.getElementById("input-url")).value =
-        items["inputUrl"];
-        mcgillServerSetting.checked = items["mcgillServer"];
-        customServerSetting.checked = items["customServer"];
-        toggleButton.checked = items["developerMode"];
-        noHapticsSetting.checked= items["noHaptics"];
-        haply2diySetting.checked= items["haply2diy"];
+    (<HTMLInputElement>document.getElementById("input-url")).value =
+      items["inputUrl"];
+      mcgillServerSetting.checked = items["mcgillServer"];
+      customServerSetting.checked = items["customServer"];
+      toggleButton.checked = items["developerMode"];
+      noHapticsSetting.checked= items["noHaptics"];
+      haply2diySetting.checked= items["haply2diy"];
 
-        if (toggleButton.checked && chromeAgent===true) {
-          developerSettings.style.display = "block"; 
-        }
-    }); 
+      if (toggleButton.checked && navigatorSerial !== undefined) {
+        developerSettings.style.display = "block"; 
+      }
+  }); 
 }
 
 document.addEventListener("DOMContentLoaded", restore_options);
