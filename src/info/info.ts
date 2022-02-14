@@ -170,7 +170,7 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
+        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics" ||rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics" )  {
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
@@ -227,7 +227,7 @@ port.onMessage.addListener(async (message) => {
             canvas.width = 800;
             canvas.height = 500;
             canvas.style.zIndex = "8";
-            canvas.style.position = "absolute";
+            canvas.style.position = "relative";
             canvas.style.border = "1px solid";
             contentDiv.append(document.createElement("br"));
             contentDiv.append(canvas);
