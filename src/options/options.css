@@ -1,14 +1,29 @@
-#preferences-submit {
-  background: #2196f3 ; 
+
+ #preferences-submit {
+  background: #7ed7f4 ; 
   border: none;
   border-radius: 12px;
-  color: white;
+  color: black;
   display: inline-block;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 400;
-  margin-top: 20px;
+  margin-top: 40px;
   text-decoration: none;
-  width: 140px; 
+  width: 180px; 
+  height: 40px; 
+  margin-left: 20px;
+}
+#cancel-button{
+  background: rgb(176, 175, 175) ; 
+  border: none;
+  border-radius: 12px;
+  color: black;
+  display: inline-block;
+  font-size: 20px;
+  font-weight: 400;
+  margin-top: 40px;
+  text-decoration: none;
+  width: 100px; 
   height: 40px; 
 }
 
@@ -17,7 +32,7 @@
   width: 500px;
   font-size:12pt;
   margin-left: 16px;
-  color: grey;
+  color: black;
 }
 
 #wrapper-div{
@@ -26,19 +41,19 @@
   overflow:auto;
 }
 
-#developer-mode-text{
-color: grey;
-font-size: x-large;
-font-weight: 400;
+#developer-mode{
+  float: left;
 }
 
-#developer-mode{
-float:left;
+#developer-mode-text{
+  color: black;
+  font-size: x-large;
+  font-weight: 400;
 }
 
 #div-togglebutton{
-margin-top: 17px;
-left: 10px;
+  margin-top: 17px;
+  left: 10px;
 }
 .toggle-container {
   position:relative;
@@ -62,9 +77,10 @@ left: 0;
 right: 0;
 bottom: 0;
 cursor: pointer;
-background-color: #808080;
+background-color: rgb(178, 172, 172) ;
 transition: 0.4s;
 pointer-events: none;
+border: #100f0f ;
 }
 
 .slider::before {
@@ -74,7 +90,7 @@ height: 20px;
 width: 20px;
 left: 2px;
 bottom: 2px;
-background-color: #fff;
+background-color: #808080;
 transition: 0.2s;
 pointer-events: none;
 }
@@ -87,11 +103,11 @@ right: 5px;
 bottom: 5px;
 transition: 0.2s;
 pointer-events: none;
-color: #fff;
+color: #808080;
 }
 
 input:checked + .slider {
-background-color: #2196f3;
+background-color:#7ed7f4;
 }
 
 input:checked + .slider:before {
@@ -111,68 +127,68 @@ border-radius: 50%;
 }
 
 #advanced-options{
-color: grey;
+color: black;
 font-size: x-large;
 font-weight: 400;
 }
 
 #renderings-header{
-color: grey;
+color: black;
 font-size: x-large;
 font-weight: 400;
 }
 #noHaptics{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400; 
 }
 
 #Haply2diy{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400; 
 }
 #audioRenderingsLabel{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400;
 }
 
 #textRenderingsLabel{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400;
 line-height: 30pt;
 }
 
 #server-options{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400;
 }
 
 #mcgillServerLabel{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400; 
 line-height: 30pt;
 }
 
 #customServerLabel{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400; 
 line-height: 20pt;
 }
 
 #debugText{
-color: grey;
+color: black;
 font-size: medium;
 font-weight: 400; 
-margin-left: 0px;
 }
 
 #debug-text-div{
-text-align: start;
-margin-top: 20px;
+  text-align: start;
+  margin-top: 20px;
 }
+

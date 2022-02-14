@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="./options.css">
     </head>
     <body>
+        
         <div>
            <h1 id="renderings-header">Rendering Options</h1> 
             <div class="browser-style">
@@ -43,19 +44,18 @@
             </div>
        </div>
 
-        <div id="developerSettingsDiv" style="display: none;">
+        <div id="developerSettingsDiv" style="display: none;"> 
             <div class="browser-style">
-                <input type="radio" id="none-option" name="none-option" checked>
+                <input type="radio" id="none-option" name="hapticsOptions" checked>
                 <label for="noHaptics" id="noHaptics"></label>
             </div>
             <div class="browser-style">
-                <input type="radio" id="haply-option" name="haply-option">
+                <input type="radio" id="haply-option" name="hapticsOptions">
                 <label for="Haply2diy" id="Haply2diy"></label>
             </div>
         </div>
-    
-        <button class="browser-style" type="submit" id="preferences-submit"></button>
-        <div id="status"></div>
+        <button class="cancel button" type="button" id="cancel-button">Cancel</button>
+        <button class="save button" type="button" id="preferences-submit">Save Changes</button>
     </body>
     <script type="module" src="./options.ts"></script>
 </html>

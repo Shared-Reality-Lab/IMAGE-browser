@@ -28,16 +28,39 @@ function getAllStorageSyncData() {
     //Default values
     inputUrl: "",
     customServer:false,
-    mcgillServer: true, 
+    mcgillServer: true,
     developerMode: false,
     previousToggleState:false,
+    noHaptics: true,
+    haply2diy: false,
+    audio: true,
+    text: false,
     processItem: "",
     requestItem: "",
     mweItem: ""
   });
 }
 
+var renderers : string[] = [];
+
+async function getRenderers(){
+  renderers = [];
+  getAllStorageSyncData().then(async items => {
+    if(items["audio"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.SegmentAudio");
+      renderers.push("ca.mcgill.a11y.image.renderer.SimpleAudio");
+    }
+    if(items["text"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.Text");
+    }
+    if(items["haply2diy"]){
+      renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
+    }
+  });
+}
+
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
+  getRenderers();
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -52,26 +75,23 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
+
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
             "URL": message.url,
-            "image": image,
+            "graphic": image,
             "dimensions": message.dims,
             "context": message.context,
             "language": "en",
             "capabilities": [],
-            "renderers": [
-                "ca.mcgill.a11y.image.renderer.Text",
-                "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                "ca.mcgill.a11y.image.renderer.SimpleHaptics"
-            ],
+            "renderers": renderers
         } as IMAGERequest;
     });
 }
 
 async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
+    getRenderers();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -82,15 +102,12 @@ async function generateMapQuery(message: { context: string, coordinates: [number
         "context": message.context,
         "language": "en",
         "capabilities": [],
-        "renderers": [
-            "ca.mcgill.a11y.image.renderer.Text",
-            "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "ca.mcgill.a11y.image.renderer.SegmentAudio"
-        ]
+        "renderers": renderers
     } as IMAGERequest;
 }
 
 async function generateMapSearchQuery(message: { context: string, placeID: string,}): Promise<IMAGERequest> {
+  getRenderers();
   return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
@@ -98,28 +115,21 @@ async function generateMapSearchQuery(message: { context: string, placeID: strin
       "context": message.context,
       "language": "en",
       "capabilities": [],
-      "renderers": [
-          "ca.mcgill.a11y.image.renderer.Text",
-          "ca.mcgill.a11y.image.renderer.SimpleAudio",
-          "ca.mcgill.a11y.image.renderer.SegmentAudio"
-      ]
+      "renderers": renderers
   } as IMAGERequest;
 }
 
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
+    getRenderers();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
-        "image": message.image,
+        "graphic": message.image,
         "dimensions": message.dims,
         "context": message.context,
         "language": "en",
         "capabilities": [],
-        "renderers": [
-            "ca.mcgill.a11y.image.renderer.Text",
-            "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "ca.mcgill.a11y.image.renderer.SimpleHaptics"
-        ],
+        "renderers": renderers
     } as IMAGERequest;
 }
 
@@ -238,7 +248,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
   }
 }
 
-
 function updateDebugContextMenu(){
   getAllStorageSyncData().then((items) => {
     showDebugOptions = items["developerMode"];
@@ -259,7 +268,7 @@ function updateDebugContextMenu(){
         },
         onCreated);
       }
-  
+
       browser.storage.sync.set({
         previousToggleState : true,
         processItem: "preprocess-only",
@@ -339,7 +348,6 @@ function onCreated(): void {
         console.error(browser.runtime.lastError);
     }
 }
-
 browser.contextMenus.create({
     id: "mwe-item",
     title: browser.i18n.getMessage("menuItem"),
@@ -358,18 +366,18 @@ getAllStorageSyncData().then((items) => {
   previousToggleState = items["previousToggleState"];
 
   if (showDebugOptions) {
-        browser.contextMenus.create({
-          id: "preprocess-only",
-          title: browser.i18n.getMessage("preprocessItem"),
-          contexts: ["image", "link"]
-        },
+      browser.contextMenus.create({
+        id: "preprocess-only",
+        title: browser.i18n.getMessage("preprocessItem"),
+        contexts: ["image", "link"]
+      },
       onCreated);
       browser.contextMenus.create({
         id: "request-only",
         title: browser.i18n.getMessage("requestItem"),
         contexts: ["image", "link"]
       },
-      onCreated);
+    onCreated);
     }
 });
 
