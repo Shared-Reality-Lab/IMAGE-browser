@@ -18,6 +18,9 @@ import  browser  from "webextension-polyfill";
 
 let port = browser.runtime.connect();
 
+navigator.serial
+let navigatorSerial = navigator.serial;
+
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -45,7 +48,7 @@ if (toggleButton) {
 }
 
 function showDeveloperSettings() {
-if (toggleButton.checked) {
+if (toggleButton.checked && navigatorSerial !== undefined) {
     developerSettings.style.display = "block";
   } else {
     developerSettings.style.display = "none";
@@ -117,7 +120,7 @@ function restore_options() {
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
 
-        if (toggleButton.checked) {
+        if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }
     }); 
