@@ -17,7 +17,8 @@
 import  browser  from "webextension-polyfill";
 
 let port = browser.runtime.connect();
-let navigatorSerial =navigator.serial;
+let navigatorSerial = navigator.serial;
+
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -35,6 +36,8 @@ const customServerSetting = <HTMLInputElement>(document.getElementById("custom-s
 const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
 const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
 const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
+const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
+const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
 
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
@@ -50,16 +53,22 @@ if (toggleButton.checked && navigatorSerial !== undefined) {
   }
 }
 
-
-function customUrlCheck(){
+function optionsCheck(){
   browser.storage.sync.get({
     inputUrl: "",
     customServer:false,
+    noHaptics:true,
+    audio:false,
+    text:false
   })
   .then((items)=>{
-    if(items["inputUrl"]==="" && items["customServer"]=== true){
+    if(items["inputUrl"]=== "" && items["customServer"]=== true){
     window.alert("Continuing without entering Custom URL will not give any renderings.");
-    }else{
+    } 
+    else if(items["noHaptics"]=== true && items["audio"]=== false && items["text"]=== false ){
+      window.alert("No interpretations will appear when both Audio and Text are unchecked!");
+    }
+    else{
      window.alert("Preferences Saved!");
     }
   });
@@ -72,14 +81,16 @@ function saveOptions() {
     customServer: customServerSetting.checked,
     developerMode: toggleButton.checked,
     noHaptics: noHapticsSetting.checked,
-    haply2diy: haply2diySetting.checked
+    haply2diy: haply2diySetting.checked,
+    audio:audioRenderingsSetting.checked,
+    text:textRenderingsSetting.checked
   }),
     (function () {
-    customUrlCheck();
-    port.postMessage({
-      type: "settingsSaved"
-    });
-  })();
+      optionsCheck();
+      port.postMessage({
+        type: "settingsSaved"
+      });
+    })();
 }
 
 function restore_options() {
@@ -92,30 +103,44 @@ function restore_options() {
       previousToggleState:false,
       developerMode: false,
       noHaptics:true,
-      haply2diy:false
+      haply2diy:false,
+      audio:true,
+      text:false
     })
     .then((items) => {
-    (<HTMLInputElement>document.getElementById("input-url")).value =
-      items["inputUrl"];
-      mcgillServerSetting.checked = items["mcgillServer"];
-      customServerSetting.checked = items["customServer"];
-      toggleButton.checked = items["developerMode"];
-      noHapticsSetting.checked= items["noHaptics"];
-      haply2diySetting.checked= items["haply2diy"];
+      (<HTMLInputElement>document.getElementById("input-url")).value =
+        items["inputUrl"];
+        mcgillServerSetting.checked = items["mcgillServer"];
+        customServerSetting.checked = items["customServer"];
+        toggleButton.checked = items["developerMode"];
+        noHapticsSetting.checked= items["noHaptics"];
+        haply2diySetting.checked= items["haply2diy"];
+        audioRenderingsSetting.checked = items["audio"];
+        textRenderingsSetting.checked = items["text"];
 
-      if (toggleButton.checked && navigatorSerial !== undefined) {
-        developerSettings.style.display = "block"; 
-      }
-  }); 
+        if (toggleButton.checked &&  navigatorSerial !== undefined) {
+          developerSettings.style.display = "block"; 
+        }
+    }); 
 }
 
 document.addEventListener("DOMContentLoaded", restore_options);
 
-const submit = <HTMLInputElement>(document.getElementById("preferences-submit"));
+const submit = document.getElementById("preferences-submit");
+const cancel = document.getElementById("cancel-button");
 
 if (submit) {
-  submit.textContent = browser.i18n.getMessage("savePreferences");
+  submit.textContent = browser.i18n.getMessage("saveChanges");
   submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
+}
+
+function reload(){
+  window.location.reload();
+}
+
+if(cancel){
+  cancel?.addEventListener("click", reload
+  );
 }
