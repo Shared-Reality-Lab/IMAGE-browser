@@ -366,18 +366,18 @@ getAllStorageSyncData().then((items) => {
   previousToggleState = items["previousToggleState"];
 
   if (showDebugOptions) {
-        browser.contextMenus.create({
-          id: "request-only",
-          title: browser.i18n.getMessage("requestItem"),
-          contexts: ["image", "link"]
-        },
-      onCreated);
       browser.contextMenus.create({
         id: "preprocess-only",
         title: browser.i18n.getMessage("preprocessItem"),
         contexts: ["image", "link"]
       },
       onCreated);
+      browser.contextMenus.create({
+        id: "request-only",
+        title: browser.i18n.getMessage("requestItem"),
+        contexts: ["image", "link"]
+      },
+    onCreated);
     }
 });
 
