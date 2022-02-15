@@ -24,6 +24,7 @@ import { IMAGEResponse } from "../types/response.schema";
 import { vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
+import * as worker from './worker';
 
 let request_uuid = window.location.search.substring(1);
 let renderings: IMAGEResponse;
@@ -41,7 +42,6 @@ port.onMessage.addListener(async (message) => {
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
-    console.debug(renderings);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -170,7 +170,7 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics" ||rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics" )  {
+        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
@@ -183,11 +183,16 @@ port.onMessage.addListener(async (message) => {
             // virtual end effector avatar offset
             const offset = 100;
             let objectData: any;
-            var firstCall: boolean = true;
+            let segmentData: any;
+            let firstCall: boolean = true;
 
             // get data from the handler
-            const imageSrc = rendering["data"]["graphic"] as string;
-            const data = rendering["data"]["data"] as Array<JSON>;
+            const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
+            //rendering["data"]["image"] as string;
+            //const data = rendering["data"]["data"] as Array<JSON>;
+            const data = rendering["data"]["info"] as Array<JSON>;
+
+            console.log(data);
 
             // add rendering button
             let div = document.createElement("div");
@@ -196,21 +201,22 @@ port.onMessage.addListener(async (message) => {
             let contentDiv = document.createElement("div");
             contentDiv.classList.add("collapse");
             contentDiv.classList.add("rendering-content");
+
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            var options = ["Passive",
+            let options = ["Passive",
                 "Active",
                 "Vibration"];
 
             //Create and append select list
-            var selectList = document.createElement("select");
+            const selectList = document.createElement("select");
             selectList.id = "mySelect";
             contentDiv.appendChild(selectList);
 
             //Create and append the options
-            for (var i = 0; i < options.length; i++) {
-                var option = document.createElement("option");
+            for (let i = 0; i < options.length; i++) {
+                const option = document.createElement("option");
                 option.value = options[i];
                 option.text = options[i];
                 selectList.appendChild(option);
@@ -237,10 +243,10 @@ port.onMessage.addListener(async (message) => {
             }
             const ctx: CanvasRenderingContext2D = res;
 
-            var img = new Image();
+            const img = new Image();
             img.src = imageSrc;
 
-            let worker;
+            //let worker;
 
             // world resolution properties
             const worldPixelWidth = 1000;
@@ -288,110 +294,216 @@ port.onMessage.addListener(async (message) => {
                 window.requestAnimationFrame(draw);
             }
 
-            var rec: Array<any> = [];
-            var centroids: Array<vector> = [];
+            const rec: Array<any> = [];
+            const centroids: Array<vector> = [];
+            let segments: worker.SubSegment[][];
+
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
             function createRect() {
-                for (var i = 0; i < objectData.length; i++) {
-
+                //for (let i = 0; i < objectData.length; i++) {
+                for (const obj of objectData) {
                     // transform coordinates into haply frame of reference
                     // horizontal/vertical positions
-                    let [uLX, uLY] = imgToWorldFrame(objectData[i].coords[0], objectData[i].coords[1]);
-                    let [lRX, lRY] = imgToWorldFrame(objectData[i].coords[2], objectData[i].coords[3]);
-                    // centroid
-                    let [cX, cY] = imgToWorldFrame(objectData[i].centroid[0], objectData[i].centroid[1]);
+                    for (let j = 0; j < obj['centroid'].length; j++) {
 
-                    let objWidth = Math.abs(uLX - lRX);
-                    let objHeight = Math.abs(uLY - lRY);
+                        let bounds = obj['coords'][j];
+                        let centroid = obj['centroid'][j];
 
-                    rec.push({
-                        x: uLX,
-                        y: uLY,
-                        width: objWidth,
-                        height: objHeight,
-                    });
+                        let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
+                        let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
 
-                    centroids.push({
-                        x: cX,
-                        y: cY
-                    })
+                        // centroid     
+                        let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
+
+                        let objWidth = Math.abs(uLX - lRX);
+                        let objHeight = Math.abs(uLY - lRY);
+
+                        rec.push({
+                            x: uLX,
+                            y: uLY,
+                            width: objWidth,
+                            height: objHeight,
+                        });
+
+                        centroids.push({
+                            x: cX,
+                            y: cY
+                        })
+                    }
                 }
             }
 
             function drawBoundaries() {
 
-                for (var i = 0; i < rec.length; i++) {
-                    var s = rec[i];
+                for (let i = 0; i < rec.length; i++) {
+                    const s = rec[i];
                     ctx.strokeStyle = "red";
                     ctx.strokeRect(s.x, s.y, s.width, s.height);
 
-                    var c = centroids[i];
+                    const c = centroids[i];
                     ctx.beginPath();
                     ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
                     ctx.strokeStyle = "white";
                     ctx.stroke();
                 }
-            }
 
-            function updateAnimation() {
+                ctx.strokeStyle = "blue";
 
-                // drawing bounding boxes and centroids
-                drawBoundaries();
-                border.draw();
+                console.log(segments);
 
-                //scaling end effector position to canvas
-                xE = pixelsPerMeter * -posEE.x;
-                yE = pixelsPerMeter * posEE.y;
+                for (const segment of segments) {
+                    // for (let i = 0; i < segment.length) {
 
-                // set position of virtual avatar in canvas
-                endEffector.x = deviceOrigin.x + xE - offset;
-                endEffector.y = deviceOrigin.y + yE - offset;
-                endEffector.draw();
+                    // }
+                    segment.forEach(subSegment => {
 
-            }
+                        subSegment.coordinates.forEach(coord => {
+                            const pX = coord.x;
+                            const pY = coord.y;
+                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
+    
+                            ctx.strokeRect(pointX, pointY, 1, 1);
+                        })
 
-            endEffector.draw();
+                    })
 
-            // event listener for serial comm button
-            btn.addEventListener("click", _ => {
-                const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let port = navigator.serial.requestPort();
-                worker.postMessage({
-                    renderingData: data,
-                    mode: selectList.value
-                });
-                //checking for changes in drop down menu
-                selectList.onchange = function () {
-                    worker.postMessage({
-                        renderingData: data,
-                        mode: selectList.value
-                    });
-                };
+                    //const coordinates = subsegment.coordinates;
+                    // for (let i = 0; i < coordinates.length; i++) {
 
-                worker.addEventListener("message", function (msg) {
 
-                    // we've selected the COM port
-                    btn.style.visibility = 'hidden';
+                }
+        //     }
+        // }
+    }
 
-                    // return end-effector x/y positions and objectData for updating the canvas
-                    posEE.x = msg.data.positions.x;
-                    posEE.y = msg.data.positions.y;
-                    objectData = msg.data.objectData;
+    function updateAnimation() {
 
-                    // latch to call the refresh of the animation once after which the call is recursive in draw() function
-                    if (firstCall) {
-                        createRect();
-                        window.requestAnimationFrame(draw);
-                        firstCall = false;
-                    }
-                });
+        // drawing bounding boxes and centroids
+        drawBoundaries();
+        border.draw();
+
+        //scaling end effector position to canvas
+        xE = pixelsPerMeter * -posEE.x;
+        yE = pixelsPerMeter * posEE.y;
+
+        // set position of virtual avatar in canvas
+        endEffector.x = deviceOrigin.x + xE - offset;
+        endEffector.y = deviceOrigin.y + yE - offset;
+        endEffector.draw();
+
+    }
+
+    endEffector.draw();
+
+    let keyState: number = 0;
+    const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+
+    // const getData = () => {
+    //     worker.postMessage({
+    //         renderingData: data,
+    //         mode: selectList.value,
+    //         flag: flag
+    //     });
+    // }
+
+    // const debounce = function (fn: any, d: number) { //Higher order function which returns another function.
+    //     let timer: any;
+    //     return function () {
+    //         // let context: any = this,
+    //         //    args = arguments;
+    //         clearTimeout(timer);//This clears setTimeout 
+    //         timer = setTimeout(() => {//call to getData() after 300ms 
+    //             //fn.apply(this, arguments);//fn.apply will getData()
+    //             fn();
+    //         }, d);
+    //     }
+    // }
+
+    const delta = 500;
+    let lastKeyPressTime: any = 0;
+    //const s = debounce(getData, 500);
+
+    document.addEventListener('keydown', (event) => {
+        const keyName = event.key;
+        let thisKeyPressTime: any = new Date();
+
+        if (keyName == 'b') {
+            keyState = 1;
+        }
+        else if (keyName == 'c') {
+            keyState = 2;
+        }
+        if (keyName == 'c' || keyName == 'b') {
+            worker.postMessage({
+                renderingData: data,
+                mode: selectList.value,
+                keyState: keyState
             });
         }
+    });
+
+    // document.addEventListener('keydown', (event) => {
+    //     const keyName = event.key;
+    //     let thisKeyPressTime: any = new Date();
+
+    //     if (keyName == 'b') {
+
+    //         if (thisKeyPressTime - lastKeyPressTime <= delta) {
+    //             flag = 2;
+    //             thisKeyPressTime = 0;
+    //         }
+    //         else {
+    //             flag = 1;
+    //         }
+    //         lastKeyPressTime = thisKeyPressTime;
+    //         s();
+    //     }
+    // });
+
+    // event listener for serial comm button
+    btn.addEventListener("click", _ => {
+        // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+        let port = navigator.serial.requestPort();
+
+        worker.postMessage({
+            renderingData: data,
+            mode: selectList.value,
+        });
+        //checking for changes in drop down menu
+        selectList.onchange = function () {
+            worker.postMessage({
+                renderingData: data,
+                mode: selectList.value
+            });
+        };
+
+        worker.addEventListener("message", function (msg) {
+
+            // we've selected the COM port
+            btn.style.visibility = 'hidden';
+
+            // return end-effector x/y positions and objectData for updating the canvas
+            posEE.x = msg.data.positions.x;
+            posEE.y = msg.data.positions.y;
+            objectData = msg.data.objectData;
+            segmentData = msg.data.segmentData;
+            keyState = 0;
+
+            // latch to call the refresh of the animation once after which the call is recursive in draw() function
+            if (firstCall) {
+                createRect();
+                segments = segmentData;
+                window.requestAnimationFrame(draw);
+                firstCall = false;
+            }
+        });
+    });
+}
 
         document.getElementById("renderings-container")!.appendChild(container)
         count++;
     }
-    Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 });
 
 port.postMessage({
@@ -400,8 +512,8 @@ port.postMessage({
 });
 
 // scaling of coordinates to canvas
-function imgToWorldFrame(x1: number, y1: number) {
-    var x = x1 * canvasWidth;
-    var y = y1 * canvasHeight;
+function imgToWorldFrame(x1: number, y1: number): [number, number] {
+    const x = x1 * canvasWidth;
+    const y = y1 * canvasHeight;
     return [x, y];
 }
