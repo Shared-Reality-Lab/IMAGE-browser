@@ -1,4 +1,5 @@
 {
+  "name": "image-browser-extension",
   "targets": {
     "webext-dev": {
       "sourceMap": {
