@@ -36,7 +36,7 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "info/worker.js",
+        "info/worker.ts",
         "info/info.html",
         "info/info.ts",
         "errors/no_renderings.html",
