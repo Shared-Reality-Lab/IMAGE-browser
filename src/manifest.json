@@ -40,7 +40,8 @@
         "info/info.html",
         "info/info.ts",
         "errors/no_renderings.html",
-        "errors/http_error.html"
+        "errors/http_error.html",
+        "./image_request_sent.mp3"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"

@@ -160,6 +160,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
+        let audio = new Audio(chrome.runtime.getURL("image_request_sent.mp3"));
+        audio.play();
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
             serverUrl = "https://image.a11y.mcgill.ca/";
