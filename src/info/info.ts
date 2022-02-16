@@ -181,7 +181,7 @@ port.onMessage.addListener(async (message) => {
             let xE, yE: number;
             let deviceOrigin: vector;
             // virtual end effector avatar offset
-            const offset = 100;
+            const offset = 150;
             let objectData: any;
             let segmentData: any;
             let firstCall: boolean = true;
@@ -246,11 +246,9 @@ port.onMessage.addListener(async (message) => {
             const img = new Image();
             img.src = imageSrc;
 
-            //let worker;
-
             // world resolution properties
             const worldPixelWidth = 1000;
-            const pixelsPerMeter = 4000;
+            const pixelsPerMeter = 5000;
 
             posEE = {
                 x: 0,
@@ -297,6 +295,7 @@ port.onMessage.addListener(async (message) => {
             const rec: Array<any> = [];
             const centroids: Array<vector> = [];
             let segments: worker.SubSegment[][];
+            let waitForInput: boolean = false;
 
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
             function createRect() {
@@ -349,161 +348,114 @@ port.onMessage.addListener(async (message) => {
 
                 ctx.strokeStyle = "blue";
 
-                console.log(segments);
-
                 for (const segment of segments) {
-                    // for (let i = 0; i < segment.length) {
+                    for (const subsegment of segment) {
+                        const coordinates = subsegment.coordinates;
+                        for (let i = 0; i < coordinates.length; i++) {
+                            const pX = coordinates[i].x;
+                            const pY = coordinates[i].y;
 
-                    // }
-                    segment.forEach(subSegment => {
-
-                        subSegment.coordinates.forEach(coord => {
-                            const pX = coord.x;
-                            const pY = coord.y;
                             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-    
                             ctx.strokeRect(pointX, pointY, 1, 1);
-                        })
+                        }
+                    }
+                    // segment.forEach(subSegment => {
+                    //     subSegment.coordinates.forEach((coord: any) => {
+                    //         const pX = coord.x;
+                    //         const pY = coord.y;
+                    //         let [pointX, pointY] = imgToWorldFrame(pX, pY);
 
-                    })
-
-                    //const coordinates = subsegment.coordinates;
-                    // for (let i = 0; i < coordinates.length; i++) {
-
-
+                    //         ctx.strokeRect(pointX, pointY, 1, 1);
+                    //     }); 
+                    // });
+                    //break;
                 }
-        //     }
-        // }
-    }
-
-    function updateAnimation() {
-
-        // drawing bounding boxes and centroids
-        drawBoundaries();
-        border.draw();
-
-        //scaling end effector position to canvas
-        xE = pixelsPerMeter * -posEE.x;
-        yE = pixelsPerMeter * posEE.y;
-
-        // set position of virtual avatar in canvas
-        endEffector.x = deviceOrigin.x + xE - offset;
-        endEffector.y = deviceOrigin.y + yE - offset;
-        endEffector.draw();
-
-    }
-
-    endEffector.draw();
-
-    let keyState: number = 0;
-    const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-
-    // const getData = () => {
-    //     worker.postMessage({
-    //         renderingData: data,
-    //         mode: selectList.value,
-    //         flag: flag
-    //     });
-    // }
-
-    // const debounce = function (fn: any, d: number) { //Higher order function which returns another function.
-    //     let timer: any;
-    //     return function () {
-    //         // let context: any = this,
-    //         //    args = arguments;
-    //         clearTimeout(timer);//This clears setTimeout 
-    //         timer = setTimeout(() => {//call to getData() after 300ms 
-    //             //fn.apply(this, arguments);//fn.apply will getData()
-    //             fn();
-    //         }, d);
-    //     }
-    // }
-
-    const delta = 500;
-    let lastKeyPressTime: any = 0;
-    //const s = debounce(getData, 500);
-
-    document.addEventListener('keydown', (event) => {
-        const keyName = event.key;
-        let thisKeyPressTime: any = new Date();
-
-        if (keyName == 'b') {
-            keyState = 1;
-        }
-        else if (keyName == 'c') {
-            keyState = 2;
-        }
-        if (keyName == 'c' || keyName == 'b') {
-            worker.postMessage({
-                renderingData: data,
-                mode: selectList.value,
-                keyState: keyState
-            });
-        }
-    });
-
-    // document.addEventListener('keydown', (event) => {
-    //     const keyName = event.key;
-    //     let thisKeyPressTime: any = new Date();
-
-    //     if (keyName == 'b') {
-
-    //         if (thisKeyPressTime - lastKeyPressTime <= delta) {
-    //             flag = 2;
-    //             thisKeyPressTime = 0;
-    //         }
-    //         else {
-    //             flag = 1;
-    //         }
-    //         lastKeyPressTime = thisKeyPressTime;
-    //         s();
-    //     }
-    // });
-
-    // event listener for serial comm button
-    btn.addEventListener("click", _ => {
-        // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-        let port = navigator.serial.requestPort();
-
-        worker.postMessage({
-            renderingData: data,
-            mode: selectList.value,
-        });
-        //checking for changes in drop down menu
-        selectList.onchange = function () {
-            worker.postMessage({
-                renderingData: data,
-                mode: selectList.value
-            });
-        };
-
-        worker.addEventListener("message", function (msg) {
-
-            // we've selected the COM port
-            btn.style.visibility = 'hidden';
-
-            // return end-effector x/y positions and objectData for updating the canvas
-            posEE.x = msg.data.positions.x;
-            posEE.y = msg.data.positions.y;
-            objectData = msg.data.objectData;
-            segmentData = msg.data.segmentData;
-            keyState = 0;
-
-            // latch to call the refresh of the animation once after which the call is recursive in draw() function
-            if (firstCall) {
-                createRect();
-                segments = segmentData;
-                window.requestAnimationFrame(draw);
-                firstCall = false;
             }
-        });
-    });
-}
+
+            function updateAnimation() {
+
+                // drawing bounding boxes and centroids
+                drawBoundaries();
+                border.draw();
+
+                //scaling end effector position to canvas
+                xE = pixelsPerMeter * -posEE.x;
+                yE = pixelsPerMeter * posEE.y;
+
+
+                // set position of virtual avatar in canvas
+                endEffector.x = deviceOrigin.x + xE - 100;
+                endEffector.y = deviceOrigin.y + yE - 100;
+                endEffector.draw();
+                
+                console.log(endEffector.x, endEffector.y);
+
+            }
+
+            endEffector.draw();
+
+            let keyState: number = 0;
+            const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+
+            document.addEventListener('keydown', (event) => {
+                const keyName = event.key;
+
+                // if we're waiting for input from the user, send the key state
+                if (waitForInput && keyName == 'b') {
+                    waitForInput = !waitForInput;
+                    worker.postMessage({
+                        //renderingData: data,
+                        //mode: selectList.value,
+                        waitForInput: waitForInput,
+                        tKeyPressTime: Date.now()
+                    });
+                }
+            });
+
+            // event listener for serial comm button
+            btn.addEventListener("click", _ => {
+                // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+                let port = navigator.serial.requestPort();
+
+                worker.postMessage({
+                    renderingData: data,
+                    mode: selectList.value,
+                });
+                //checking for changes in drop down menu
+                selectList.onchange = function () {
+                    worker.postMessage({
+                        renderingData: data,
+                        mode: selectList.value
+                    });
+                };
+
+                worker.addEventListener("message", function (msg) {
+
+                    // we've selected the COM port
+                    btn.style.visibility = 'hidden';
+
+                    // return end-effector x/y positions and objectData for updating the canvas
+                    posEE.x = msg.data.positions.x;
+                    posEE.y = msg.data.positions.y;
+                    objectData = msg.data.objectData;
+                    segmentData = msg.data.segmentData;
+                    waitForInput = msg.data.waitForInput;
+
+                    // latch to call the refresh of the animation once after which the call is recursive in draw() function
+                    if (firstCall) {
+                        createRect();
+                        segments = segmentData;
+                        window.requestAnimationFrame(draw);
+                        firstCall = false;
+                    }
+                });
+            });
+        }
 
         document.getElementById("renderings-container")!.appendChild(container)
         count++;
     }
-Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+    Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 });
 
 port.postMessage({
@@ -513,7 +465,7 @@ port.postMessage({
 
 // scaling of coordinates to canvas
 function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    const x = x1 * canvasWidth;
-    const y = y1 * canvasHeight;
+    const x = (x1 * 5.0 + 0.5) * canvasWidth;
+    const y = (y1 * 8.0 - 0.2) * canvasHeight;
     return [x, y];
 }
