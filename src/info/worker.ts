@@ -112,6 +112,7 @@ let haplyType: Type = Type.SEGMENT;
 let guidance: boolean = true;
 
 // self.addEventListener("close", async function (event) {
+//   console.log("close");
 //   widgetOne.set_device_torques([0, 0]);
 //   widgetOne.device_write_torques();  
 // });
@@ -126,11 +127,9 @@ self.addEventListener("message", async function (event) {
     }
     if (curSubSegmentDone) {
       tLastChangeSubSegment = event.data.tKeyPressTime;
-      console.log("last change SUBsegment changed");
     }
     if (curSegmentDone) {
       tLastChangeSegment = event.data.tKeyPressTime;
-      console.log("last change segment changed");
     }
 
     if (event.data.renderingData != undefined) {
@@ -191,10 +190,8 @@ self.addEventListener("message", async function (event) {
   }
 
   function transformCoords(coords: [number, number]): Vector {
-    const x = (coords[0] - 0.5) / 5.0;
-    const y = (coords[1] + 0.2) / 8.0;
-    // const x = coords[0];
-    // const y = coords[1];
+    const x = (coords[0] * 0.1345) - 0.0537;
+    const y = (coords[1] * 0.0834) + 0.0284;
     return { x, y };
   }
 
@@ -257,7 +254,7 @@ self.addEventListener("message", async function (event) {
 
       switch (haplyType) {
         case Type.SEGMENT: {
-          lineFollowing(segments, -1 * 200);
+          lineFollowing(segments, -1 * 400);
           break;
         }
         case Type.OBJECT: {
@@ -270,14 +267,7 @@ self.addEventListener("message", async function (event) {
       posEE.set(posEE.clone().multiply(200));
     }
 
-    // if (event.data.flag) {
-    //   if (event.data.flag == 2) {
-    //     console.log("double press");
-    //   }
-    //   else if (event.data.flag == 1) {
-    //     console.log("single press");
-    //   }
-    // }
+    //console.log(convPosEE.x, convPosEE.y);
 
     // // compute forces based on existing position
     // if (hapticMode === "Active") {
@@ -341,17 +331,6 @@ let tHoldTime: number = Number.NEGATIVE_INFINITY;
 let tResetTime: number = Number.NEGATIVE_INFINITY;
 let tResetDuration: number = 2000;
 
-// class Segments {
-
-//   x: number = 0;
-//   y: number = 0;
-
-//   constructor() {
-
-//   }
-
-// }
-
 function lineFollowing(segments: SubSegment[][], springConst: number) {
 
   // no segments to run, end
@@ -360,6 +339,19 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
   }
 
   switch (haplyMode) {
+
+    // case Mode.AUDIO: {
+    //   playAudio();
+    //   tHoldAudioTime = Date.now();
+    //   case Mode.WAITING_AUDIO;
+    //   break;
+    // }
+    // case Mode.WAITING_AUDIO: {
+    //   if (Date.now() - tHoldAudioTime > offsetDuration) {
+
+    //   }
+
+    // }
     case Mode.START: {
       tHoldTime = Date.now();
       haplyMode = Mode.WAIT;
@@ -477,13 +469,15 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         currentSubSegmentIndex++;
         curSubSegmentDone = true;
         waitForInput = true;
+        fEE.set(0, 0);
+
       }
       tLastChangePoint = Date.now();
     } else {
       const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
       moveToPos(coord, springConst)
-       //console.log(currentSegmentIndex, ", " + currentSubSegmentIndex + ", "
-       //  + currentSubSegmentPointIndex);
+      console.log(currentSegmentIndex, ", " + currentSubSegmentIndex + ", "
+        + currentSubSegmentPointIndex);
     }
   }
 }
@@ -495,40 +489,16 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
  */
 function moveToPos(vector: Vector, springConst: number) {
 
-  const xPos = vector.x;
-  const yPos = vector.y;
-
-  const targetPos = new Vector
-    (
-      //TODO: figure out mapping
-      xPos * 0.8,
-      yPos * 0.8
-    );
+  const targetPos = new Vector(vector.x, vector.y);
 
   const xDiff = (convPosEE).subtract(targetPos);
-  const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+ // const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
   //const multiplier = (xDiff.mag() * 200) < 3 ? 0.8 : 1
-  force.set(xDiff.multiply(-200).multiply(1));
+  force.set(xDiff.multiply(springConst).multiply(1));
   fEE.set(graphics_to_device(force));
 }
 
 /////////////////////////////////////////
-
-// function activeGuidance() {
-//   if (!doneGuidance) {
-//     // get difference to target location from current pos
-//     var xDiff = (convPosEE).subtract(targetLoc);
-
-//     // get force multiplier based on distance
-//     var multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
-
-//     // set force
-//     force.set(xDiff.multiply(-200).multiply(multiplier));
-//     fEE.set(graphics_to_device(force));
-//   }
-//   else
-//     fEE.set(0, 0);
-// }
 
 // wall rendering
 function passiveGuidance() {

@@ -188,8 +188,6 @@ port.onMessage.addListener(async (message) => {
 
             // get data from the handler
             const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
-            //rendering["data"]["image"] as string;
-            //const data = rendering["data"]["data"] as Array<JSON>;
             const data = rendering["data"]["info"] as Array<JSON>;
 
             console.log(data);
@@ -247,8 +245,8 @@ port.onMessage.addListener(async (message) => {
             img.src = imageSrc;
 
             // world resolution properties
-            const worldPixelWidth = 1000;
-            const pixelsPerMeter = 5000;
+            const worldPixelWidth = 800;
+            const pixelsPerMeter = 6000;
 
             posEE = {
                 x: 0,
@@ -332,6 +330,8 @@ port.onMessage.addListener(async (message) => {
                 }
             }
 
+            let donelog: boolean = false;
+
             function drawBoundaries() {
 
                 for (let i = 0; i < rec.length; i++) {
@@ -349,26 +349,16 @@ port.onMessage.addListener(async (message) => {
                 ctx.strokeStyle = "blue";
 
                 for (const segment of segments) {
-                    for (const subsegment of segment) {
-                        const coordinates = subsegment.coordinates;
-                        for (let i = 0; i < coordinates.length; i++) {
-                            const pX = coordinates[i].x;
-                            const pY = coordinates[i].y;
-
+                    segment.forEach(subSegment => {
+                        subSegment.coordinates.forEach((coord: any) => {
+                            const pX = coord.x;
+                            const pY = coord.y;
                             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                            ctx.strokeRect(pointX, pointY, 1, 1);
-                        }
-                    }
-                    // segment.forEach(subSegment => {
-                    //     subSegment.coordinates.forEach((coord: any) => {
-                    //         const pX = coord.x;
-                    //         const pY = coord.y;
-                    //         let [pointX, pointY] = imgToWorldFrame(pX, pY);
 
-                    //         ctx.strokeRect(pointX, pointY, 1, 1);
-                    //     }); 
-                    // });
-                    //break;
+                            ctx.strokeRect(pointX, pointY, 1, 1);
+                        });
+                    });
+                    break;
                 }
             }
 
@@ -385,10 +375,10 @@ port.onMessage.addListener(async (message) => {
 
                 // set position of virtual avatar in canvas
                 endEffector.x = deviceOrigin.x + xE - 100;
-                endEffector.y = deviceOrigin.y + yE - 100;
+                endEffector.y = deviceOrigin.y + yE - 167;
                 endEffector.draw();
-                
-                console.log(endEffector.x, endEffector.y);
+
+                //console.log(endEffector.x, endEffector.y);
 
             }
 
@@ -404,8 +394,6 @@ port.onMessage.addListener(async (message) => {
                 if (waitForInput && keyName == 'b') {
                     waitForInput = !waitForInput;
                     worker.postMessage({
-                        //renderingData: data,
-                        //mode: selectList.value,
                         waitForInput: waitForInput,
                         tKeyPressTime: Date.now()
                     });
@@ -465,7 +453,7 @@ port.postMessage({
 
 // scaling of coordinates to canvas
 function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    const x = (x1 * 5.0 + 0.5) * canvasWidth;
-    const y = (y1 * 8.0 - 0.2) * canvasHeight;
+    const x = ((x1 + 0.0537) / 0.1345) * canvasWidth;
+    const y = ((y1 - 0.0284) / 0.0834) * canvasHeight;
     return [x, y];
 }
