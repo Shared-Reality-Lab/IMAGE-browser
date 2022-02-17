@@ -387,10 +387,6 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   // if we are done with the current segment...
   if (curSegmentDone) {
 
-    console.log("segment done");
-    console.log(currentSegmentIndex);
-    console.log(segments.length);
-
     // check to see if this is the last segment
     if (currentSegmentIndex !== segments.length - 1) {
 
@@ -401,16 +397,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         // wait 2000 ms before going to next segment
       } else {
         if (Date.now() - tLastChangeSegment > tSegmentDuration) {
-          //tLastChangeSegment = Date.now();
-          curSegmentDone = false;
-          waitForInput = false;
-          currentSegmentIndex++;
-          currentSubSegmentIndex = 0; // added extra
-          //tLastChangeSubSegment = Date.now();
-        }
-        else {
-          const td = Date.now() - tLastChangeSegment;
-          console.log("waiting for seg duration after key input: ", td);
+          startNewSegment();
         }
       }
     }
@@ -427,33 +414,18 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       // if not, move on to next subsegment
       // but make sure we're not waiting for input
       if (waitForInput) {
-        console.log("waiting for input");
         guidance = false;
       }
       else {
         if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
-          curSubSegmentDone = false;
-          waitForInput = false;
-          tLastChangePoint = Date.now();
-          console.log("BEGIN next subsegment");
-        }
-        else {
-          // reset time wait for checking whether to move to next subseg
-          //tLastChangeSubSegment = Date.now();
-          const tdx = Date.now() - tLastChangeSubSegment;
-          console.log("waiting for subseg duration after key input ", tdx);
+          startNewSubSegment();
         }
       }
     }
 
     else {
-      console.log("done with all subsegments");
-      curSegmentDone = true;
-      curSubSegmentDone = false; // added extra
-      waitForInput = true;
-      //currentSubSegmentIndex = 0; // added extra
+      finishSegment();
     }
-
   }
 
   // we're not done with the current subsegment
@@ -464,13 +436,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       //console.log(currentSubSegment);
       // check to see if we've made it to the last point, then we know it's time to increment the subseg index
       if (currentSubSegmentPointIndex >= (currentSubSegment.coordinates.length - 1)) {
-
-        currentSubSegmentPointIndex = 0;
-        currentSubSegmentIndex++;
-        curSubSegmentDone = true;
-        waitForInput = true;
-        fEE.set(0, 0);
-
+        finishSubSegment();
       }
       tLastChangePoint = Date.now();
     } else {
@@ -483,6 +449,45 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 }
 
 /**
+ * Called when a new segment is just about to begin.
+ */
+function startNewSegment() {
+  curSegmentDone = false;
+  waitForInput = false;
+  currentSegmentIndex++;
+  currentSubSegmentIndex = 0;
+}
+
+/**
+ * Called when a new subsegment is just about to begin.
+ */
+function startNewSubSegment() {
+  curSubSegmentDone = false;
+  waitForInput = false;
+  tLastChangePoint = Date.now();
+}
+
+/**
+ * Called when a segment is finished.
+ */
+function finishSegment() {
+  curSegmentDone = true;
+  curSubSegmentDone = false;
+  waitForInput = true;
+}
+
+/**
+ * Called when a subsegment is finished.
+ */
+function finishSubSegment() {
+  currentSubSegmentPointIndex = 0;
+  currentSubSegmentIndex++;
+  curSubSegmentDone = true;
+  waitForInput = true;
+  fEE.set(0, 0);
+}
+
+/**
  * Moves the end-effector to a position on the workspace.
  * @param vector the x/y position of the point
  * @param springConst the stiffness (should be no longer)
@@ -492,7 +497,7 @@ function moveToPos(vector: Vector, springConst: number) {
   const targetPos = new Vector(vector.x, vector.y);
 
   const xDiff = (convPosEE).subtract(targetPos);
- // const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+  // const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
   //const multiplier = (xDiff.mag() * 200) < 3 ? 0.8 : 1
   force.set(xDiff.multiply(springConst).multiply(1));
   fEE.set(graphics_to_device(force));
