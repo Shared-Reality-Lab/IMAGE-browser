@@ -185,11 +185,11 @@ self.addEventListener("message", async function (event) {
    * @returns transformed coordinates for Haply workspace.
    */
   function mapCoords(coordinates: [number, number][]): Vector[] {
-    coordinates = coordinates.map(x => transformCoords(x));
+    coordinates = coordinates.map(x => transformPtToWorkspace(x));
     return coordinates;
   }
 
-  function transformCoords(coords: [number, number]): Vector {
+  function transformPtToWorkspace(coords: [number, number]): Vector {
     const x = (coords[0] * 0.1345) - 0.0537;
     const y = (coords[1] * 0.0834) + 0.0284;
     return { x, y };
