@@ -40,6 +40,7 @@ let positions = new Vector(0, 0);
 
 // end-effector x/y coords
 let posEE = new Vector(0, 0);
+let prevPosEE = new Vector(0.5, 0);
 
 // transformed end-effector coordinates
 let convPosEE = new Vector(0, 0);
@@ -117,6 +118,14 @@ let guidance: boolean = true;
 //   widgetOne.device_write_torques();  
 // });
 
+function device_to_graphics(deviceFrame: any) {
+  return new Vector(-deviceFrame[0], deviceFrame[1]);
+}
+
+function graphics_to_device(graphicsFrame: any) {
+  return graphicsFrame.set(-graphicsFrame.x, graphicsFrame.y);
+}
+
 self.addEventListener("message", async function (event) {
   // get image data from the main script
   if (event) {
@@ -125,9 +134,11 @@ self.addEventListener("message", async function (event) {
     if (waitForInput == false) {
       guidance = true;
     }
-    if (curSubSegmentDone) {
-      tLastChangeSubSegment = event.data.tKeyPressTime;
-    }
+    breakOutKey = event.data.breakOutKey;
+
+    // if (curSubSegmentDone) {
+    //   tLastChangeSubSegment = event.data.tKeyPressTime;
+    // }
     if (curSegmentDone) {
       tLastChangeSegment = event.data.tKeyPressTime;
     }
@@ -180,10 +191,6 @@ self.addEventListener("message", async function (event) {
     }
   }
 
-  /**
-   * @param coordinates 2-D array containing [x, y] for each segment.
-   * @returns transformed coordinates for Haply workspace.
-   */
   function mapCoords(coordinates: [number, number][]): Vector[] {
     coordinates = coordinates.map(x => transformPtToWorkspace(x));
     return coordinates;
@@ -221,23 +228,23 @@ self.addEventListener("message", async function (event) {
 
   // Tells us if we are in guidance mode.
 
-  if (hapticMode === "Active") {
-    (func = (function* () {
-      // jump to new loc based on a timer
-      for (let idx = 1; idx <= objectData.length; idx++) {
-        yield setTimeout(() => {
-          if (idx === objectData.length) {
-            doneGuidance = true;
-          } else {
-            // set next target location
-            targetLoc.set(imageToHaply(new Vector(objectData[idx].centroid[0], objectData[idx].centroid[1])));
-          }
-          func.next();
-        }, 2000);
+  // if (hapticMode === "Active") {
+  //   (func = (function* () {
+  //     // jump to new loc based on a timer
+  //     for (let idx = 1; idx <= objectData.length; idx++) {
+  //       yield setTimeout(() => {
+  //         if (idx === objectData.length) {
+  //           doneGuidance = true;
+  //         } else {
+  //           // set next target location
+  //           targetLoc.set(imageToHaply(new Vector(objectData[idx].centroid[0], objectData[idx].centroid[1])));
+  //         }
+  //         func.next();
+  //       }, 2000);
 
-      }
-    })()).next();
-  }
+  //     }
+  //   })()).next();
+  // }
 
   while (true) {
 
@@ -286,6 +293,8 @@ self.addEventListener("message", async function (event) {
       waitForInput: waitForInput
     }
 
+    prevPosEE.set(posEE.clone()); 
+
     // // sending end effector position back to info.ts to update visuals
     this.self.postMessage(data);
 
@@ -298,13 +307,6 @@ self.addEventListener("message", async function (event) {
 
   /**********  END CONTROL LOOP CODE *********************/
 });
-
-/**
- * 
- * An array of arrays.
- * Each 'subarray'[0] (why!?) has the ['coordinates']
- * @param segments 
- */
 
 // Indicates whether we are done tracing the current segment.
 let curSegmentDone: boolean = false;
@@ -323,6 +325,9 @@ let currentSubSegmentPointIndex: number = 0;
 
 // Wait for current user input.
 let waitForInput: boolean = false;
+
+// To determine whether the user has pressed a key to move to the next subsegment.
+let breakOutKey: boolean = false;
 
 let tLastChangePoint: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSegment: number = Number.NEGATIVE_INFINITY;
@@ -368,7 +373,7 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
       break;
     }
     case Mode.MOVE: {
-      activeGuidance(segments, 3000, 800, 15, springConst);
+      activeGuidance(segments, 3000, 2000, 15, springConst);
       break;
     }
     case Mode.RESET: {
@@ -383,122 +388,136 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   let currentSegment: SubSegment[] = segments[currentSegmentIndex];
   let currentSubSegment: SubSegment = currentSegment[currentSubSegmentIndex];
 
-  //TODO: further abstract some of these into functions
-  // if we are done with the current segment...
-  if (curSegmentDone) {
+ if (!breakOutKey) {
 
-    // check to see if this is the last segment
-    if (currentSegmentIndex !== segments.length - 1) {
+  //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
 
-      // if not, move on to the next index
-      // but make sure we're NOT waiting for input
-      if (waitForInput) {
-        guidance = false;
-        // wait 2000 ms before going to next segment
-      } else {
-        if (Date.now() - tLastChangeSegment > tSegmentDuration) {
-          startNewSegment();
+    // if (breakOutKey) {
+    //   breakOutKey = !breakOutKey;
+    //   currentSubSegmentIndex++;
+    //   waitForInput = true;
+    //   break;
+    // }
+
+    //TODO: further abstract some of these into functions
+    // if we are done with the current segment...
+    if (curSegmentDone) {
+
+      // check to see if this is the last segment
+      if (currentSegmentIndex !== segments.length) {
+
+        // if not, move on to the next index
+        // but make sure we're NOT waiting for input
+        if (waitForInput) {
+          console.log("waiting for input");
+          guidance = false;
+          // wait 2000 ms before going to next segment
+        } else {
+          if (Date.now() - tLastChangeSegment > tSegmentDuration) {
+            startNewSegment();
+          }
         }
       }
-    }
-    // we are done with all segments, reset haply etc here
-    else {
-      console.log("all segments traced");
-      guidance = false;
-    }
-
-  } else if (curSubSegmentDone) {
-
-    // check to see if this is the last subsegment in the list
-    if (currentSubSegmentIndex != currentSegment.length) {
-      // if not, move on to next subsegment
-      // but make sure we're not waiting for input
-      if (waitForInput) {
-        guidance = false;
-      }
+      // we are done with all segments, reset haply etc here
       else {
-        if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
-          startNewSubSegment();
+        console.log("all segments traced");
+        guidance = false;
+      }
+
+    } else if (curSubSegmentDone) {
+
+      // check to see if this is the last subsegment in the list
+      if (currentSubSegmentIndex != currentSegment.length) {
+        // if not, move on to next subsegment
+        // but make sure we're not waiting for input
+        
+        if (waitForInput) {
+          guidance = false;
         }
+        else {
+          if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
+            startNewSubSegment();
+          }
+        }
+      }
+
+      else {
+        finishSegment();
       }
     }
 
+    // we're not done with the current subsegment
     else {
-      finishSegment();
+      // check if we have to move to the next point in the subsegment
+      if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
+        currentSubSegmentPointIndex++;
+        //console.log(currentSubSegment);
+        // check to see if we've made it to the last point, then we know it's time to increment the subseg index
+        if (currentSubSegmentPointIndex >= (currentSubSegment.coordinates.length - 1)) {
+          finishSubSegment();
+        }
+        tLastChangePoint = Date.now();
+      } else {
+        const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
+        moveToPos(coord, springConst)
+        //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
+      }
     }
   }
-
-  // we're not done with the current subsegment
   else {
-    // check if we have to move to the next point in the subsegment
-    if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
-      currentSubSegmentPointIndex++;
-      //console.log(currentSubSegment);
-      // check to see if we've made it to the last point, then we know it's time to increment the subseg index
-      if (currentSubSegmentPointIndex >= (currentSubSegment.coordinates.length - 1)) {
-        finishSubSegment();
-      }
-      tLastChangePoint = Date.now();
-    } else {
-      const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
-      moveToPos(coord, springConst)
-      console.log(currentSegmentIndex, ", " + currentSubSegmentIndex + ", "
-        + currentSubSegmentPointIndex);
-    }
+    // if the user wants to stop, then just finish the segment
+    finishSubSegment();
+    breakOutKey = !breakOutKey;
   }
 }
 
-/**
- * Called when a new segment is just about to begin.
- */
 function startNewSegment() {
   curSegmentDone = false;
   waitForInput = false;
-  currentSegmentIndex++;
-  currentSubSegmentIndex = 0;
+  // currentSegmentIndex++;
+  // currentSubSegmentIndex = 0;
 }
 
-/**
- * Called when a new subsegment is just about to begin.
- */
+
 function startNewSubSegment() {
   curSubSegmentDone = false;
   waitForInput = false;
   tLastChangePoint = Date.now();
 }
 
-/**
- * Called when a segment is finished.
- */
 function finishSegment() {
+  console.log("finish seg");
+  currentSegmentIndex++;
+  currentSubSegmentIndex = 0;
   curSegmentDone = true;
   curSubSegmentDone = false;
-  waitForInput = true;
-}
-
-/**
- * Called when a subsegment is finished.
- */
-function finishSubSegment() {
-  currentSubSegmentPointIndex = 0;
-  currentSubSegmentIndex++;
-  curSubSegmentDone = true;
   waitForInput = true;
   fEE.set(0, 0);
 }
 
-/**
- * Moves the end-effector to a position on the workspace.
- * @param vector the x/y position of the point
- * @param springConst the stiffness (should be no longer)
- */
+function finishSubSegment() {
+  currentSubSegmentPointIndex = 0;
+  currentSubSegmentIndex++;
+  curSubSegmentDone = true;
+  //waitForInput = true;
+  tLastChangeSubSegment = Date.now();
+  fEE.set(0, 0);
+}
+
 function moveToPos(vector: Vector, springConst: number) {
 
   const targetPos = new Vector(vector.x, vector.y);
-
   const xDiff = (convPosEE).subtract(targetPos);
   // const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
   //const multiplier = (xDiff.mag() * 200) < 3 ? 0.8 : 1
+
+  // f = kx + v(dx/dt) + a (dx^2/dt^2)
+  //v[t] = x[t] - x[t-1]
+
+  // const dx = posEE.subtract(prevPosEE);
+  // const dt = 1/1000;
+  // const dxdt = dx / dt;
+
   force.set(xDiff.multiply(springConst).multiply(1));
   fEE.set(graphics_to_device(force));
 }
@@ -661,14 +680,6 @@ function imageToHaply(vec: Vector) {
   var y = (vec.y + 0.2) / 8.0;
 
   return new Vector(x, y);
-}
-
-function device_to_graphics(deviceFrame: any) {
-  return new Vector(-deviceFrame[0], deviceFrame[1]);
-}
-
-function graphics_to_device(graphicsFrame: any) {
-  return graphicsFrame.set(-graphicsFrame.x, graphicsFrame.y);
 }
 
 //checks to see if the end effector is inside a specified shape (currently only checks for rectanlges)

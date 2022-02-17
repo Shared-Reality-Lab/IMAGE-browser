@@ -294,6 +294,7 @@ port.onMessage.addListener(async (message) => {
             const centroids: Array<vector> = [];
             let segments: worker.SubSegment[][];
             let waitForInput: boolean = false;
+            let breakOutKey: boolean = false;
 
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
             function createRect() {
@@ -358,7 +359,6 @@ port.onMessage.addListener(async (message) => {
                             ctx.strokeRect(pointX, pointY, 1, 1);
                         });
                     });
-                    break;
                 }
             }
 
@@ -382,7 +382,7 @@ port.onMessage.addListener(async (message) => {
 
             }
 
-            endEffector.draw();
+            //endEffector.draw();
 
             let keyState: number = 0;
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
@@ -393,11 +393,27 @@ port.onMessage.addListener(async (message) => {
                 // if we're waiting for input from the user, send the key state
                 if (waitForInput && keyName == 'b') {
                     waitForInput = !waitForInput;
-                    worker.postMessage({
-                        waitForInput: waitForInput,
-                        tKeyPressTime: Date.now()
-                    });
+
+                    console.log(breakOutKey);
+
+                    // if the user skipped a segment ...
+                    // and we're waiting for input again ...
+                    // then reset the flag
+                    // conditional statement probably not
+                    if (breakOutKey) {
+                        breakOutKey = false;
+                    }
                 }
+
+                //test key to break out of current segment
+                if (keyName == 'c') {
+                    breakOutKey = true;
+                }
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakOutKey: breakOutKey,
+                    tKeyPressTime: Date.now()
+                });
             });
 
             // event listener for serial comm button
