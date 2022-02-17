@@ -19,6 +19,9 @@ import { Board } from "../hAPI/libraries/Board.ts";
 import { Device } from "../hAPI/libraries/Device.ts";
 import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
 
+// declaring audio file:
+const audioCtx = new window.AudioContext();
+
 // declaration of haply specific variables
 const widgetOneID = 5;
 let widgetOne;

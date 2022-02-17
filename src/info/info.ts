@@ -29,6 +29,27 @@ import * as worker from './worker';
 let request_uuid = window.location.search.substring(1);
 let renderings: IMAGEResponse;
 let port = browser.runtime.connect();
+let playAudio = true;
+let playingAudio = false;
+let start = Date.now();
+let idy =0;
+
+enum Mode {
+    START,
+    RUNNING,
+    WAIT,
+    DONE,
+    SKIP,
+  }
+
+  enum Type {
+    SEGMENT,
+    OBJECT,
+  }
+
+let haplyMode: Mode = Mode.WAIT;
+let haplyType: Type = Type.SEGMENT
+
 
 // canvas dimensions for haptic rendering
 const canvasWidth = 800;
@@ -171,6 +192,7 @@ port.onMessage.addListener(async (message) => {
         }
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
+           
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
@@ -191,6 +213,11 @@ port.onMessage.addListener(async (message) => {
             //rendering["data"]["image"] as string;
             //const data = rendering["data"]["data"] as Array<JSON>;
             const data = rendering["data"]["info"] as Array<JSON>;
+            const audioBuffer = await fetch(rendering["data"]["info"]["audioFile"] as string).then(resp => {
+                return resp.arrayBuffer();
+            }).then(buffer => {
+                return audioCtx.decodeAudioData(buffer);
+            }).catch(e => { console.error(e); throw e; });
 
             console.log(data);
 
@@ -291,6 +318,63 @@ port.onMessage.addListener(async (message) => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 updateAnimation();
+                checkAudioBounds();
+                switch (haplyMode) {
+                    case Mode.START: {
+                        playAudioSeg(audioBuffer,  data["entityInfo"][idy]["offset"], data["entityInfo"][idy]["duration"]);
+                        
+                        // worker.postMessage("Start haptics!");
+                        worker.postMessage({
+                            renderingData: data,
+                            // audioFile: audioBuffer,
+                            mode: haplyMode,
+                            keyState: keyState
+                        });
+                        haplyMode = Mode.RUNNING
+                        start = Date.now();
+                        break;
+                        
+                    }
+                    case Mode.RUNNING:{
+                        if((Date.now()-start)>data["entityInfo"][idy]["duration"]*1000){
+                            console.log("DONE AUDIO!!");
+                            playingAudio = false;
+                            haplyMode = Mode.WAIT;
+                        }
+                        break;
+                    }
+                    case Mode.WAIT:{
+                        console.log("waiting!");
+                        break;
+                    }
+                    case Mode.DONE:{
+                        console.log("done!");
+                        break;
+
+                    }
+                }
+                // if(playAudio){
+                //     // console.log( data["entityInfo"][2]);
+                //     // console.log("offset: ",data["entityInfo");
+                
+                //     playAudioSeg(audioBuffer,  data["entityInfo"][idy]["offset"], data["entityInfo"][idy]["duration"]);
+                //     playAudio = false;
+                //     playingAudio = true;
+                //     start = Date.now();
+                
+                // }
+                // if(playingAudio && (Date.now()-start)>data["entityInfo"][idy]["duration"]*1000){
+                //     worker.postMessage("Start haptics!");
+                //     console.log("DONE AUDIO!!");
+                //     playingAudio = false;
+                //     if(idy<data["entityInfo"].length){
+                //         idy++;
+                //         playAudio = true;
+                //     }
+                    
+                   
+                // }
+
                 window.requestAnimationFrame(draw);
             }
 
@@ -349,7 +433,7 @@ port.onMessage.addListener(async (message) => {
 
                 ctx.strokeStyle = "blue";
 
-                console.log(segments);
+                // console.log(segments);
 
                 for (const segment of segments) {
                     // for (let i = 0; i < segment.length) {
@@ -429,6 +513,8 @@ port.onMessage.addListener(async (message) => {
 
         if (keyName == 'b') {
             keyState = 1;
+            haplyMode = Mode.START;
+            idy++;
         }
         else if (keyName == 'c') {
             keyState = 2;
@@ -436,6 +522,7 @@ port.onMessage.addListener(async (message) => {
         if (keyName == 'c' || keyName == 'b') {
             worker.postMessage({
                 renderingData: data,
+                // audioFile: audioBuffer,
                 mode: selectList.value,
                 keyState: keyState
             });
@@ -467,12 +554,15 @@ port.onMessage.addListener(async (message) => {
 
         worker.postMessage({
             renderingData: data,
+            // audioFile: audioBuffer,
             mode: selectList.value,
         });
+        haplyMode = Mode.START;
         //checking for changes in drop down menu
         selectList.onchange = function () {
             worker.postMessage({
                 renderingData: data,
+                // audioFil:audioBuffer,
                 mode: selectList.value
             });
         };
@@ -498,6 +588,20 @@ port.onMessage.addListener(async (message) => {
             }
         });
     });
+
+    function playAudioSeg(audioBuffer:any, offset:number, duration:number){
+        const sourceNode = audioCtx.createBufferSource();
+        sourceNode.buffer = audioBuffer;
+        sourceNode.connect(audioCtx.destination);
+        sourceNode.start(0, offset, duration);
+       
+         
+    }
+    function checkAudioBounds(){
+        if(idy>=data["entityInfo"].length){
+            haplyMode= Mode.DONE;
+        }
+    }
 }
 
         document.getElementById("renderings-container")!.appendChild(container)
@@ -517,3 +621,5 @@ function imgToWorldFrame(x1: number, y1: number): [number, number] {
     const y = y1 * canvasHeight;
     return [x, y];
 }
+
+

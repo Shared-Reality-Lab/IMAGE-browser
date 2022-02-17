@@ -76,7 +76,7 @@ let applyVibration = false; //boolean to check if vibration condition has been m
 let doneGuidance: any;
 
 // to track the status of the drop down menu
-let hapticMode: any;
+let hapticMode: any = "none";
 
 // keeps track of many times a message has been received in the worker
 let messageCount = 0;
@@ -120,13 +120,15 @@ self.addEventListener("message", async function (event) {
   // get image data from the main script
   if (event) {
 
+    this.console.log(event);
     if (event.data.keyState) {
-      console.log(event.data.keyState);
+      this.self.close();
+      // console.log(event.data.keyState);
     }
 
-    console.log(event.data.renderingData.entityInfo);
+    // console.log(event.data.renderingData.entityInfo);
 
-    hapticMode = event.data.mode;
+    haplyMode = event.data.mode;
     let rendering = event.data.renderingData.entityInfo;
 
     let objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex((x: { name: string; }) => x.name === "Text");//rendering.indexOf(x => x.name == "Text", 1);
@@ -368,6 +370,7 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
       break;
     }
     case Mode.RESET: {
+      self.close();
       break;
     }
   }
