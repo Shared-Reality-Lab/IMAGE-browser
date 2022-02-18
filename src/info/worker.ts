@@ -30,6 +30,7 @@ let haplyBoard;
 // store required handler json
 let objectData: any = []
 let segmentData: any = []; //SubSegment[][] = []
+let audioData: any = [];
 
 // threshold used for force calculation
 const threshold = 0.02;
@@ -75,9 +76,6 @@ let fWall = new Vector(0, 0);
 let randForce = new Vector(0, 0);
 let applyVibration = false; //boolean to check if vibration condition has been met
 
-// indicate we've iterated through all the points in an image
-let doneGuidance: any;
-
 // to track the status of the drop down menu
 let hapticMode: any;
 
@@ -93,22 +91,25 @@ const segments: SubSegment[][] = [];
 //const segments: 
 const keyState: number = 0;
 
-enum Mode {
-  START,
-  WAIT,
-  MOVE,
+export const enum Mode {
+  START_AUDIO,
+  PLAY_AUDIO,
+  AUDIO_IN_PROGRESS,
+  START_HAPLY,
+  WAIT_HAPLY,
+  MOVE_HAPLY,
   SKIP,
   RESET
 }
 
-let haplyMode: Mode = Mode.START;
+let mode = Mode.START_AUDIO;
 
 enum Type {
   SEGMENT,
   OBJECT,
 }
 
-let haplyType: Type = Type.SEGMENT;
+let haplyType = Type.SEGMENT;
 
 let guidance: boolean = true;
 
@@ -130,6 +131,10 @@ self.addEventListener("message", async function (event) {
   // get image data from the main script
   if (event) {
 
+    if (event.data.isPlayingAudio != undefined) {
+      isPlayingAudio = event.data.isPlayingAudio;
+    }
+
     waitForInput = event.data.waitForInput;
     if (waitForInput == false) {
       guidance = true;
@@ -149,14 +154,14 @@ self.addEventListener("message", async function (event) {
 
       let objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex((x: { name: string; }) => x.name === "Text");//rendering.indexOf(x => x.name == "Text", 1);
       rendering.reverse();
-      for (var i = 1; i < objHeaderIndex; i++) {
+      for (let i = 1; i < objHeaderIndex; i++) {
         let seg = {
           centroid: rendering[i].centroid,
           coords: rendering[i].contourPoints.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)))
         }
         segmentData.push(seg);
       }
-      for (var i = objHeaderIndex + 1; i < rendering.length; i++) {
+      for (let i = objHeaderIndex + 1; i < rendering.length; i++) {
         let obj = {
           name: rendering[i].name,
           centroid: rendering[i].centroid,
@@ -165,6 +170,19 @@ self.addEventListener("message", async function (event) {
         objectData.push(obj);
       }
       createSegs();
+
+      // fetch audio data
+      // TODO: rewrite all of this to use just a single loop
+      rendering.forEach((x: { name: string; offset: number; duration: number; }) => {
+        const isStaticSegment = x.name == "Text" ? true : false;
+        let audio = {
+          name: x.name,
+          offset: x.offset,
+          duration: x.duration,
+          isStaticSegment: isStaticSegment
+        }
+        audioData.push(audio);
+      });
 
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
@@ -294,8 +312,13 @@ self.addEventListener("message", async function (event) {
 
     // // send required data back
     const data = {
-      positions: { x: positions[0], y: positions[1] },
-      waitForInput: waitForInput
+      positions:
+        { x: positions[0], y: positions[1] },
+      waitForInput: waitForInput,
+      audioInfo: {
+        entityIndex: entityIndex,
+        mode: mode
+      }
     }
 
     // // sending end effector position back to info.ts to update visuals
@@ -310,6 +333,9 @@ self.addEventListener("message", async function (event) {
 
   /**********  END CONTROL LOOP CODE *********************/
 });
+
+// Index for audio information.
+let entityIndex: number = 0;
 
 // Indicates whether we are done tracing the current segment.
 let curSegmentDone: boolean = false;
@@ -336,8 +362,13 @@ let tLastChangePoint: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSegment: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSubSegment: number = Number.NEGATIVE_INFINITY;
 let tHoldTime: number = Number.NEGATIVE_INFINITY;
+let tHoldAudioTime: number = Number.NEGATIVE_INFINITY;
 let tResetTime: number = Number.NEGATIVE_INFINITY;
 let tResetDuration: number = 2000;
+let tAudioWaitTime = 1000;
+
+// Let's us know if that the main script is playing audio.
+let isPlayingAudio = false;
 
 function lineFollowing(segments: SubSegment[][], springConst: number) {
 
@@ -346,36 +377,64 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
     return;
   }
 
-  switch (haplyMode) {
+  switch (mode) {
 
-    // case Mode.AUDIO: {
-    //   playAudio();
-    //   tHoldAudioTime = Date.now();
-    //   case Mode.WAITING_AUDIO;
-    //   break;
-    // }
-    // case Mode.WAITING_AUDIO: {
-    //   if (Date.now() - tHoldAudioTime > offsetDuration) {
+    case Mode.START_AUDIO: {
+      // if we are done with all segments, end
+      if (entityIndex > audioData.length) {
+        mode = Mode.RESET;
+      }
+      else {
+        tHoldAudioTime = Date.now();
+        mode = Mode.PLAY_AUDIO;
+      }
+      break;
+    }
+    case Mode.PLAY_AUDIO: {
 
-    //   }
+      if (isPlayingAudio) {
+        mode = Mode.AUDIO_IN_PROGRESS;
+      }
+      break;
+    }
+    case Mode.AUDIO_IN_PROGRESS: {
 
-    // }
-    case Mode.START: {
+      let audioSeg = audioData[entityIndex];
+      let waitTime = (audioSeg.duration + 1) * 1000; // add 1s of buffer
+
+      if (Date.now() - tHoldAudioTime > waitTime) {
+        // special case: if it's a static segment
+        // then we need to play the static segment and the next segment
+        // before we start the haply
+        isPlayingAudio = false;
+        console.log(audioSeg.isStaticSegment);
+        if (audioSeg.isStaticSegment) {
+          mode = Mode.START_AUDIO;
+        }
+        else {
+          mode = Mode.START_HAPLY;
+        }
+        entityIndex++;
+      }
+      break;
+    }
+    case Mode.START_HAPLY: {
+      console.log("it's haply time!");
       tHoldTime = Date.now();
-      haplyMode = Mode.WAIT;
+      mode = Mode.WAIT_HAPLY;
       break;
     }
 
     // start ~2 after button press
-    case Mode.WAIT: {
+    case Mode.WAIT_HAPLY: {
       if (Date.now() - tHoldTime > 2000) {
-        haplyMode = Mode.MOVE;
+        mode = Mode.MOVE_HAPLY;
         // set the current index (increments each time)
-        currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex + 1;
+        //currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex + 1;
       }
       break;
     }
-    case Mode.MOVE: {
+    case Mode.MOVE_HAPLY: {
       activeGuidance(segments, 3000, 2000, 15, springConst);
       break;
     }
@@ -393,15 +452,6 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
   if (!breakOutKey) {
 
-    //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
-
-    // if (breakOutKey) {
-    //   breakOutKey = !breakOutKey;
-    //   currentSubSegmentIndex++;
-    //   waitForInput = true;
-    //   break;
-    // }
-
     //TODO: further abstract some of these into functions
     // if we are done with the current segment...
     if (curSegmentDone) {
@@ -409,19 +459,23 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       // check to see if this is the last segment
       if (currentSegmentIndex !== segments.length) {
 
+        //mode = Mode.START_AUDIO;
+
         // if not, move on to the next index
         // but make sure we're NOT waiting for input
-        if (waitForInput) {
-          console.log("waiting for input");
-          guidance = false;
-          // wait 2000 ms before going to next segment
-        } else {
-          if (Date.now() - tLastChangeSegment > tSegmentDuration) {
-            startNewSegment();
+          if (waitForInput) {
+            console.log("waiting for input");
+            guidance = false;
+            // wait 2000 ms before going to next segment
+          } else {
+            if (Date.now() - tLastChangeSegment > tSegmentDuration) {
+              mode = Mode.START_AUDIO;
+              startNewSegment();
+              //startNewSegment();
+            }
           }
-        }
       }
-      // we are done with all segments, reset haply etc here
+      // // we are done with all segments, reset haply etc here
       else {
         console.log("all segments traced");
         guidance = false;
@@ -462,9 +516,8 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         tLastChangePoint = Date.now();
       } else {
         const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
-        const nextCoord = currentSubSegment.coordinates[currentSubSegmentPointIndex + 1];
-        moveToPos(coord, springConst, nextCoord)
-        //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
+        moveToPos(coord, springConst)
+        console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
       }
     }
   }
@@ -508,7 +561,7 @@ function finishSubSegment() {
   fEE.set(0, 0);
 }
 
-function moveToPos(vector: Vector, springConst: number, nextPos?: Vector, ) {
+function moveToPos(vector: Vector, springConst: number) {
 
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
@@ -523,8 +576,8 @@ function moveToPos(vector: Vector, springConst: number, nextPos?: Vector, ) {
   const c = 1.2;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
-  const fx = kx.x + cdxdt.x;
-  const fy = kx.y + cdxdt.y;
+  const fx = kx.x;// + cdxdt.x;
+  const fy = kx.y;// + cdxdt.y;
   force.set(fx, fy);
   fEE.set(graphics_to_device(force));
 }

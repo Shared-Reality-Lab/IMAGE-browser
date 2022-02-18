@@ -190,6 +190,12 @@ port.onMessage.addListener(async (message) => {
             const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
             const data = rendering["data"]["info"] as Array<JSON>;
 
+            const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
+                return resp.arrayBuffer();
+            }).then(buffer => {
+                return audioCtx.decodeAudioData(buffer);
+            }).catch(e => { console.error(e); throw e; });
+
             console.log(data);
 
             // add rendering button
@@ -293,8 +299,28 @@ port.onMessage.addListener(async (message) => {
             const rec: Array<any> = [];
             const centroids: Array<vector> = [];
             let segments: worker.SubSegment[][];
+            // when haply needs to move to a next segment
             let waitForInput: boolean = false;
+            // when user presses a key to break out of the current haply segment
             let breakOutKey: boolean = false;
+
+            const enum Mode {
+                START_AUDIO,
+                PLAY_AUDIO,
+                AUDIO_IN_PROGRESS,
+                START_HAPLY,
+                WAIT_HAPLY,
+                MOVE_HAPLY,
+                SKIP,
+                RESET
+              }
+
+            let audioMode;
+
+            let audioData = {
+                entityIndex: 0,
+                mode: audioMode
+            };
 
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
             function createRect() {
@@ -330,8 +356,6 @@ port.onMessage.addListener(async (message) => {
                     }
                 }
             }
-
-            let donelog: boolean = false;
 
             function drawBoundaries() {
 
@@ -382,9 +406,19 @@ port.onMessage.addListener(async (message) => {
 
             }
 
-            //endEffector.draw();
+            function checkForAudio() {
+                // TODO: use same key for audio/haptics
+                if (audioData.mode == Mode.PLAY_AUDIO) {
+                    console.log("aaa");
+                    playAudioSeg(audioBuffer,
+                        data["entityInfo"][audioData.entityIndex]["offset"],
+                        data["entityInfo"][audioData.entityIndex]["duration"]);
+                        worker.postMessage({
+                            isPlayingAudio: true
+                        });
+                    }
+            }
 
-            let keyState: number = 0;
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
             document.addEventListener('keydown', (event) => {
@@ -393,28 +427,27 @@ port.onMessage.addListener(async (message) => {
                 // if we're waiting for input from the user, send the key state
                 if (waitForInput && keyName == 'b') {
                     waitForInput = !waitForInput;
-
-                    console.log(breakOutKey);
-
-                    // if the user skipped a segment ...
-                    // and we're waiting for input again ...
-                    // then reset the flag
-                    // conditional statement probably not
-                    if (breakOutKey) {
-                        breakOutKey = false;
-                    }
+                    breakOutKey = false;
                 }
 
                 //test key to break out of current segment
                 if (keyName == 'c') {
                     breakOutKey = true;
                 }
+
                 worker.postMessage({
                     waitForInput: waitForInput,
                     breakOutKey: breakOutKey,
                     tKeyPressTime: Date.now()
                 });
             });
+
+            function playAudioSeg(audioBuffer: any, offset: number, duration: number) {
+                const sourceNode = audioCtx.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+                sourceNode.connect(audioCtx.destination);
+                sourceNode.start(0, offset, duration);
+            }
 
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
@@ -444,6 +477,7 @@ port.onMessage.addListener(async (message) => {
                     objectData = msg.data.objectData;
                     segmentData = msg.data.segmentData;
                     waitForInput = msg.data.waitForInput;
+                    audioData = msg.data.audioInfo;
 
                     // latch to call the refresh of the animation once after which the call is recursive in draw() function
                     if (firstCall) {
@@ -452,6 +486,8 @@ port.onMessage.addListener(async (message) => {
                         window.requestAnimationFrame(draw);
                         firstCall = false;
                     }
+
+                    checkForAudio();
                 });
             });
         }
