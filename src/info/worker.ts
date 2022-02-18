@@ -256,12 +256,14 @@ self.addEventListener("message", async function (event) {
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
 
+    //console.log("1", convPosEE);
+
     if (guidance) {
       posEE.set(device_to_graphics(posEE));
 
       switch (haplyType) {
         case Type.SEGMENT: {
-          lineFollowing(segments, -1 * 400);
+          lineFollowing(segments, 200);
           break;
         }
         case Type.OBJECT: {
@@ -274,6 +276,9 @@ self.addEventListener("message", async function (event) {
       posEE.set(posEE.clone().multiply(200));
     }
 
+    prevPosEE.set(convPosEE.clone());
+
+    //prevPosEE = posEE.clone();
     //console.log(convPosEE.x, convPosEE.y);
 
     // // compute forces based on existing position
@@ -292,8 +297,6 @@ self.addEventListener("message", async function (event) {
       positions: { x: positions[0], y: positions[1] },
       waitForInput: waitForInput
     }
-
-    prevPosEE.set(posEE.clone()); 
 
     // // sending end effector position back to info.ts to update visuals
     this.self.postMessage(data);
@@ -388,9 +391,9 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   let currentSegment: SubSegment[] = segments[currentSegmentIndex];
   let currentSubSegment: SubSegment = currentSegment[currentSubSegmentIndex];
 
- if (!breakOutKey) {
+  if (!breakOutKey) {
 
-  //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
+    //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
 
     // if (breakOutKey) {
     //   breakOutKey = !breakOutKey;
@@ -430,7 +433,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       if (currentSubSegmentIndex != currentSegment.length) {
         // if not, move on to next subsegment
         // but make sure we're not waiting for input
-        
+
         if (waitForInput) {
           guidance = false;
         }
@@ -459,7 +462,8 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         tLastChangePoint = Date.now();
       } else {
         const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
-        moveToPos(coord, springConst)
+        const nextCoord = currentSubSegment.coordinates[currentSubSegmentPointIndex + 1];
+        moveToPos(coord, springConst, nextCoord)
         //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
       }
     }
@@ -504,21 +508,24 @@ function finishSubSegment() {
   fEE.set(0, 0);
 }
 
-function moveToPos(vector: Vector, springConst: number) {
+function moveToPos(vector: Vector, springConst: number, nextPos?: Vector, ) {
 
   const targetPos = new Vector(vector.x, vector.y);
-  const xDiff = (convPosEE).subtract(targetPos);
-  // const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
-  //const multiplier = (xDiff.mag() * 200) < 3 ? 0.8 : 1
+  const xDiff = targetPos.subtract(convPosEE.clone());
 
-  // f = kx + v(dx/dt) + a (dx^2/dt^2)
-  //v[t] = x[t] - x[t-1]
+  // get the angle between this and the next position
+  //const angle = Math.abs(xDiff.toAngles().phi); 
+  //const multiplier = angle > 1.5 ? 1.4 : 1;
+  const kx = xDiff.multiply(springConst);//.multiply(multiplier);
 
-  // const dx = posEE.subtract(prevPosEE);
-  // const dt = 1/1000;
-  // const dxdt = dx / dt;
+  const dx = (convPosEE.clone()).subtract(prevPosEE);
+  const dt = 1 / 1000;
+  const c = 1.2;
+  const cdxdt = (dx.divide(dt)).multiply(c);
 
-  force.set(xDiff.multiply(springConst).multiply(1));
+  const fx = kx.x + cdxdt.x;
+  const fy = kx.y + cdxdt.y;
+  force.set(fx, fy);
   fEE.set(graphics_to_device(force));
 }
 

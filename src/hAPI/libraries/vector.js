@@ -75,10 +75,10 @@ function Vector(x, y, z) {
     clone: function() {
       return new Vector(this.x, this.y, this.z);
     },
-    mag:function(){
-        return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
+    mag: function() {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     },
-    set:function(x, y, z){
+    set: function(x, y, z) {
       if (x instanceof Vector) {
         this.x = x.x || 0;
         this.y = x.y || 0;
@@ -95,9 +95,6 @@ function Vector(x, y, z) {
       this.y = y || 0;
       this.z = z || 0;
       return this;
-      // this.x = v[0];
-      // this.y = v[1];
-      // this.z = v[2];
     },
     init: function(x, y, z) {
       this.x = x; this.y = y; this.z = z;
@@ -164,8 +161,4 @@ function Vector(x, y, z) {
     return a.angleTo(b);
   };
 
-  Vector.mag = function(a,b) {
-      return sqrt(a.x*a.x + b.y*b.y);
-  }
-  
   export { Vector };
