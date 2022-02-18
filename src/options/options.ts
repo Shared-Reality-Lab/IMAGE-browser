@@ -45,11 +45,27 @@ if (toggleButton) {
   console.warn('Could not find toggle button with ID "toggle"');
 }
 
+
 function showDeveloperSettings() {
 if (toggleButton.checked && navigatorSerial !== undefined) {
     developerSettings.style.display = "block";
+    document.getElementById("haply-option").addEventListener('click', function (event) {
+      savePorts();
+    });
   } else {
     developerSettings.style.display = "none";
+  }
+}
+
+
+
+function savePorts(){
+  if(haply2diySetting.checked && navigatorSerial !== undefined){
+    const filters = [
+      { usbVendorId: 0x2341, usbProductId: 0x804D }
+    ];
+    
+    let hapticsPort = navigator.serial.requestPort({ filters });
   }
 }
 

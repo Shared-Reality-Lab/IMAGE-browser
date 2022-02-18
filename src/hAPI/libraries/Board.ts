@@ -34,7 +34,8 @@ class Board {
             try {
                 this.port = (await navigator.serial.getPorts())[0];
                 await this.port.open({ baudRate: 57600 }); // `baudRate` was `baudrate` in previous versions.
-
+                console.log("opened serial port!");
+                console.log(this.port);
                 this.writer = this.port.writable.getWriter();
                 this.reader = this.port.readable.getReader();
 

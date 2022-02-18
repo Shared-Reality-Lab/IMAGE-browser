@@ -355,7 +355,11 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
                 const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let port = navigator.serial.requestPort();
+                const filters = [
+                          { usbVendorId: 0x2341, usbProductId: 0x804D }
+                        ];
+                
+                // let port = navigator.serial.requestPort({ filters });
                 worker.postMessage({
                     renderingData: data,
                     mode: selectList.value
