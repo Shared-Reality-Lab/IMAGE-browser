@@ -92,17 +92,16 @@ const segments: SubSegment[][] = [];
 const keyState: number = 0;
 
 export const enum Mode {
-  START_AUDIO,
-  PLAY_AUDIO,
-  AUDIO_IN_PROGRESS,
-  START_HAPLY,
-  WAIT_HAPLY,
-  MOVE_HAPLY,
-  SKIP,
-  RESET
+  StartAudio,
+  PlayAudio,
+  DoneAudio,
+  StartHaply,
+  WaitHaply,
+  MoveHaply,
+  Reset
 }
 
-let mode = Mode.START_AUDIO;
+let mode = Mode.StartAudio;
 
 enum Type {
   SEGMENT,
@@ -131,8 +130,15 @@ self.addEventListener("message", async function (event) {
   // get image data from the main script
   if (event) {
 
-    if (event.data.isPlayingAudio != undefined) {
-      isPlayingAudio = event.data.isPlayingAudio;
+    if (event.data.doneWithAudio != undefined) {
+      doneWithAudio = event.data.doneWithAudio;
+    }
+
+    // handshake
+    if (event.data.receivedAudioSignal != undefined
+      && sendAudioSignal == true) {
+      sendAudioSignal = !event.data.receivedAudioSignal;
+      console.log("acknowledged!");
     }
 
     waitForInput = event.data.waitForInput;
@@ -274,8 +280,6 @@ self.addEventListener("message", async function (event) {
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
 
-    //console.log("1", convPosEE);
-
     if (guidance) {
       posEE.set(device_to_graphics(posEE));
 
@@ -310,14 +314,14 @@ self.addEventListener("message", async function (event) {
     //   vib_mode();
     // }
 
-    // // send required data back
+    // send required data back
     const data = {
       positions:
         { x: positions[0], y: positions[1] },
       waitForInput: waitForInput,
       audioInfo: {
         entityIndex: entityIndex,
-        mode: mode
+        sendAudioSignal: sendAudioSignal,
       }
     }
 
@@ -368,7 +372,10 @@ let tResetDuration: number = 2000;
 let tAudioWaitTime = 1000;
 
 // Let's us know if that the main script is playing audio.
-let isPlayingAudio = false;
+let doneWithAudio = false;
+
+// To let main script know it's time to play audio.
+let sendAudioSignal = false;
 
 function lineFollowing(segments: SubSegment[][], springConst: number) {
 
@@ -376,69 +383,63 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
   if (segments.length == 0) {
     return;
   }
-
   switch (mode) {
 
-    case Mode.START_AUDIO: {
+    case Mode.StartAudio: {
       // if we are done with all segments, end
       if (entityIndex > audioData.length) {
-        mode = Mode.RESET;
+        mode = Mode.Reset;
       }
       else {
+        // tell main script we need audio played
+        sendAudioSignal = true;
+        mode = Mode.PlayAudio;
+      }
+      break;
+    }
+    case Mode.PlayAudio: {
+      // wait for a response from main script to see if we're done
+      if (doneWithAudio) {
+        mode = Mode.DoneAudio;
         tHoldAudioTime = Date.now();
-        mode = Mode.PLAY_AUDIO;
       }
       break;
     }
-    case Mode.PLAY_AUDIO: {
+    case Mode.DoneAudio: {
 
-      if (isPlayingAudio) {
-        mode = Mode.AUDIO_IN_PROGRESS;
-      }
-      break;
-    }
-    case Mode.AUDIO_IN_PROGRESS: {
-
+      // reset flag
+      doneWithAudio = false;
       let audioSeg = audioData[entityIndex];
-      let waitTime = (audioSeg.duration + 1) * 1000; // add 1s of buffer
-
-      if (Date.now() - tHoldAudioTime > waitTime) {
-        // special case: if it's a static segment
-        // then we need to play the static segment and the next segment
-        // before we start the haply
-        isPlayingAudio = false;
-        console.log(audioSeg.isStaticSegment);
-        if (audioSeg.isStaticSegment) {
-          mode = Mode.START_AUDIO;
-        }
-        else {
-          mode = Mode.START_HAPLY;
-        }
-        entityIndex++;
+      if (audioSeg.isStaticSegment) {
+        mode = Mode.StartAudio;
       }
+      else {
+        mode = Mode.StartHaply;
+      }
+      entityIndex++;
       break;
     }
-    case Mode.START_HAPLY: {
+    case Mode.StartHaply: {
       console.log("it's haply time!");
       tHoldTime = Date.now();
-      mode = Mode.WAIT_HAPLY;
+      mode = Mode.WaitHaply;
       break;
     }
 
     // start ~2 after button press
-    case Mode.WAIT_HAPLY: {
+    case Mode.WaitHaply: {
       if (Date.now() - tHoldTime > 2000) {
-        mode = Mode.MOVE_HAPLY;
+        mode = Mode.MoveHaply;
         // set the current index (increments each time)
         //currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex + 1;
       }
       break;
     }
-    case Mode.MOVE_HAPLY: {
-      activeGuidance(segments, 3000, 2000, 15, springConst);
+    case Mode.MoveHaply: {
+      activeGuidance(segments, 3000, 4000, 15, springConst);
       break;
     }
-    case Mode.RESET: {
+    case Mode.Reset: {
       break;
     }
   }
@@ -463,17 +464,18 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
         // if not, move on to the next index
         // but make sure we're NOT waiting for input
-          if (waitForInput) {
-            console.log("waiting for input");
-            guidance = false;
-            // wait 2000 ms before going to next segment
-          } else {
-            if (Date.now() - tLastChangeSegment > tSegmentDuration) {
-              mode = Mode.START_AUDIO;
-              startNewSegment();
-              //startNewSegment();
-            }
-          }
+
+        //if (waitForInput) {
+        //  console.log("waiting for input");
+        //  guidance = false;
+          // wait 2000 ms before going to next segment
+        //} else {
+          if (Date.now() - tLastChangeSegment > tSegmentDuration) {
+            mode = Mode.StartAudio;
+            startNewSegment();
+            //startNewSegment();
+        //  }
+        }
       }
       // // we are done with all segments, reset haply etc here
       else {

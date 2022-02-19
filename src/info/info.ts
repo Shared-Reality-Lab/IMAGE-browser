@@ -304,22 +304,14 @@ port.onMessage.addListener(async (message) => {
             // when user presses a key to break out of the current haply segment
             let breakOutKey: boolean = false;
 
-            const enum Mode {
-                START_AUDIO,
-                PLAY_AUDIO,
-                AUDIO_IN_PROGRESS,
-                START_HAPLY,
-                WAIT_HAPLY,
-                MOVE_HAPLY,
-                SKIP,
-                RESET
-              }
-
-            let audioMode;
-
-            let audioData = {
+            const enum AudioMode {
+                Play,
+                InProgress,
+                Idle
+            }
+            let audioData: { entityIndex: number, mode: null | AudioMode } = {
                 entityIndex: 0,
-                mode: audioMode
+                mode: null
             };
 
             // creating bounding boxes and centroid circles using the coordinates from haptics handler
@@ -405,20 +397,6 @@ port.onMessage.addListener(async (message) => {
                 //console.log(endEffector.x, endEffector.y);
 
             }
-
-            function checkForAudio() {
-                // TODO: use same key for audio/haptics
-                if (audioData.mode == Mode.PLAY_AUDIO) {
-                    console.log("aaa");
-                    playAudioSeg(audioBuffer,
-                        data["entityInfo"][audioData.entityIndex]["offset"],
-                        data["entityInfo"][audioData.entityIndex]["duration"]);
-                        worker.postMessage({
-                            isPlayingAudio: true
-                        });
-                    }
-            }
-
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
             document.addEventListener('keydown', (event) => {
@@ -449,6 +427,9 @@ port.onMessage.addListener(async (message) => {
                 sourceNode.start(0, offset, duration);
             }
 
+            let tAudioBegin: number;
+            let playingAudio = false;
+
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
@@ -477,7 +458,16 @@ port.onMessage.addListener(async (message) => {
                     objectData = msg.data.objectData;
                     segmentData = msg.data.segmentData;
                     waitForInput = msg.data.waitForInput;
-                    audioData = msg.data.audioInfo;
+
+                    if (msg.data.audioInfo != undefined) {
+                        if (msg.data.audioInfo.sendAudioSignal) {
+                            audioData.entityIndex = msg.data.audioInfo.entityIndex;
+                            audioData.mode = AudioMode.Play;
+                            worker.postMessage({
+                                receivedAudioSignal: true
+                            })
+                        }
+                    }
 
                     // latch to call the refresh of the animation once after which the call is recursive in draw() function
                     if (firstCall) {
@@ -487,7 +477,29 @@ port.onMessage.addListener(async (message) => {
                         firstCall = false;
                     }
 
-                    checkForAudio();
+                    switch (audioData.mode) {
+                        case AudioMode.Play: {
+                            if (!playingAudio) {
+                                playingAudio = true;
+                                playAudioSeg(audioBuffer,
+                                    data["entityInfo"][audioData.entityIndex]["offset"],
+                                    data["entityInfo"][audioData.entityIndex]["duration"]);
+                                audioData.mode = AudioMode.InProgress;
+                                tAudioBegin = Date.now();
+                            }
+                        }
+                        case AudioMode.InProgress: {
+                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entityInfo"][audioData.entityIndex]["duration"])) {
+                                playingAudio = false;
+                                worker.postMessage({
+                                    doneWithAudio: true
+                                });
+                                audioData.mode = AudioMode.Idle;
+                            }
+                        }
+                        case AudioMode.Idle:
+                            break;
+                    }
                 });
             });
         }
