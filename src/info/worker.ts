@@ -369,8 +369,10 @@ let waitForInput: boolean = false;
 
 export const enum BreakKey {
   None,
-  Previous,
-  Next
+  PreviousHaptic,
+  NextHaptic,
+  PreviousAudio,
+  NextFromAudio
 }
 
 let breakKey: BreakKey;
@@ -396,6 +398,7 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
   if (segments.length == 0) {
     return;
   }
+
   switch (mode) {
 
     case Mode.StartAudio: {
@@ -422,6 +425,7 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
 
       // reset flag
       doneWithAudio = false;
+
       let audioSeg = audioData[entityIndex];
       if (audioSeg.isStaticSegment) {
         mode = Mode.StartAudio;
@@ -429,6 +433,7 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
       else {
         mode = Mode.StartHaply;
       }
+      // since we've finished a chunk, move on to the next one
       entityIndex++;
       break;
     }
@@ -441,15 +446,18 @@ function lineFollowing(segments: SubSegment[][], springConst: number) {
 
     // start ~2 after button press
     case Mode.WaitHaply: {
-      if (Date.now() - tHoldTime > 2000) {
+      //console.log("enter wait mode");
+      //console.log(Date.now(), tHoldTime);
+      if (Date.now() - tHoldTime > 1000) {
         mode = Mode.MoveHaply;
+        console.log("done waiting");
         // set the current index (increments each time)
         //currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex + 1;
       }
       break;
     }
     case Mode.MoveHaply: {
-      activeGuidance(segments, 3000, 4000, 15, springConst);
+      activeGuidance(segments, 3000, 2000, 15, springConst);
       break;
     }
     case Mode.Reset: {
@@ -466,12 +474,19 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
   // first check for breakout conditions
   if (breakKey != BreakKey.None) {
+    console.log("enter guidance mode");
     // the user skipped forward
-    if (breakKey == BreakKey.Next) {
+    if (breakKey == BreakKey.NextHaptic) {
       finishSubSegment();
     }
+    if (breakKey == BreakKey.NextFromAudio) {
+      // the only difference with audio is that we don't
+      // increment the subsegment index
+      // because this will be a fresh segment
+      changeSubSegment();
+    }
     // the user wants to go back
-    if (breakKey == BreakKey.Previous) {
+    if (breakKey == BreakKey.PreviousHaptic) {
       prevSubSegment();
     }
     // reset after we've finished

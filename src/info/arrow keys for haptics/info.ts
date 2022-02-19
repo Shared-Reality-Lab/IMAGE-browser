@@ -303,14 +303,15 @@ port.onMessage.addListener(async (message) => {
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
-
+            
             let breakKey: null | BreakKey;
 
             const enum AudioMode {
                 Play,
                 InProgress,
-                Finished,
                 Idle,
+                SkipBack,
+                SkipAhead
             }
             let audioData: { entityIndex: number, mode: null | AudioMode } = {
                 entityIndex: 0,
@@ -413,25 +414,11 @@ port.onMessage.addListener(async (message) => {
 
                 //test key to break out of current segment
                 if (keyName == 'c') {
-                    //console.log(audioData.mode);
-                    //if (audioData.mode == AudioMode.Idle) {
-                    breakKey = BreakKey.PreviousHaptic;
-                    //}
-                    // else {
-                    //     console.log("PLAYING AUDIO");
-                    //     breakKey == BreakKey.PreviousAudio;
-                    // }
+                    breakKey = BreakKey.Previous;
                 }
 
                 if (keyName == 'd') {
-                    if (audioData.mode == AudioMode.Play) {
-                        sourceNode.stop();
-                        audioData.mode = AudioMode.Finished;
-                        breakKey = BreakKey.NextFromAudio;
-                    }
-                    else {
-                    breakKey = BreakKey.NextHaptic;
-                    }
+                    breakKey = BreakKey.Next;
                 }
 
                 worker.postMessage({
@@ -441,9 +428,8 @@ port.onMessage.addListener(async (message) => {
                 });
             });
 
-            let sourceNode: AudioBufferSourceNode;
             function playAudioSeg(audioBuffer: any, offset: number, duration: number) {
-                sourceNode = audioCtx.createBufferSource();
+                const sourceNode = audioCtx.createBufferSource();
                 sourceNode.buffer = audioBuffer;
                 sourceNode.connect(audioCtx.destination);
                 sourceNode.start(0, offset, duration);
@@ -497,7 +483,7 @@ port.onMessage.addListener(async (message) => {
                         segments = segmentData;
                         window.requestAnimationFrame(draw);
                         firstCall = false;
-                    }           
+                    }
 
                     switch (audioData.mode) {
                         case AudioMode.Play: {
@@ -512,16 +498,12 @@ port.onMessage.addListener(async (message) => {
                         }
                         case AudioMode.InProgress: {
                             if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entityInfo"][audioData.entityIndex]["duration"])) {
-                                audioData.mode = AudioMode.Finished;
+                                playingAudio = false;
+                                worker.postMessage({
+                                    doneWithAudio: true
+                                });
+                                audioData.mode = AudioMode.Idle;
                             }
-                            break;
-                        }
-                        case AudioMode.Finished: {
-                            playingAudio = false;
-                            worker.postMessage({
-                                doneWithAudio: true
-                            });
-                            audioData.mode = AudioMode.Idle;
                         }
                         case AudioMode.Idle:
                             break;
