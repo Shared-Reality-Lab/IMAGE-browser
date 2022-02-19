@@ -371,7 +371,7 @@ export const enum BreakKey {
   None,
   PreviousHaptic,
   NextHaptic,
-  PreviousAudio,
+  PreviousFromAudio,
   NextFromAudio
 }
 
@@ -489,6 +489,30 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
     if (breakKey == BreakKey.PreviousHaptic) {
       prevSubSegment();
     }
+
+    if (breakKey == BreakKey.PreviousFromAudio) {
+
+      // note our pattern is A.A.H.A.H.A since the first seg is static
+      // so we want to make sure our entity index is at least >= 2
+      // to play a segment
+      // TODO: rewrite, badly written
+
+      if (currentSegmentIndex == 0 && entityIndex <= 2) {
+        entityIndex = 0;
+        mode = Mode.StartAudio;
+      }
+      else {
+        // go back one index
+        currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex - 1;
+        currentSubSegmentIndex = segments[currentSegmentIndex].length - 1;
+        // TODO: fix where this is incremented/decremented
+        entityIndex--;
+
+        //console.log("yew", currentSegmentIndex, currentSubSegmentIndex);
+        changeSubSegment();
+      }
+      // }
+    }
     // reset after we've finished
     breakKey = BreakKey.None;
   }
@@ -595,6 +619,7 @@ function finishSegment() {
   console.log("finish seg");
   currentSegmentIndex++;
   currentSubSegmentIndex = 0;
+  currentSubSegmentPointIndex = 0;
   curSegmentDone = true;
   curSubSegmentDone = false;
   waitForInput = true;

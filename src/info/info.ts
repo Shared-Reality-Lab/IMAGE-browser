@@ -412,15 +412,17 @@ port.onMessage.addListener(async (message) => {
                 // }
 
                 //test key to break out of current segment
-                if (keyName == 'c') {
+                if (keyName == 'c' && audioData.entityIndex != 0) {
                     //console.log(audioData.mode);
                     //if (audioData.mode == AudioMode.Idle) {
-                    breakKey = BreakKey.PreviousHaptic;
-                    //}
-                    // else {
-                    //     console.log("PLAYING AUDIO");
-                    //     breakKey == BreakKey.PreviousAudio;
-                    // }
+                    if (audioData.mode == AudioMode.Play) {
+                        sourceNode.stop();
+                        audioData.mode = AudioMode.Finished;
+                        breakKey = BreakKey.PreviousFromAudio;
+                    }
+                    else {
+                        breakKey = BreakKey.PreviousHaptic;
+                    }
                 }
 
                 if (keyName == 'd') {
@@ -430,7 +432,7 @@ port.onMessage.addListener(async (message) => {
                         breakKey = BreakKey.NextFromAudio;
                     }
                     else {
-                    breakKey = BreakKey.NextHaptic;
+                        breakKey = BreakKey.NextHaptic;
                     }
                 }
 
@@ -497,11 +499,13 @@ port.onMessage.addListener(async (message) => {
                         segments = segmentData;
                         window.requestAnimationFrame(draw);
                         firstCall = false;
-                    }           
+                    }
+
 
                     switch (audioData.mode) {
                         case AudioMode.Play: {
                             if (!playingAudio) {
+                                console.log(audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
                                     data["entityInfo"][audioData.entityIndex]["offset"],
