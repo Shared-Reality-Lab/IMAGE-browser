@@ -108,6 +108,11 @@ enum Type {
   OBJECT,
 }
 
+
+// To determine whether the user has pressed a key to move to the next subsegment.
+//let breakOutKey: boolean = false;
+
+
 let haplyType = Type.SEGMENT;
 
 let guidance: boolean = true;
@@ -145,7 +150,10 @@ self.addEventListener("message", async function (event) {
     if (waitForInput == false) {
       guidance = true;
     }
-    breakOutKey = event.data.breakOutKey;
+    if (event.data.breakKey != undefined) {
+      breakKey = event.data.breakKey;
+    }
+    //breakOutKey = event.data.breakOutKey;
 
     // if (curSubSegmentDone) {
     //   tLastChangeSubSegment = event.data.tKeyPressTime;
@@ -359,8 +367,13 @@ let currentSubSegmentPointIndex: number = 0;
 // Wait for current user input.
 let waitForInput: boolean = false;
 
-// To determine whether the user has pressed a key to move to the next subsegment.
-let breakOutKey: boolean = false;
+export const enum BreakKey {
+  None,
+  Previous,
+  Next
+}
+
+let breakKey: BreakKey;
 
 let tLastChangePoint: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSegment: number = Number.NEGATIVE_INFINITY;
@@ -451,7 +464,21 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   let currentSegment: SubSegment[] = segments[currentSegmentIndex];
   let currentSubSegment: SubSegment = currentSegment[currentSubSegmentIndex];
 
-  if (!breakOutKey) {
+  // first check for breakout conditions
+  if (breakKey != BreakKey.None) {
+    // the user skipped forward
+    if (breakKey == BreakKey.Next) {
+      finishSubSegment();
+    }
+    // the user wants to go back
+    if (breakKey == BreakKey.Previous) {
+      prevSubSegment();
+    }
+    // reset after we've finished
+    breakKey = BreakKey.None;
+  }
+
+  else {
 
     //TODO: further abstract some of these into functions
     // if we are done with the current segment...
@@ -468,13 +495,13 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         //if (waitForInput) {
         //  console.log("waiting for input");
         //  guidance = false;
-          // wait 2000 ms before going to next segment
+        // wait 2000 ms before going to next segment
         //} else {
-          if (Date.now() - tLastChangeSegment > tSegmentDuration) {
-            mode = Mode.StartAudio;
-            startNewSegment();
-            //startNewSegment();
-        //  }
+        if (Date.now() - tLastChangeSegment > tSegmentDuration) {
+          mode = Mode.StartAudio;
+          startNewSegment();
+          //startNewSegment();
+          //  }
         }
       }
       // // we are done with all segments, reset haply etc here
@@ -523,20 +550,25 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       }
     }
   }
+}
+
+function prevSubSegment() {
+  // check if this is the first subsegment
+  // if so we'll have to change back to audio mode
+  if (currentSubSegmentIndex == 0) {
+    entityIndex--;
+    mode = Mode.StartAudio;
+  }
   else {
-    // if the user wants to stop, then just finish the segment
-    finishSubSegment();
-    breakOutKey = !breakOutKey;
+    currentSubSegmentIndex--;
+    changeSubSegment();
   }
 }
 
 function startNewSegment() {
   curSegmentDone = false;
   waitForInput = false;
-  // currentSegmentIndex++;
-  // currentSubSegmentIndex = 0;
 }
-
 
 function startNewSubSegment() {
   curSubSegmentDone = false;
@@ -555,8 +587,16 @@ function finishSegment() {
 }
 
 function finishSubSegment() {
-  currentSubSegmentPointIndex = 0;
   currentSubSegmentIndex++;
+  changeSubSegment();
+}
+
+/**
+ * Called by either prevSubSegment() or nextSubSegment().
+ * Change the subsegment index before calling this.
+ */
+function changeSubSegment() {
+  currentSubSegmentPointIndex = 0;
   curSubSegmentDone = true;
   //waitForInput = true;
   tLastChangeSubSegment = Date.now();

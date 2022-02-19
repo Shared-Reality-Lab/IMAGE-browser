@@ -25,6 +25,7 @@ import { vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 import * as worker from './worker';
+import { BreakKey } from './worker';
 
 let request_uuid = window.location.search.substring(1);
 let renderings: IMAGEResponse;
@@ -302,12 +303,15 @@ port.onMessage.addListener(async (message) => {
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
-            let breakOutKey: boolean = false;
+            
+            let breakKey: null | BreakKey;
 
             const enum AudioMode {
                 Play,
                 InProgress,
-                Idle
+                Idle,
+                SkipBack,
+                SkipAhead
             }
             let audioData: { entityIndex: number, mode: null | AudioMode } = {
                 entityIndex: 0,
@@ -403,19 +407,23 @@ port.onMessage.addListener(async (message) => {
                 const keyName = event.key;
 
                 // if we're waiting for input from the user, send the key state
-                if (waitForInput && keyName == 'b') {
-                    waitForInput = !waitForInput;
-                    breakOutKey = false;
-                }
+                // if (waitForInput && keyName == 'b') {
+                //     waitForInput = !waitForInput;
+                //     //breakOutKey = false;
+                // }
 
                 //test key to break out of current segment
                 if (keyName == 'c') {
-                    breakOutKey = true;
+                    breakKey = BreakKey.Previous;
+                }
+
+                if (keyName == 'd') {
+                    breakKey = BreakKey.Next;
                 }
 
                 worker.postMessage({
                     waitForInput: waitForInput,
-                    breakOutKey: breakOutKey,
+                    breakKey: breakKey,
                     tKeyPressTime: Date.now()
                 });
             });
