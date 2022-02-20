@@ -26,17 +26,18 @@
     "@parcel/transformer-typescript-tsc": "^2.2.1",
     "@parcel/validator-typescript": "^2.2.1",
     "@types/uuid": "^8.3.3",
+    "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
-    "@types/w3c-web-serial":"1.0.2" ,
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.2.1",
     "web-ext": "^6.0.0"
   },
   "dependencies": {
-    "@types/w3c-web-serial": "1.0.2",
     "@types/chrome": "^0.0.164",
+    "@types/w3c-web-serial": "1.0.2",
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
+    "progressbar.js": "^1.1.0",
     "uuid": "^8.3.2",
     "webextension-polyfill": "^0.8.0"
   }

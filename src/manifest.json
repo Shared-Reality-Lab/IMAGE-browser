@@ -39,6 +39,7 @@
         "info/worker.js",
         "info/info.html",
         "info/info.ts",
+        "progressBar/progressBar.html",
         "errors/no_renderings.html",
         "errors/http_error.html",
         "./image_request_sent.mp3"

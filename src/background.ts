@@ -133,6 +133,8 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
     } as IMAGERequest;
 }
 
+export var requestSent:Boolean
+
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message");
   let query: IMAGERequest;
@@ -165,6 +167,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
             serverUrl = "https://image.a11y.mcgill.ca/";
+            var progressWindow = await browser.windows.create({
+              type:"popup",
+              url: "progressBar/progressBar.html",
+              height: 100,
+              width: 400,
+            })
+             // Value from 0.0 to 1.0
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
@@ -195,6 +204,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   if (json["renderings"].length > 0) {
                     if(query["request_uuid"] !== undefined){
                       responseMap.set(query["request_uuid"], json);
+                      browser.windows.remove(progressWindow.id!)
                       browser.windows.create({
                         type: "panel",
                         url: "info/info.html?" + query["request_uuid"]
