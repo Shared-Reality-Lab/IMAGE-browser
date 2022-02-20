@@ -178,6 +178,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
             "body": JSON.stringify(query)
           }).then(async (resp) => {
               if (resp.ok) {
+                let completionAudio = new Audio(chrome.runtime.getURL("image_request_sent.mp3")); //TODO: replace it to the audio that indicate the completion of the request
+                completionAudio.play();
                 return resp.json();
               } else {
                   browser.windows.create({
