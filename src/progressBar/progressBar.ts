@@ -1,5 +1,4 @@
 import progressbar from "progressbar.js"
-import {requestSent} from "../background.ts"
 
 var ProgressBar = require('progressbar.js');
 var bar = new ProgressBar.Line('#progress', {

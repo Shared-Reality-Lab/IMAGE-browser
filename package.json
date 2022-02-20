@@ -25,6 +25,7 @@
     "@parcel/transformer-sass": "^2.2.1",
     "@parcel/transformer-typescript-tsc": "^2.2.1",
     "@parcel/validator-typescript": "^2.2.1",
+    "@types/progressbar.js": "^1.1.2",
     "@types/uuid": "^8.3.3",
     "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
