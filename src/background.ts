@@ -186,6 +186,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
             },
             "body": JSON.stringify(query)
           }).then(async (resp) => {
+              browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
                 let completionAudio = new Audio(chrome.runtime.getURL("image_request_sent.mp3")); //TODO: replace it to the audio that indicate the completion of the request
                 completionAudio.play();
@@ -204,7 +205,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   if (json["renderings"].length > 0) {
                     if(query["request_uuid"] !== undefined){
                       responseMap.set(query["request_uuid"], json);
-                      browser.windows.remove(progressWindow.id!)
                       browser.windows.create({
                         type: "panel",
                         url: "info/info.html?" + query["request_uuid"]
