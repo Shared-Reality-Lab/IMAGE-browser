@@ -284,7 +284,7 @@ port.onMessage.addListener(async (message) => {
                 vx: 5,
                 vy: 2,
                 radius: 8,
-                color: 'red',
+                color: 'brown',
                 draw: function () {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
@@ -326,31 +326,34 @@ port.onMessage.addListener(async (message) => {
 
             function drawBoundaries() {
 
-                for (const objectSegment of objects) {
-                    objectSegment.forEach(object => {
-                        if (object.bounds != undefined) {
+                // for (const objectSegment of objects) {
+                //     objectSegment.forEach(object => {
+                //         if (object.bounds != undefined) {
 
-                            let bounds = object.bounds;
-                            let centroid = object.coordinates;
+                //             let bounds = object.bounds;
+                //             let centroid = object.coordinates;
 
-                            let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
-                            let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
-                            let objWidth = Math.abs(uLX - lRX);
-                            let objHeight = Math.abs(uLY - lRY);
-                            ctx.strokeStyle = "black";
-                            ctx.strokeRect(uLX, uLY, objWidth, objHeight);
+                //             let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
+                //             let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
+                //             let objWidth = Math.abs(uLX - lRX);
+                //             let objHeight = Math.abs(uLY - lRY);
+                //             ctx.strokeStyle = "black";
+                //             ctx.strokeRect(uLX, uLY, objWidth, objHeight);
 
-                            let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
-                            ctx.beginPath();
-                            ctx.arc(cX, cY, 10, 0, 2 * Math.PI);
-                            ctx.strokeStyle = 'red';
-                            ctx.stroke();
-                        }
-                    })
-                }
+                //             let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
+                //             ctx.beginPath();
+                //             ctx.arc(cX, cY, 10, 0, 2 * Math.PI);
+                //             ctx.strokeStyle = 'red';
+                //             ctx.stroke();
+                //         }
+                //     })
+                // }
 
                 ctx.strokeStyle = "blue";
+                //let i = 0;
                 for (const segment of segments) {
+                    //ctx.strokeStyle = colors[i];
+                    //i++;
                     segment.forEach(subSegment => {
                         subSegment.coordinates.forEach((coord: any) => {
                             const pX = coord[0];
@@ -362,6 +365,9 @@ port.onMessage.addListener(async (message) => {
                     });
                 }
             }
+
+            const colors: string[] = ['red', 'blue', 'orange', 'purple',
+                'green', 'brown', 'maroon', 'teal'];
 
             function updateAnimation() {
 
@@ -470,9 +476,12 @@ port.onMessage.addListener(async (message) => {
                     if (msg.data.objectData != undefined)
                         objects = msg.data.objectData;
 
-                    if (msg.data.segmentData != undefined ||
-                        msg.data.objectData != undefined) {
-                        window.requestAnimationFrame(draw);
+                    if (firstCall) {
+                        if (msg.data.segmentData != undefined ||
+                            msg.data.objectData != undefined) {
+                            window.requestAnimationFrame(draw);
+                            firstCall = false;
+                        }
                     }
 
                     if (msg.data.audioInfo != undefined) {
