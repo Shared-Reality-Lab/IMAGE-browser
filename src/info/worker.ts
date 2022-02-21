@@ -373,7 +373,7 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, [3000, 2000, 15]);
+            audioHapticContours(segments, [3000, 2000, 3]);
           }
           break;
         }
@@ -565,6 +565,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
   // first check for breakout conditions
   if (breakKey != BreakKey.None) {
+    fEE.set(0, 0); // reset forces
     // the user skipped forward
     if (breakKey == BreakKey.NextHaptic) {
       finishSubSegment();
@@ -719,7 +720,7 @@ function startNewSubSegment() {
 }
 
 function finishSegment() {
-  console.log("finish seg");
+  //console.log("finish seg");
   currentSegmentIndex++;
   currentSubSegmentIndex = 0;
   currentSubSegmentPointIndex = 0;
@@ -750,21 +751,31 @@ function moveToPos(vector: Vector, springConst: number) {
 
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
-
+  //const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+  //const xDiff = (convPosEE).subtract(targetPos);
   // get the angle between this and the next position
   //const angle = Math.abs(xDiff.toAngles().phi); 
   //const multiplier = angle > 1.5 ? 1.4 : 1;
-  const kx = xDiff.multiply(springConst);//.multiply(multiplier);
+  const kx = xDiff.multiply(200);//.multiply(multiplier);
+
+
+
+  //console.log(currentSubSegmentPointIndex, xDiff);
 
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
   const c = 1.2;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
-  const fx = kx.x;// + cdxdt.x;
-  const fy = kx.y;// + cdxdt.y;
+  const fx = constrain(kx.x + cdxdt.x, -2.4, 2.4);
+  const fy = constrain(kx.y + cdxdt.y, -2.4, 2.4);
   force.set(fx, fy);
+  console.log(force);
   fEE.set(graphics_to_device(force));
+}
+
+function constrain(val: number, min: number, max: number) {
+  return val > max ? max : val < min ? min : val;
 }
 
 /////////////////////////////////////////
