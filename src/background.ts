@@ -188,7 +188,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
           }).then(async (resp) => {
               browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
-                let completionAudio = new Audio(chrome.runtime.getURL("image_request_sent.mp3")); //TODO: replace it to the audio that indicate the completion of the request
+                let completionAudio = new Audio(chrome.runtime.getURL("earcon_server_communication_IMAGE_results-arrived.mp3")); //TODO: replace it to the audio that indicate the completion of the request
                 completionAudio.play();
                 return resp.json();
               } else {
