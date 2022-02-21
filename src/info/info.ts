@@ -227,7 +227,7 @@ port.onMessage.addListener(async (message) => {
             canvas.width = 800;
             canvas.height = 500;
             canvas.style.zIndex = "8";
-            canvas.style.position = "absolute";
+            canvas.style.position = "relative";
             canvas.style.border = "1px solid";
             contentDiv.append(document.createElement("br"));
             contentDiv.append(canvas);
