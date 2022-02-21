@@ -232,6 +232,11 @@ port.onMessage.addListener(async (message) => {
             btn.innerHTML = "Play Haptic Rendering";
             contentDiv.append(btn);
 
+            let btnStart = document.createElement("button");
+            btnStart.id = "btnStart";
+            btnStart.innerHTML = "Start";
+            contentDiv.append(btnStart);
+
             // set canvas properties
             const canvas: HTMLCanvasElement = document.createElement('canvas');
             canvas.id = "main";
@@ -297,9 +302,11 @@ port.onMessage.addListener(async (message) => {
                 window.requestAnimationFrame(draw);
             }
 
+            // TODO: figure out type
             const rec: Array<any> = [];
             const centroids: Array<vector> = [];
             let segments: worker.SubSegment[][];
+            let objects: worker.SubSegment[][];
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
@@ -317,62 +324,37 @@ port.onMessage.addListener(async (message) => {
                 mode: null
             };
 
-            // creating bounding boxes and centroid circles using the coordinates from haptics handler
-            function createRect() {
-                //for (let i = 0; i < objectData.length; i++) {
-                for (const obj of objectData) {
-                    // transform coordinates into haply frame of reference
-                    // horizontal/vertical positions
-                    for (let j = 0; j < obj['centroid'].length; j++) {
-
-                        let bounds = obj['coords'][j];
-                        let centroid = obj['centroid'][j];
-
-                        let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
-                        let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
-
-                        // centroid     
-                        let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
-
-                        let objWidth = Math.abs(uLX - lRX);
-                        let objHeight = Math.abs(uLY - lRY);
-
-                        rec.push({
-                            x: uLX,
-                            y: uLY,
-                            width: objWidth,
-                            height: objHeight,
-                        });
-
-                        centroids.push({
-                            x: cX,
-                            y: cY
-                        })
-                    }
-                }
-            }
-
             function drawBoundaries() {
 
-                for (let i = 0; i < rec.length; i++) {
-                    const s = rec[i];
-                    ctx.strokeStyle = "red";
-                    ctx.strokeRect(s.x, s.y, s.width, s.height);
+                for (const objectSegment of objects) {
+                    objectSegment.forEach(object => {
+                        if (object.bounds != undefined) {
 
-                    const c = centroids[i];
-                    ctx.beginPath();
-                    ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
-                    ctx.strokeStyle = "white";
-                    ctx.stroke();
+                            let bounds = object.bounds;
+                            let centroid = object.coordinates;
+
+                            let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
+                            let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
+                            let objWidth = Math.abs(uLX - lRX);
+                            let objHeight = Math.abs(uLY - lRY);
+                            ctx.strokeStyle = "black";
+                            ctx.strokeRect(uLX, uLY, objWidth, objHeight);
+
+                            let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
+                            ctx.beginPath();
+                            ctx.arc(cX, cY, 10, 0, 2 * Math.PI);
+                            ctx.strokeStyle = 'red';
+                            ctx.stroke();
+                        }
+                    })
                 }
 
                 ctx.strokeStyle = "blue";
-
                 for (const segment of segments) {
                     segment.forEach(subSegment => {
                         subSegment.coordinates.forEach((coord: any) => {
-                            const pX = coord.x;
-                            const pY = coord.y;
+                            const pX = coord[0];
+                            const pY = coord[1];
                             let [pointX, pointY] = imgToWorldFrame(pX, pY);
 
                             ctx.strokeRect(pointX, pointY, 1, 1);
@@ -396,9 +378,6 @@ port.onMessage.addListener(async (message) => {
                 endEffector.x = deviceOrigin.x + xE - 100;
                 endEffector.y = deviceOrigin.y + yE - 167;
                 endEffector.draw();
-
-                //console.log(endEffector.x, endEffector.y);
-
             }
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
@@ -413,8 +392,6 @@ port.onMessage.addListener(async (message) => {
 
                 //test key to break out of current segment
                 if (keyName == 'c' && audioData.entityIndex != 0) {
-                    //console.log(audioData.mode);
-                    //if (audioData.mode == AudioMode.Idle) {
                     if (audioData.mode == AudioMode.Play) {
                         sourceNode.stop();
                         audioData.mode = AudioMode.Finished;
@@ -454,6 +431,12 @@ port.onMessage.addListener(async (message) => {
             let tAudioBegin: number;
             let playingAudio = false;
 
+            btnStart.addEventListener("click", _ => {
+                worker.postMessage({
+                    start: true
+                });
+            })
+
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
@@ -479,9 +462,18 @@ port.onMessage.addListener(async (message) => {
                     // return end-effector x/y positions and objectData for updating the canvas
                     posEE.x = msg.data.positions.x;
                     posEE.y = msg.data.positions.y;
-                    objectData = msg.data.objectData;
-                    segmentData = msg.data.segmentData;
                     waitForInput = msg.data.waitForInput;
+
+                    if (msg.data.segmentData != undefined)
+                        segments = msg.data.segmentData;
+
+                    if (msg.data.objectData != undefined)
+                        objects = msg.data.objectData;
+
+                    if (msg.data.segmentData != undefined ||
+                        msg.data.objectData != undefined) {
+                        window.requestAnimationFrame(draw);
+                    }
 
                     if (msg.data.audioInfo != undefined) {
                         if (msg.data.audioInfo.sendAudioSignal) {
@@ -493,19 +485,10 @@ port.onMessage.addListener(async (message) => {
                         }
                     }
 
-                    // latch to call the refresh of the animation once after which the call is recursive in draw() function
-                    if (firstCall) {
-                        createRect();
-                        segments = segmentData;
-                        window.requestAnimationFrame(draw);
-                        firstCall = false;
-                    }
-
-
                     switch (audioData.mode) {
                         case AudioMode.Play: {
                             if (!playingAudio) {
-                                console.log(audioData.entityIndex);
+                                console.log("index is", audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
                                     data["entityInfo"][audioData.entityIndex]["offset"],
@@ -517,6 +500,7 @@ port.onMessage.addListener(async (message) => {
                         case AudioMode.InProgress: {
                             if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entityInfo"][audioData.entityIndex]["duration"])) {
                                 audioData.mode = AudioMode.Finished;
+                                console.log("waiting");
                             }
                             break;
                         }
@@ -547,7 +531,9 @@ port.postMessage({
 
 // scaling of coordinates to canvas
 function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    const x = ((x1 + 0.0537) / 0.1345) * canvasWidth;
-    const y = ((y1 - 0.0284) / 0.0834) * canvasHeight;
-    return [x, y];
+    //const x = ((x1 + 0.0537) / 0.1345) * canvasWidth;
+    //const y = ((y1 - 0.0284) / 0.0834) * canvasHeight;
+    const x = x1 * canvasWidth;
+    const y = y1 * canvasHeight;
+    return [x, y]
 }
