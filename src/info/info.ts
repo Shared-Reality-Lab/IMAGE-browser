@@ -140,6 +140,12 @@ port.onMessage.addListener(async (message) => {
             button.classList.add("btn", "btn-secondary");
             selectDiv.append(button);
 
+            const download = document.createElement("a");
+            download.setAttribute("href", rendering["data"]["audioFile"] as string);
+            download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
+            download.textContent = "Download Audio File";
+            contentDiv.append(download);
+
             const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
                 return resp.arrayBuffer();
             }).then(buffer => {
