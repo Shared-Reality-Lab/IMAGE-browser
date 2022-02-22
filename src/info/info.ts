@@ -33,8 +33,6 @@ let port = browser.runtime.connect();
 const canvasWidth = 800;
 const canvasHeight = 500;
 
-const audioCtx = new window.AudioContext();
-
 port.onMessage.addListener(async (message) => {
     if (message) {
         renderings = message;
@@ -125,6 +123,7 @@ port.onMessage.addListener(async (message) => {
             fullOption.textContent = browser.i18n.getMessage("segmentAudioFullRendering");
             select.append(fullOption);
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
+            // Construct dropdown menu from returned audio segments
             for (let idx = 0; idx < audioInfo.length; idx++) {
                 const opt = document.createElement("option");
                 opt.setAttribute("value", idx.toString());
@@ -146,6 +145,8 @@ port.onMessage.addListener(async (message) => {
             download.textContent = "Download Audio File";
             contentDiv.append(download);
 
+            // Set up audio controls
+            const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
                 return resp.arrayBuffer();
             }).then(buffer => {
@@ -154,6 +155,7 @@ port.onMessage.addListener(async (message) => {
 
             let currentOffset: number | undefined;
             let currentDuration: number | undefined;
+            let sourceNode: AudioBufferSourceNode | undefined;
 
             select.addEventListener("input", (e) => {
                 const evt = e as InputEvent;
@@ -169,10 +171,15 @@ port.onMessage.addListener(async (message) => {
                 }
             });
             button.addEventListener("click", _ => {
-                const sourceNode = audioCtx.createBufferSource();
-                sourceNode.buffer = audioBuffer;
-                sourceNode.connect(audioCtx.destination);
-                sourceNode.start(0, currentOffset, currentDuration);
+                if (sourceNode !== undefined) {
+                    sourceNode.stop();
+                } else {
+                    sourceNode = audioCtx.createBufferSource();
+                    sourceNode.addEventListener("ended", () => { sourceNode = undefined; });
+                    sourceNode.buffer = audioBuffer;
+                    sourceNode.connect(audioCtx.destination);
+                    sourceNode.start(0, currentOffset, currentDuration);
+                }
             });
         }
 

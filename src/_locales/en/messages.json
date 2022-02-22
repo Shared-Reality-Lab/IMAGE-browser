@@ -36,8 +36,8 @@
         "description": "Selection option to play through the entire rendering."
     },
     "segmentAudioButton": {
-        "message": "Play",
-        "description": "Label for playing audio renderings of selected audio segment."
+        "message": "Play/Stop",
+        "description": "Label for playing and stopping audio renderings of selected audio segment."
     },
     "audioRenderingsLabel": {
         "message": "Audio (Specialized renderings, best experienced with stereo headphones)",
