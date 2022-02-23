@@ -18,6 +18,7 @@ import { Vector } from "../hAPI/libraries/vector.js";
 import { Board } from "../hAPI/libraries/Board.ts";
 import { Device } from "../hAPI/libraries/Device.ts";
 import { Pantograph } from "../hAPI/libraries/Pantograph.ts";
+import { convexhull } from './convex-hull';
 
 // TODO: set object types
 
@@ -111,7 +112,7 @@ export const enum Mode {
 
 let mode = Mode.InitializeAudio;
 
-enum Type {
+export const enum Type {
   SEGMENT,
   OBJECT,
   IDLE
@@ -196,14 +197,17 @@ self.addEventListener("message", async function (event) {
         baseSegmentData.push(baseSeg);
         segmentData.push(tSeg);
       }
+      
+      console.log(baseSegmentData);
+
       segments = createSegs(segmentData);
 
       for (let i = objHeaderIndex + 1; i < rendering.length; i++) {
 
         const name = rendering[i].name;
-        const centroid = rendering[i].centroid;
+        const centroid = rendering[i].centroid.map((x: any) => transformToVector(x));
         const coords = rendering[i].contourPoints;
-        const tCentroid = centroid.map((x: any) => transformPtToWorkspace(x))
+        const tCentroid = rendering[i].centroid.map((x: any) => transformPtToWorkspace(x))
 
         let baseObj = {
           name: name,
@@ -220,9 +224,10 @@ self.addEventListener("message", async function (event) {
         baseObjectData.push(baseObj);
         objectData.push(tObj);
       }
+      //console.log("objectData", objectData);
       objects = createObjs(objectData);
 
-      console.log(segments);
+      //console.log("objects", objects);
 
       // fetch audio data
       // TODO: rewrite all of this to use just a single loop
@@ -244,8 +249,6 @@ self.addEventListener("message", async function (event) {
         objectData: createObjs(baseObjectData),
         segmentData: createSegs2(baseSegmentData),
       });
-
-
     }
     //activeGuidance(segments, 50, 50);
     //set initial target location first object centroid coordinates
@@ -287,19 +290,100 @@ self.addEventListener("message", async function (event) {
 
   function createObjs(objectData: any): SubSegment[][] {
     let data: SubSegment[][] = [];
+    let j = 0;
     for (const obj of objectData) {
       const object: Array<SubSegment> = [];
       //const objCentroids = objs.centroid[0];
       // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
       // each part of the segment
-      for (let i = 0; i < obj.centroid.length; i++) {
-        let coordinates = [obj.centroid[i]];
-        let bounds = obj.coords[i];
-        object[i] = { coordinates, bounds };
+      if (obj.centroid.length == 1) {
+        for (let i = 0; i < obj.centroid.length; i++) {
+          let coordinates = [obj.centroid[i]];
+          let bounds = obj.coords[i];
+          object[i] = { coordinates, bounds };
+        }
+      }
+      // if we have more than 1 point, i.e., grouped object
+      // then we'll make a convex hull
+      else {
+        // make hull from the obj centroids and then upsample
+        const objCoords: Vector[] = obj.centroid;
+        const hull: Vector[] = convexhull.makeHull(objCoords);
+        const coordinates: Vector[] = upsample(hull);
+        object[0] = { coordinates };
       }
       data.push(object);
     }
+    j++;
     return data;
+  }
+
+  function upsample(pointArray: Vector[]) {
+    // contour index in this particular object is made up of several poconsts
+    // n lines, p poconsts for each line
+    let upsampledSeg = [];
+
+    for (let n = 0; n < pointArray.length - 1; n++) {
+
+      let upsampleSubSeg: Array<Vector> = [];
+
+      const currentPoint = new Vector(pointArray[n].x, pointArray[n].y);
+      const nextPoint = new Vector(pointArray[n + 1].x, pointArray[n + 1].y);
+
+      const x1 = currentPoint.x;
+      const y1 = currentPoint.y;
+      const x2 = nextPoint.x;
+      const y2 = nextPoint.y;
+      const moveSpeed = 2000;
+
+      const m = (y2 - y1) / (x2 - x1);
+      const c = m == Number.POSITIVE_INFINITY ? 0 : y2 - (m * x2);
+      const euclidean1 = currentPoint.dist(nextPoint);
+
+      // console.log("dist b/w 2 points", euclidean1);
+
+      const samplePoints = Math.round(moveSpeed * euclidean1);
+      // console.log("no of points: ", samplePoints);
+
+      const sampleDistX = Math.abs(x2 - x1);
+      const sampleDistY = Math.abs(y2 - y1);
+
+      //console.log(sampleDistX, sampleDistY);
+
+      for (let v = 0; v < samplePoints; v++) {
+        const distX = (sampleDistX / (samplePoints - 1)) * v;
+        const distY = (sampleDistY / (samplePoints - 1)) * v;
+
+        //console.log("dists", distX, distY);
+
+        let xLocation = 0;
+        let yLocation = 0;
+
+        // case where the x values are the same
+        if (x1 == x2) {
+          xLocation = x1 + distX;
+          yLocation = y2 > y1 ? y1 + distY : y1 - distY; //m * xLocation + c;
+        }
+
+        else if (y1 == y2) {
+          xLocation = x2 > x1 ? x1 + distX : x1 - distX;
+          yLocation = y1 + distY;
+        }
+
+        else {
+          xLocation = x2 > x1 ? x1 + distX : x1 - distX;
+          yLocation = m * xLocation + c;
+        }
+
+        //console.log(xLocation, yLocation);
+
+        const p = new Vector(xLocation, yLocation);
+        upsampleSubSeg.push(p);
+      }
+      //console.log(upsampleSubSeg);
+      upsampledSeg.push(...upsampleSubSeg);
+    }
+    return [...upsampledSeg];
   }
 
   function mapCoords(coordinates: [number, number][]): Vector[] {
@@ -307,9 +391,14 @@ self.addEventListener("message", async function (event) {
     return coordinates;
   }
 
-  function transformPtToWorkspace(coords: [number, number]): Vector {
-    const x = (coords[0] * 0.1345) - 0.0537;
-    const y = (coords[1] * 0.0834) + 0.0284;
+  function arrayToVector(coordinates: [number, number][]): Vector[] {
+    coordinates = coordinates.map(a => transformToVector(a));
+    return coordinates;
+  }
+  
+  function transformToVector(coords: [number, number]): Vector {
+    const x = (coords[0]);
+    const y = (coords[1]);
     return { x, y };
   }
 
@@ -373,12 +462,17 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, [3000, 2000, 3]);
+            // this.self.postMessage({
+            //   currentHaplyIndex: [currentSegmentIndex, currentSubSegmentIndex]
+            // })
+            audioHapticContours(segments, [3000, 2000, 15]);
           }
           break;
         }
         case Type.OBJECT: {
-          audioHapticContours(objects, [2000, 2000, 500]);
+          if (objects.length != 0) {
+            audioHapticContours(objects, [2000, 2000, 500]);
+          }
           break;
         }
         case Type.IDLE:
@@ -413,7 +507,12 @@ self.addEventListener("message", async function (event) {
       waitForInput: waitForInput,
       audioInfo: {
         entityIndex: entityIndex,
-        sendAudioSignal: sendAudioSignal,
+        sendAudioSignal: sendAudioSignal
+      },
+      drawingInfo: {
+        haplyType: haplyType,
+        segIndex: currentSegmentIndex,
+        subSegIndex: currentSubSegmentIndex
       }
     }
 
@@ -560,7 +659,193 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
   }
 }
 
-function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
+// function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: number,
+//   tSubSegmentDuration: number, tSubSegmentPointDuration: number, springConst: number) {
+
+//   // first check for breakout conditions
+//   if (breakKey != BreakKey.None) {
+//     fEE.set(0, 0); // reset forces
+//     // the user skipped forward
+//     if (breakKey == BreakKey.NextHaptic) {
+//       finishSubSegment();
+//     }
+//     if (breakKey == BreakKey.NextFromAudio) {
+//       // the only difference with audio is that we don't
+//       // increment the subsegment index
+//       // because this will be a fresh segment
+//       changeSubSegment();
+//     }
+//     // the user wants to go back
+//     if (breakKey == BreakKey.PreviousHaptic) {
+//       prevSubSegment();
+//     }
+
+//     if (breakKey == BreakKey.PreviousFromAudio) {
+
+//       if (currentSegmentIndex == 0 && entityIndex <= 2) {
+//         entityIndex = 0;
+//         mode = Mode.StartAudio;
+//       }
+//       else {
+//         // go back one index
+//         currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex - 1;
+//         currentSubSegmentIndex = segments[currentSegmentIndex].length - 1;
+//         // TODO: fix where this is incremented/decremented
+//         entityIndex--;
+//         changeSubSegment();
+//       }
+//       // }
+//     }
+//     // reset after we've finished
+//     breakKey = BreakKey.None;
+//   }
+
+//   else {
+
+
+//     if (currentSegmentIndex == segments.length) {
+//       finishTracing();
+//       return;
+//     }
+
+//     // let currentSegment: SubSegment[] = segments[currentSegmentIndex];
+//     // let currentSubSegment: SubSegment = currentSegment[currentSubSegmentIndex];
+
+//     const s = new Segment(segments);
+//     s.setSegmentDuration(10);
+//     s.setSubSegmentDuration(100);
+//     s.setSubSegmentPointDuration(100);
+
+//     //TODO: further abstract some of these into functions
+//     // if we are done with the current segment...
+//     if (s.currentSegmentDone) {
+
+//       if (s.timeForNextSegment()) {
+//         mode = Mode.StartAudio;
+//         s.startNewSegment();
+//       }
+//     }
+//     else if (s.currentSubSegmentDone) {
+
+//       // check to see if this is the last subsegment in the list
+//       if (s.currentSubSegmentIndex == s.currentSegment.length) {
+//         finishSegment();
+//       }
+//       else if (s.timeForNextSubSegment())
+//         startNewSubSegment();
+//     }
+//     else {
+
+//       if (s.timeForNextSubSegmentPoint()) {
+//         s.currentSubSegmentPointIndex++;
+
+//         if (s.currentSubSegmentPointIndex >= currentSubSegmentPointIndex - 1) {
+//           s.finishSubSegment();
+//         }
+//         s.tLastChangePoint = Date.now();
+//       }
+//       else {
+//         const coord = s.currentSubSegment.coordinates[s.currentSubSegmentPointIndex];
+//         moveToPos(coord, springConst);
+//       }
+//     }
+//   }
+// }
+
+// class Segment {
+
+//   segments: SubSegment[][]
+//   currentSegment: SubSegment[] = [];
+//   currentSubSegment: SubSegment = this.currentSegment[0];
+//   currentSegmentIndex = 0;
+//   currentSubSegmentIndex = 0;
+//   currentSubSegmentPointIndex = 0;
+
+//   currentSegmentDone = false;
+//   currentSubSegmentDone = false;
+
+//   tSegmentDuration = 0;
+//   tSubSegmentDuration = 0;
+//   tSubSegmentPointDuration = 0;
+
+//   tLastChangeSegment = 0;
+//   tLastChangeSubSegment = 0;
+//   tLastChangePoint = 0;
+
+//   constructor(segments: SubSegment[][]) {
+//     this.segments = segments;
+//   }
+
+//   setSegmentDuration(duration: number) {
+//     this.tSegmentDuration = duration;
+//   }
+
+//   setSubSegmentDuration(duration: number) {
+//     this.tSubSegmentDuration = duration;
+//   }
+
+//   setSubSegmentPointDuration(duration: number) {
+//     this.tSubSegmentPointDuration = duration;
+//   }
+
+//   timeForNextSegment() {
+//     if (this.wait(this.tLastChangeSegment, this.tSegmentDuration))
+//       return true;
+//   }
+
+//   timeForNextSubSegment() {
+//     if (this.wait(this.tLastChangeSubSegment, this.tSubSegmentDuration))
+//       return true;
+//   }
+
+//   timeForNextSubSegmentPoint() {
+//     if (this.wait(this.tLastChangePoint, this.tSubSegmentPointDuration))
+//       return true;
+//   }
+
+//   startNewSegment() {
+//     this.currentSegmentDone = false;
+//   }
+
+//   startNewSubSegment() {
+//     this.currentSubSegmentDone = false;
+//     this.tLastChangePoint = Date.now();
+//   }
+
+//   finishSegment() {
+//     this.currentSegmentIndex++;
+//     this.currentSubSegmentIndex = 0;
+//     this.currentSubSegmentPointIndex = 0;
+//     this.currentSegmentDone = true;
+//     this.currentSubSegmentDone = false;
+//     //fEE.set(0, 0);
+//   }
+
+//   finishSubSegment() {
+//     this.currentSubSegmentIndex++;
+//     this.changeSubSegment();
+//   }
+
+//   private changeSubSegment() {
+//     this.currentSubSegmentPointIndex = 0;
+//     this.currentSubSegmentDone = true;
+//     tLastChangeSubSegment = Date.now();
+//     //fEE.set(0, 0);
+//   }
+
+//   finishTracing() {
+//     this.currentSegmentIndex = 0;
+//     this.currentSegmentDone = false;
+//   }
+
+//   private wait(tHold: number, duration: number) {
+//     if (Date.now() - tHold > duration)
+//       return true;
+//     return false;
+//   }
+// }
+
+function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: number,
   tSubSegmentDuration: number, tSubSegmentPointDuration: number, springConst: number) {
 
   // first check for breakout conditions
@@ -613,6 +898,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       finishTracing();
       return;
     }
+
     let currentSegment: SubSegment[] = segments[currentSegmentIndex];
     let currentSubSegment: SubSegment = currentSegment[currentSubSegmentIndex];
 
@@ -631,7 +917,6 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       if (Date.now() - tLastChangeSegment > tSegmentDuration) {
         mode = Mode.StartAudio;
         startNewSegment();
-        //startNewSegment();
       }
 
     } else if (curSubSegmentDone) {
@@ -647,6 +932,10 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         else {
           if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
             startNewSubSegment();
+            //console.log(currentSegmentIndex, currentSubSegmentIndex);
+          }
+          else {
+            //console.log("waiting", Date.now() - tLastChangeSubSegment);
           }
         }
       }
@@ -671,7 +960,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       } else {
         const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
         moveToPos(coord, springConst);
-        //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
+        console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
       }
     }
   }
@@ -752,23 +1041,27 @@ function moveToPos(vector: Vector, springConst: number) {
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
   //const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
+
+  const multiplier = xDiff.mag() > 0.01 ? 2 : 2;
+
+  //const multiplier = xDiff.mag() * 4; // punish larger forces
   //const xDiff = (convPosEE).subtract(targetPos);
   // get the angle between this and the next position
   //const angle = Math.abs(xDiff.toAngles().phi); 
   //const multiplier = angle > 1.5 ? 1.4 : 1;
-  const kx = xDiff.multiply(200);//.multiply(multiplier);
+  const kx = xDiff.multiply(200).multiply(multiplier);
 
 
 
   //console.log(currentSubSegmentPointIndex, xDiff);
 
-  const dx = (convPosEE.clone()).subtract(prevPosEE);
-  const dt = 1 / 1000;
-  const c = 1.2;
-  const cdxdt = (dx.divide(dt)).multiply(c);
+  // const dx = (convPosEE.clone()).subtract(prevPosEE);
+  // const dt = 1 / 1000;
+  // const c = 1.2;
+  // const cdxdt = (dx.divide(dt)).multiply(c);
 
-  const fx = constrain(kx.x + cdxdt.x, -2.4, 2.4);
-  const fy = constrain(kx.y + cdxdt.y, -2.4, 2.4);
+  const fx = constrain(kx.x, -3, 3);
+  const fy = constrain(kx.y, -3, 3);
   force.set(fx, fy);
   console.log(force);
   fEE.set(graphics_to_device(force));
@@ -776,6 +1069,12 @@ function moveToPos(vector: Vector, springConst: number) {
 
 function constrain(val: number, min: number, max: number) {
   return val > max ? max : val < min ? min : val;
+}
+
+export function transformPtToWorkspace(coords: [number, number]): Vector {
+  const x = (coords[0] * 0.1333) - 0.05;
+  const y = (coords[1] * 0.0833) + 0.0278;
+  return { x, y };
 }
 
 /////////////////////////////////////////
