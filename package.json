@@ -16,9 +16,10 @@
     "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
     "clean": "rm -rf build",
     "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
+    "pack:chromium": "mv src/manifest.json src/manifest.json.bak && jq -r 'del( .browser_specific_settings )' src/manifest.json.bak > src/manifest.json && npm run clean && parcel build src/manifest.json --target webext-prod && rm src/manifest.json && mv src/manifest.json.bak src/manifest.json",
     "prestart": "(cd schemas && json2ts -i '*.json' -o ../src/types)",
     "build:ff": "npm run pack && web-ext build -s build -a dist",
-    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
+    "build:chromium": "npm run pack:chromium && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.2.1",
