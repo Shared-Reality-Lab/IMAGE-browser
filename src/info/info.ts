@@ -21,7 +21,7 @@ import "./info.scss";
 import browser from "webextension-polyfill";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
-import { vector } from '../types/vector';
+import { Vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 import * as worker from './worker';
@@ -177,10 +177,11 @@ port.onMessage.addListener(async (message) => {
             let border: canvasRectangle;
 
             // end effector x/y coordinates
-            let posEE: vector;
+            let posEE: Vector;
             // transformed canvas coordinates
-            let xE, yE: number;
-            let deviceOrigin: vector;
+            let xE: number
+            let yE: number;
+            let deviceOrigin: Vector;
             // virtual end effector avatar offset
             const offset = 150;
             let objectData: any;
@@ -304,9 +305,10 @@ port.onMessage.addListener(async (message) => {
 
             // TODO: figure out type
             const rec: Array<any> = [];
-            const centroids: Array<vector> = [];
+            const centroids: Array<Vector> = [];
             let segments: worker.SubSegment[][];
             let objects: worker.SubSegment[][];
+            let drawingInfo: [worker.Type, number, number];
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
@@ -348,22 +350,52 @@ port.onMessage.addListener(async (message) => {
                 //         }
                 //     })
                 // }
-
-                ctx.strokeStyle = "blue";
-                //let i = 0;
-                for (const segment of segments) {
-                    //ctx.strokeStyle = colors[i];
-                    //i++;
-                    segment.forEach(subSegment => {
-                        subSegment.coordinates.forEach((coord: any) => {
+                //console.log(currentHaplyIndex);
+                //if (currentHaplyIndex != undefined) {
+                //seg tracing
+                // TODO: make cleaner
+                if (drawingInfo != undefined) {
+                    const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex'];//currentHaplyIndex;
+                    if (drawingInfo['haplyType'] == 0) {
+                        segments[i][j].coordinates.forEach((coord: any) => {
                             const pX = coord[0];
                             const pY = coord[1];
                             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-
                             ctx.strokeRect(pointX, pointY, 1, 1);
-                        });
-                    });
+                        })
+                    }
+                    else {
+                        objects[i][j].coordinates.forEach((coord: any) => {
+                            const pX = coord.x;
+                            const pY = coord.y;
+                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
+                            ctx.strokeRect(pointX, pointY, 1, 1);
+                        })
+                    }
                 }
+                // obj tracing
+
+                //console.log(objects);
+
+                //console.log(objects);
+
+                //}
+
+                // ctx.strokeStyle = "blue";
+                // let i = 0;
+                // for (const segment of segments) {
+                //     //ctx.strokeStyle = colors[i];
+                //     //i++;
+                //     segment.forEach(subSegment => {
+                //         subSegment.coordinates.forEach((coord: any) => {
+                //             const pX = coord[0];
+                //             const pY = coord[1];
+                //             let [pointX, pointY] = imgToWorldFrame(pX, pY);
+
+                //             ctx.strokeRect(pointX, pointY, 1, 1);
+                //         });
+                //     });
+                // }
             }
 
             const colors: string[] = ['red', 'blue', 'orange', 'purple',
@@ -409,6 +441,7 @@ port.onMessage.addListener(async (message) => {
                 }
 
                 if (keyName == 'd') {
+                    console.log("test");
                     if (audioData.mode == AudioMode.Play) {
                         sourceNode.stop();
                         audioData.mode = AudioMode.Finished;
@@ -417,6 +450,11 @@ port.onMessage.addListener(async (message) => {
                     else {
                         breakKey = BreakKey.NextHaptic;
                     }
+                }
+
+                if (keyName == 'e') {
+                    //console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
+                    console.log(posEE.x, posEE.y);
                 }
 
                 worker.postMessage({
@@ -436,6 +474,8 @@ port.onMessage.addListener(async (message) => {
 
             let tAudioBegin: number;
             let playingAudio = false;
+            // segment #, subsegment #
+            let currentHaplyIndex: [number, number];
 
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
@@ -475,6 +515,14 @@ port.onMessage.addListener(async (message) => {
 
                     if (msg.data.objectData != undefined)
                         objects = msg.data.objectData;
+
+                    if (msg.data.drawingInfo != undefined)
+                        drawingInfo = msg.data.drawingInfo;
+
+                    // if (msg.data.currentHaplyIndex != undefined) {
+                    //     currentHaplyIndex = msg.data.currentHaplyIndex;
+                    //     console.log(currentHaplyIndex);
+                    // }
 
                     if (firstCall) {
                         if (msg.data.segmentData != undefined ||
