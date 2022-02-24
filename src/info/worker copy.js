@@ -80,19 +80,18 @@ let hapticMode;
 //keeps track of many times a message has been received in the worker
 let messageCount = 0;
 
-
 /*PID Variables */
+
 let cumerror = new Vector(0,0);
 const smoothing = 0.8;
-const P=  300;
-const I = 0.5;
-const D =1;
+const P= 0;
+const I = 0;
+const D =0;
 
-let diff = new Vector(0,0)
 let buff= new Vector(0,0);
-let olde =new Vector(0,0);
+let olde = new Vector(0,0);
 
-let oldtime = 0;
+
 
 self.addEventListener("message", async function (event) {
   // get image data from the main script
@@ -138,10 +137,9 @@ self.addEventListener("message", async function (event) {
   /**********  BEGIN CONTROL LOOP CODE *********************/
   let func;
 
-  if (hapticMode === "Active") {
     (func = (function* () {
       // jump to new loc based on a timer
-      for (let idx = 0; idx <= 5; idx++) {
+      for (let idx = 1; idx <= objectData.length; idx++) {
         yield setTimeout(() => {
           if (idx === objectData.length) {
             doneGuidance = true;
@@ -154,7 +152,7 @@ self.addEventListener("message", async function (event) {
 
       }
     })()).next();
-  }
+  
 
   while (true) {
 
@@ -165,15 +163,20 @@ self.addEventListener("message", async function (event) {
 
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
-
+    // if(!doneGuidance){
+    //   PID(targetLoc.x, targetLoc.y);
+    // }
     // compute forces based on existing position
-    if (hapticMode === "Active") {
-      // activeGuidance();
-      // this.console.log("target location: ", targetLoc);
-      PID(targetLoc.x, targetLoc.y);
-    }
-    
-   
+    // if (hapticMode === "Active") {
+    //   activeGuidance();
+    // }
+    // else if (hapticMode === "Passive") {
+    //   passiveGuidance();
+    // }
+    // else if (hapticMode === "Vibration") {
+    //   vib_mode();
+    // }
+
     // send required data back
     var data = {
       positions: { x: positions[0], y: positions[1] },
@@ -209,6 +212,35 @@ function activeGuidance() {
     fEE.set(0, 0);
 }
 
+// function PID(x_m, y_m){
+  
+//   let timeDif = performance.now()-oldtime;
+//   //x_m = currentx
+//   //y_m = currenty
+//   xE =convPosEE.x;
+//   yE =convPosEE.y;
+
+//   let dist_X= x_m-xE;
+//   cumerror.x = dist_X*timeDif*0.000001
+//   let dist_Y = y_m-yE;
+//   cumerror.y = dist_Y*timeDif*0.000001
+
+//   if(timeDif>0){
+//     buff.x= (dist_X-olde.x)/timedif*1000;
+//     buff.y= (dist_Y-olde.y)/timedif*1000;            
+
+//     diff.x = smoothing*diff.x + (1.0-smoothing)*buff.x;
+//     diff.y = smoothing*diff.y + (1.0-smoothing)*buff.y;
+//     olde.x = dist_X;
+//     olde.y = dist_Y;
+//     oldtime= performance.now();
+//   }
+//   let fee_x = P*dist_X + I*cumerror.x + D*diff.x;
+//   let fee_y = P*dist_Y + I*cumerror.y + D*diff.y;
+
+//   fEE.set(fee_x,fee_y);
+//   console.log("fEE is :", fEE);
+// }
 
 // transform image normalized coordinates into haply frame of reference
 // based on calibration on haply from extreme left/right and bottom positions
@@ -227,49 +259,5 @@ function graphics_to_device(graphicsFrame) {
   return graphicsFrame.set(-graphicsFrame.x, graphicsFrame.y);
 }
 
-//checks to see if the end effector is inside a specified shape (currently only checks for rectanlges)
-function inShape(coords, ee_pos) {
-  if ((ee_pos.x >= coords[0] && ee_pos.x <= coords[2]) && (ee_pos.y >= coords[1] && ee_pos.y <= coords[3])) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
 
 
-function PID(x_m, y_m){
-  
-  let timeDif = performance.now()-oldtime;
-  //x_m = currentx
-  //y_m = currenty
- let  xE =convPosEE.x;
- let yE =convPosEE.y;
-
-//  console.log("EE position:", convPosEE);
-
-  let dist_X= x_m-xE;
-  cumerror.x += dist_X*timeDif;
-  let dist_Y = y_m-yE;
-  cumerror.y += dist_Y*timeDif;
-
-  if(timeDif>0){
-    buff.x= (dist_X-olde.x)/timeDif*1000;
-    buff.y= (dist_Y-olde.y)/timeDif*1000;            
-
-    diff.x = smoothing*diff.x + (1.0-smoothing)*buff.x;
-    diff.y = smoothing*diff.y + (1.0-smoothing)*buff.y;
-    olde.x = dist_X;
-    olde.y = dist_Y;
-    oldtime= performance.now();
-  }
-  // console.log("dist = ", [dist_X, dist_Y]);
-  console.log("cumerror = ", cumerror);
-  // console.log("diff = ", diff);
-
-  let fee_x = -(P*dist_X + I*cumerror.x + D*diff.x);
-  let fee_y = P*dist_Y + I*cumerror.y + D*diff.y;
-
-  fEE.set(fee_x,fee_y);
-  // console.log("fEE is :", [fee_x, fee_y]);
-}
