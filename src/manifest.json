@@ -42,8 +42,9 @@
         "progressBar/progressBar.html",
         "errors/no_renderings.html",
         "errors/http_error.html",
-        "./image_request_sent.mp3",
-        "./earcon_server_communication_IMAGE_results-arrived.mp3"
+        "./progressBar/image_request_sent.mp3",
+        "./progressBar/earcon_server_communication_IMAGE_results-arrived.mp3",
+        "./progressBar/earcon_server_communication_IMAGE_processing-data.mp3"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"
