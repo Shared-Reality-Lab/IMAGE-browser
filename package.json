@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
-    "clean": "rm -rf build && rm -rf build-firefox && rm-rf build-chrome",
+    "clean": "rm -rf build && rm -rf build-firefox && rm -rf build-chrome",
     "pack": "npm run clean && parcel build src/manifest.json --target webext-prod-firefox",
     "pack:chromium": "mv src/manifest.json src/manifest.json.bak && jq -r 'del( .browser_specific_settings )' src/manifest.json.bak > src/manifest.json && npm run clean && parcel build src/manifest.json --target webext-prod-chrome && rm src/manifest.json && mv src/manifest.json.bak src/manifest.json",
     "prestart": "(cd schemas && json2ts -i '*.json' -o ../src/types)",
