@@ -49,6 +49,9 @@ function Vector(x, y, z) {
     max: function() {
       return Math.max(Math.max(this.x, this.y), this.z);
     },
+    dist: function(v) {
+      return Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+    },
     normalize: function() {
       let len = this.mag();
 
