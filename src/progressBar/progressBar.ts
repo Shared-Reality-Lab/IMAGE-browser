@@ -20,6 +20,6 @@ bar.animate(1);
 var audio = new Audio('../progressBar/earcon_server_communication_IMAGE_processing-data.mp3');
 setInterval(function(){
 	audio.play();
-}, 2000);
+}, 3000);
 
 
