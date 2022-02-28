@@ -18,6 +18,7 @@ import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
+const compress = require('compress-images');
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
@@ -59,35 +60,53 @@ async function getRenderers(){
   });
 }
 
+
+const processImages = async (input_image: string) => {
+  const result = await compress({
+      source: input_image,
+      //destination: OUTPUT_path,
+      enginesSetup: {
+          jpg: { engine: 'mozjpeg', command: ['-quality', '60']},
+          png: { engine: 'pngquant', command: ['--quality=20-50', '-o']},
+      }
+  });
+
+  const { statistics, errors } = result;
+  return statistics;
+  // statistics - all processed images list
+};
+
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
-    return fetch(message.sourceURL).then(resp => {
-        if (resp.ok) {
-            return resp.blob();
-        } else {
-            throw resp;
-        }
-    }).then(blob => {
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(blob);
-        });
-    }).then(image => {
-
-        return {
-            "request_uuid": uuidv4(),
-            "timestamp": Math.round(Date.now() / 1000),
-            "URL": message.url,
-            "graphic": image,
-            "dimensions": message.dims,
-            "context": message.context,
-            "language": "en",
-            "capabilities": [],
-            "renderers": renderers
-        } as IMAGERequest;
-    });
+  return fetch(message.sourceURL).then(resp => {
+      if (resp.ok) {
+          return resp.blob();
+      } else {
+          throw resp;
+      }
+  }).then(blob => {
+      return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+      });
+  }).then(async(image) => {
+      console.log(image)
+      console.log("I am here")
+      image = await processImages(image)
+      return {
+          "request_uuid": uuidv4(),
+          "timestamp": Math.round(Date.now() / 1000),
+          "URL": message.url,
+          "graphic": image,
+          "dimensions": message.dims,
+          "context": message.context,
+          "language": "en",
+          "capabilities": [],
+          "renderers": renderers
+      } as IMAGERequest;
+  });
 }
 
 async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
