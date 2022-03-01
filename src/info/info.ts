@@ -294,45 +294,6 @@ port.onMessage.addListener(async (message) => {
 
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
-            document.addEventListener('keydown', (event) => {
-                const keyName = event.key;
-                //test key to break out of current segment
-                if (keyName == 'c' && audioData.entityIndex != 0) {
-                    if (audioData.mode == AudioMode.Play) {
-                        sourceNode.stop();
-                        audioData.mode = AudioMode.Finished;
-                        breakKey = BreakKey.PreviousFromAudio;
-                    }
-                    else {
-                        breakKey = BreakKey.PreviousHaptic;
-                    }
-                }
-
-                if (keyName == 'd') {
-                    console.log("test");
-                    if (audioData.mode == AudioMode.Play) {
-                        sourceNode.stop();
-                        audioData.mode = AudioMode.Finished;
-                        breakKey = BreakKey.NextFromAudio;
-                    }
-                    else {
-                        breakKey = BreakKey.NextHaptic;
-                    }
-                }
-
-                // debug, for printing coords
-                if (keyName == 'e') {
-                    //console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
-                    //console.log(posEE.x, posEE.y);
-                }
-
-                worker.postMessage({
-                    waitForInput: waitForInput,
-                    breakKey: breakKey,
-                    tKeyPressTime: Date.now()
-                });
-            });
-
             // Play an audio segment with a given offset and duration.
             let sourceNode: AudioBufferSourceNode;
             function playAudioSeg(audioBuffer: any, offset: number, duration: number) {

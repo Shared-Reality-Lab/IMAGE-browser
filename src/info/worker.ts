@@ -565,7 +565,7 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
     }
 
     case Mode.WaitHaply: {
-      if (Date.now() - tHoldTime > 1500) {
+      if (Date.now() - tHoldTime > 1000) {
         mode = Mode.MoveHaply;
         tLastChangePoint = Date.now();
       }
@@ -583,7 +583,7 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
 }
 
 /**
- * 
+ * Moves the Haply 2DIY in ascending order of segments/objects.
  * @param segments list of objects or segments to trace as SubSegments[]
  * @param tSegmentDuration Buffer time when moving from one segment to the next.
  * @param tSubSegmentDuration Buffer time when moving from one subsegment to the next.
@@ -837,7 +837,7 @@ function moveToPos(vector: Vector) {
 
 /**
  * 
- * @param val Value to check for.
+ * @param val Value to constrain.
  * @param min Minimum constrained value.
  * @param max Maximum constrained value.
  * @returns 
