@@ -477,7 +477,7 @@ port.onMessage.addListener(async (message) => {
 
             let tAudioBegin: number;
             let playingAudio = false;
-            
+
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
                     start: true
@@ -490,9 +490,6 @@ port.onMessage.addListener(async (message) => {
                 const filters = [
                     { usbVendorId: 0x2341 }
                 ];
-
-
-
 
                 let port = navigator.serial.requestPort({ filters });
                 worker.postMessage({
@@ -517,15 +514,19 @@ port.onMessage.addListener(async (message) => {
                     posEE.y = msg.data.positions.y;
                     waitForInput = msg.data.waitForInput;
 
+                    // grab segment data if available
                     if (msg.data.segmentData != undefined)
                         segments = msg.data.segmentData;
 
+                    // grab object data if available
                     if (msg.data.objectData != undefined)
                         objects = msg.data.objectData;
 
+                    // grab drawing info if available
                     if (msg.data.drawingInfo != undefined)
                         drawingInfo = msg.data.drawingInfo;
 
+                    // only request to run draw() once
                     if (firstCall) {
                         if (msg.data.segmentData != undefined ||
                             msg.data.objectData != undefined) {
@@ -534,6 +535,7 @@ port.onMessage.addListener(async (message) => {
                         }
                     }
 
+                    // see if the worker wants us to play any audio
                     if (msg.data.audioInfo != undefined) {
                         if (msg.data.audioInfo.sendAudioSignal) {
                             audioData.entityIndex = msg.data.audioInfo.entityIndex;
@@ -546,8 +548,8 @@ port.onMessage.addListener(async (message) => {
 
                     switch (audioData.mode) {
                         case AudioMode.Play: {
-                            if (!playingAudio) {
-                                console.log("index is", audioData.entityIndex);
+                            // prevent audio from playing multiple times
+                            if (!playingAudio) { 
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
                                     data["entities"][audioData.entityIndex]["offset"],
@@ -556,13 +558,17 @@ port.onMessage.addListener(async (message) => {
                                 tAudioBegin = Date.now();
                             }
                         }
+
+                        // wait for the audio segment to finish
                         case AudioMode.InProgress: {
+                            // include a half second buffer
                             if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
                                 audioData.mode = AudioMode.Finished;
-                                console.log("waiting");
                             }
                             break;
                         }
+
+                        // we've finished playing the audio segment
                         case AudioMode.Finished: {
                             playingAudio = false;
                             worker.postMessage({
@@ -588,10 +594,13 @@ port.postMessage({
     "request_uuid": request_uuid
 });
 
-// scaling of coordinates to canvas
+/**
+ * 
+ * @param x1 x position in the normalized 0 -> 1 coordinate system
+ * @param y1 y position in the normalized 0 -> 1 coordinate system
+ * @returns Tuple containing the [x, y] position for the canvas
+ */
 function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    //const x = ((x1 + 0.0537) / 0.1345) * canvasWidth;
-    //const y = ((y1 - 0.0284) / 0.0834) * canvasHeight;
     const x = x1 * canvasWidth;
     const y = y1 * canvasHeight;
     return [x, y]
