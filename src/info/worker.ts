@@ -417,6 +417,7 @@ self.addEventListener("message", async function (event) {
     if (guidance) {
       posEE.set(device_to_graphics(posEE));
 
+      // depending on the type of entity to trace
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
@@ -435,28 +436,18 @@ self.addEventListener("message", async function (event) {
       }
     }
 
-    //else {
-    //passiveGuidance();
-    //  posEE.set(posEE.clone().multiply(200));
-    //}
-
     prevPosEE.set(convPosEE.clone());
 
-    //prevPosEE = posEE.clone();
-    //console.log(convPosEE.x, convPosEE.y);
-
-    // // compute forces based on existing position
-    // if (hapticMode === "Active") {
-    //   activeGuidance();
-    // }
-    // else if (hapticMode === "Passive") {
-    //   passiveGuidance();
-    // }
-    // else if (hapticMode === "Vibration") {
-    //   vib_mode();
-    // }
-
     // send required data back
+    /**
+     * positions: x/y position in 2DIY frame of reference
+     * waitForInput: if we need to request input from the user
+     * entityIndex: index of the entity needed to play audio
+     * sendAudioSignal: signal to let main script know we're ready to play audio
+     * haplyType: segment or object for drawing
+     * segIndex: index of the current segment or object
+     * subSegIndex: index of the current subsegment or object in a group
+     */
     const data = {
       positions:
         { x: positions[0], y: positions[1] },
@@ -506,8 +497,10 @@ let currentSubSegmentPointIndex: number = 0;
 // Wait for current user input.
 let waitForInput: boolean = false;
 
+// Spring constant.
 let springConst = 200;
 
+// Mode when controlled by the user.
 export const enum BreakKey {
   None,
   PreviousHaptic,
@@ -518,42 +511,37 @@ export const enum BreakKey {
 }
 
 let breakKey: BreakKey;
-
 let tLastChangePoint: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSegment: number = Number.NEGATIVE_INFINITY;
 let tLastChangeSubSegment: number = Number.NEGATIVE_INFINITY;
 let tHoldTime: number = Number.NEGATIVE_INFINITY;
-let tHoldAudioTime: number = Number.NEGATIVE_INFINITY;
 
-
-// unused atm
-
-// Let's us know if that the main script is playing audio.
+// Let's us know if that the main script is done playing audio.
 let doneWithAudio = false;
 
 // To let main script know it's time to play audio.
 let sendAudioSignal = false;
 
-//TODO: rewrite all of this within a class
+// TODO: rewrite all of this within a class
+function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
+  tSubSegDuration: number, tSubSegPointDuration: number) {
 
-let tSavedSubSegmentDuration = 0;
-
-function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, number, number]) {
-
-  const t0 = timeIntervals[0];
-  const t1 = timeIntervals[1];
-  const t2 = timeIntervals[2];
+  const t0 = tSegDuration;
+  const t1 = tSubSegDuration;
+  const t2 = tSubSegPointDuration;
 
   switch (mode) {
 
     case Mode.InitializeAudio: {
-      //entityIndex = 0;//objHeaderIndex; //doneWithSegments == true ? objHeaderIndex : 0;
+      // called when starting a segment or object experience
+      // depending on the type, the starting audio index may vary
+      // objHeaderIndex contains the index of the first object returned in the entities list
       entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
       mode = Mode.StartAudio;
     }
 
     case Mode.StartAudio: {
-      // if we are done with all segments, end
+      // make sure we don't go beyond the max index
       if (entityIndex > audioData.length) {
         mode = Mode.Reset;
       }
@@ -568,7 +556,6 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
       // wait for a response from main script to see if we're done
       if (doneWithAudio) {
         mode = Mode.DoneAudio;
-        tHoldAudioTime = Date.now();
       }
       break;
     }
@@ -577,26 +564,29 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
       // reset flag
       doneWithAudio = false;
 
+      // in case we need to play another audio segment right after one is finished
+      // typically after static segments
+      // otherwise get ready for the 2DIY
       let audioSeg = audioData[entityIndex];
       if (audioSeg.isStaticSegment) {
         mode = Mode.StartAudio;
-        console.log("region");
       }
       else {
         mode = Mode.StartHaply;
       }
-      // since we've finished a chunk, move on to the next one
+
+      // since we've finished an audio chunk, move on to the next one
       entityIndex++;
       break;
     }
+
+    // grace 1.5s buffer before we actually begin
     case Mode.StartHaply: {
-      console.log("it's haply time!");
       tHoldTime = Date.now();
       mode = Mode.WaitHaply;
       break;
     }
 
-    // start ~1.5 after button press
     case Mode.WaitHaply: {
       if (Date.now() - tHoldTime > 1500) {
         mode = Mode.MoveHaply;
@@ -805,22 +795,23 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
 function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: number,
   tSubSegmentDuration: number, tSubSegmentPointDuration: number) {
 
-  tSavedSubSegmentDuration = tSubSegmentPointDuration;
-  // first check for breakout conditions
+  // first check for breakout conditions by user
   if (breakKey != BreakKey.None) {
     fEE.set(0, 0); // reset forces
 
+    // escape means we want to cancel any tracing
     if (breakKey == BreakKey.Escape) {
       finishTracing();
       haplyType = Type.IDLE;
       mode = Mode.Reset;
     }
 
-
-    // the user skipped forward
+    // the user skipped forward while on a haptic segment
     if (breakKey == BreakKey.NextHaptic) {
       finishSubSegment();
     }
+
+    // the user skipped forward while on an audio segment
     if (breakKey == BreakKey.NextFromAudio) {
       // the only difference with audio is that we don't
       // increment the subsegment index
@@ -835,10 +826,7 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
     if (breakKey == BreakKey.PreviousFromAudio) {
 
       // note our pattern is A.A.H.A.H.A since the first seg is static
-      // so we want to make sure our entity index is at least >= 2
-      // to play a segment
-      // TODO: rewrite, badly written
-      // won't work for objects
+      // TODO: rewrite
       if (currentSegmentIndex == 0 && entityIndex <= 2) {
         entityIndex = 0;
         mode = Mode.StartAudio;
@@ -846,12 +834,12 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
       else {
         // go back one index
         currentSegmentIndex = currentSegmentIndex == 0 ? 0 : currentSegmentIndex - 1;
+
+        // this will always be equivalent to the last subsegment to trace when coming from an audio segment
         currentSubSegmentIndex = segments[currentSegmentIndex].length - 1;
-        // TODO: fix where this is incremented/decremented
         entityIndex--;
         changeSubSegment();
       }
-      // }
     }
     // reset after we've finished
     breakKey = BreakKey.None;
@@ -859,7 +847,7 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
 
   else {
 
-
+    // if we have traced every index, then we are done with the current mode
     if (currentSegmentIndex == segments.length) {
       finishTracing();
       switchMode();
@@ -873,36 +861,26 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
     // if we are done with the current segment...
     if (curSegmentDone) {
 
-      // if not, move on to the next index
-      // but make sure we're NOT waiting for input
-
-      //if (waitForInput) {
-      //  console.log("waiting for input");
-      //  guidance = false;
-      // wait 2000 ms before going to next segment
-      //} else {
+      // check if the buffer time is over, then play audio
       if (Date.now() - tLastChangeSegment > tSegmentDuration) {
         mode = Mode.StartAudio;
         startNewSegment();
       }
 
+      // if we are done with a subsegment ...
     } else if (curSubSegmentDone) {
 
       // check to see if this is the last subsegment in the list
       if (currentSubSegmentIndex != currentSegment.length) {
         // if not, move on to next subsegment
         // but make sure we're not waiting for input
-
         if (waitForInput) {
           guidance = false;
         }
+        // we'll only start a new subsegment once the buffer time is over
         else {
           if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
             startNewSubSegment();
-            //console.log(currentSegmentIndex, currentSubSegmentIndex);
-          }
-          else {
-            //console.log("waiting", Date.now() - tLastChangeSubSegment);
           }
         }
       }
@@ -915,15 +893,17 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
     // we're not done with the current subsegment
     else {
       // check if we have to move to the next point in the subsegment
-
       if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
         currentSubSegmentPointIndex++;
+
+        // if we are done tracing each point in this subsegment, end it
         if (currentSubSegmentPointIndex >= currentSubSegment.coordinates.length) {
           finishSubSegment();
         }
         tLastChangePoint = Date.now();
       } else {
 
+        // move to end effector to the point
         const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
         moveToPos(coord);
       }
@@ -931,14 +911,19 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
   }
 }
 
+/**
+ * Called when we are done tracing all entities or want to cancel.
+ */
 function finishTracing() {
   currentSegmentIndex = 0;
   currentSubSegmentIndex = 0;
   curSegmentDone = false;
-  console.log("all segments traced");
   mode = Mode.Reset;
 }
 
+/**
+ * Switch between guidance modes.
+ */
 function switchMode() {
 
   switch (haplyType) {
@@ -953,6 +938,9 @@ function switchMode() {
   }
 }
 
+/**
+ * Called when moving to the previous subsegment.
+ */
 function prevSubSegment() {
   // check if this is the first subsegment
   // if so we'll have to change back to audio mode
@@ -965,20 +953,28 @@ function prevSubSegment() {
     changeSubSegment();
   }
 }
-
+/**
+ * Called when starting a new segment.
+ */
 function startNewSegment() {
   curSegmentDone = false;
   waitForInput = false;
 }
 
+/**
+ * Called when starting a new subsegment.
+ */
 function startNewSubSegment() {
   curSubSegmentDone = false;
   waitForInput = false;
+  // reset the point to point time buffer
   tLastChangePoint = Date.now();
 }
 
+/**
+ * Called as soon as we are done tracing a full segment.
+ */
 function finishSegment() {
-  //console.log("finish seg");
   currentSegmentIndex++;
   currentSubSegmentIndex = 0;
   currentSubSegmentPointIndex = 0;
@@ -988,6 +984,9 @@ function finishSegment() {
   fEE.set(0, 0);
 }
 
+/**
+ * Called when we are done tracing a subsegment.
+ */
 function finishSubSegment() {
   currentSubSegmentIndex++;
   changeSubSegment();
@@ -998,27 +997,29 @@ function finishSubSegment() {
  * Change the subsegment index before calling this.
  */
 function changeSubSegment() {
-  //savedEntityIndex = entityIndex;
-  //console.log("saved entity index is", savedEntityIndex);
-  //entityIndex = 11;
-  //mode = Mode.StartAudio;
   currentSubSegmentPointIndex = 0;
   curSubSegmentDone = true;
-  //waitForInput = true;
   tLastChangeSubSegment = Date.now();
   fEE.set(0, 0);
 }
 
+/**
+ * Moves the end-effector to the specified vector position.
+ * @param vector Vector containing {x,y} position of the Haply coordinates.
+ */
 function moveToPos(vector: Vector) {
 
+  // find the distance between our current position and target
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
 
   // P controller
   const multiplier = xDiff.mag() > 0.01 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
-
-  let constrainedMax = currentSegmentIndex == 0 && currentSubSegmentIndex == 0 ? 6 : 4
   const kx = xDiff.multiply(springConst).multiply(multiplier);
+
+  // allow for higher tolerance when moving from the home position
+  // apparently needs more force to move from there
+  let constrainedMax = currentSegmentIndex == 0 && currentSubSegmentIndex == 0 ? 6 : 4
 
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
@@ -1030,45 +1031,31 @@ function moveToPos(vector: Vector) {
   const cumError = dx.add(dx.multiply(dt));
   const ki = 170;
 
-  console.log("I:", cumError.x * ki, cumError.y * ki);
+  // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
   let fy = constrain(kx.y + cdxdt.y + ki * cumError.y, -1 * constrainedMax, constrainedMax);
   force.set(fx, fy);
-  //console.log(xDiff.x, xDiff.y, cdxdt.x, cdxdt.y, force.x, force.y);
   fEE.set(graphics_to_device(force));
 }
 
+/**
+ * 
+ * @param val Value to check for.
+ * @param min Minimum constrained value.
+ * @param max Maximum constrained value.
+ * @returns 
+ */
 function constrain(val: number, min: number, max: number) {
   return val > max ? max : val < min ? min : val;
 }
 
+/**
+ * 
+ * @param coords 2D array containing normalized x/y positions
+ * @returns Vector of {x,y} corresponding to position on Haply 2DIY workspace.
+ */
 export function transformPtToWorkspace(coords: [number, number]): Vector {
-  const x = (coords[0] * 0.1333) - 0.064; // 0.064 before, 0.080, -0.05
-  const y = (coords[1] * 0.0833) + 0.0368; // 0.0368 before, -0.0278
+  const x = (coords[0] * 0.1333) - 0.064;
+  const y = (coords[1] * 0.0833) + 0.0368;
   return { x, y };
-}
-
-/////////////////////////////////////////
-
-export function ReversetransformPtToWorkspace(v: Vector) {
-  const x = (v.x + 0.064) / 0.1333;
-  const y = (v.y - 0.0368) / 0.0833;
-  return new Vector(x, y);
-}
-
-// wall rendering
-
-//vibrates if inside a bounding box
-
-// transform image normalized coordinates into haply frame of reference
-// based on calibration on haply from extreme left/right and bottom positions
-
-//checks to see if the end effector is inside a specified shape (currently only checks for rectanlges)
-function inShape(coords: any, ee_pos: any) {
-  if ((ee_pos.x >= coords[0] && ee_pos.x <= coords[2]) && (ee_pos.y >= coords[1] && ee_pos.y <= coords[3])) {
-    return true;
-  }
-  else {
-    return false;
-  }
 }
