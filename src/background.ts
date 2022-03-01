@@ -160,11 +160,18 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
-        let audio = new Audio(chrome.runtime.getURL("image_request_sent.mp3"));
+        let audio = new Audio(chrome.runtime.getURL("progressBar/image_request_sent.mp3"));
         audio.play();
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
             serverUrl = "https://image.a11y.mcgill.ca/";
+            var progressWindow = await browser.windows.create({
+              type:"popup",
+              url: "progressBar/progressBar.html",
+              height: 100,
+              width: 400,
+            })
+             // Value from 0.0 to 1.0
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
@@ -177,7 +184,10 @@ async function handleMessage(p: Runtime.Port, message: any) {
             },
             "body": JSON.stringify(query)
           }).then(async (resp) => {
+              browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
+                let completionAudio = new Audio(chrome.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
+                completionAudio.play();
                 return resp.json();
               } else {
                   browser.windows.create({
