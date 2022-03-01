@@ -42,6 +42,7 @@ function getAllStorageSyncData() {
 }
 
 var renderers : string[] = [];
+var graphicUrl : string = "";
 
 async function getRenderers(){
   renderers = [];
@@ -53,7 +54,7 @@ async function getRenderers(){
     if(items["text"]){
       renderers.push("ca.mcgill.a11y.image.renderer.Text");
     }
-    if(items["haply2diy"] || true){
+    if(items["haply2diy"]){
       renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
       renderers.push("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     }
@@ -62,6 +63,7 @@ async function getRenderers(){
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
+  graphicUrl = message.sourceURL
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -161,10 +163,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
+        let audio = new Audio(chrome.runtime.getURL("image_request_sent.mp3"));
+        audio.play();
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
-            // serverUrl = "https://image.a11y.mcgill.ca/";
-            serverUrl = 'https://unicorn.cim.mcgill.ca/image/';
+            serverUrl = "https://image.a11y.mcgill.ca/";
+            
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
@@ -195,7 +199,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                       responseMap.set(query["request_uuid"], json);
                       browser.windows.create({
                         type: "panel",
-                        url: "info/info.html?" + query["request_uuid"]
+                        // url: "info/info.html?" + query["request_uuid"]
+                        url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
                      });
                     }
                       // How to handle if request_uuid was undefined??
@@ -214,8 +219,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
       else if (message["toRender"] === "preprocess") {
           await getAllStorageSyncData().then(async items => {
             if(items["mcgillServer"]===true){
-              // serverUrl = "https://image.a11y.mcgill.ca/";
-              serverUrl = 'https://unicorn.cim.mcgill.ca/image/';
+              serverUrl = "https://image.a11y.mcgill.ca/";
+             
             }else{
               if(items["inputUrl"]!== "" && items["customServer"]===true){
               serverUrl = items["inputUrl"];
@@ -369,18 +374,18 @@ getAllStorageSyncData().then((items) => {
   previousToggleState = items["previousToggleState"];
 
   if (showDebugOptions) {
-        browser.contextMenus.create({
-          id: "request-only",
-          title: browser.i18n.getMessage("requestItem"),
-          contexts: ["image", "link"]
-        },
-      onCreated);
       browser.contextMenus.create({
         id: "preprocess-only",
         title: browser.i18n.getMessage("preprocessItem"),
         contexts: ["image", "link"]
       },
       onCreated);
+      browser.contextMenus.create({
+        id: "request-only",
+        title: browser.i18n.getMessage("requestItem"),
+        contexts: ["image", "link"]
+      },
+    onCreated);
     }
 });
 
