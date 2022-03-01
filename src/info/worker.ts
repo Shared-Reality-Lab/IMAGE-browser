@@ -421,13 +421,13 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, [3000, 3000, 6]); // prev: 15
+            audioHapticContours(segments, 3000, 3000, 6); // prev: 15
           }
           break;
         }
         case Type.OBJECT: {
           if (objects.length != 0) {
-            audioHapticContours(objects, [2000, 2000, 20]);
+            audioHapticContours(objects, 2000, 2000, 20);
           }
           break;
         }
@@ -843,7 +843,7 @@ function moveToPos(vector: Vector) {
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 170;
+  const ki = 20;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
