@@ -31,7 +31,7 @@ let haplyBoard;
 // store required handler json
 let baseObjectData: any = [];
 let objectData: any = []
-let segmentData: any = []; //SubSegment[][] = []
+let segmentData: any = [];
 let baseSegmentData: any = [];
 let audioData: any = [];
 
@@ -46,16 +46,11 @@ let prevPosEE = new Vector(0.5, 0);
 // transformed end-effector coordinates
 let convPosEE = new Vector(0, 0);
 
-// location of target point
-
 // get force needed for torques
 let force = new Vector(0, 0);
 
 // the force applied to the end effector
 let fEE = new Vector(0, 0);
-
-// to track the status of the drop down menu
-let hapticMode: any;
 
 // keeps track of many times a message has been received in the worker
 let messageCount = 0;
@@ -63,6 +58,14 @@ let messageCount = 0;
 // Index for where objects begin.
 let objHeaderIndex: number = 0;
 
+// Bool to let us know when to start guidance.
+let guidance: boolean = false;
+
+/**
+ * Defines a subsegment.
+ * Contains an array of vectors
+ * But also can contain rectangular bounds (for objects)
+ */
 export type SubSegment = {
   coordinates: Vector[],
   bounds?: [number, number, number, number]
@@ -84,6 +87,7 @@ export const enum Mode {
 
 let mode = Mode.InitializeAudio;
 
+// Type of segment to trace.
 export const enum Type {
   SEGMENT,
   OBJECT,
@@ -91,7 +95,6 @@ export const enum Type {
 }
 
 let haplyType = Type.IDLE;
-let guidance: boolean = false;
 
 function device_to_graphics(deviceFrame: any) {
   return new Vector(-deviceFrame[0], deviceFrame[1]);
@@ -131,11 +134,9 @@ self.addEventListener("message", async function (event) {
     }
 
     if (event.data.renderingData != undefined) {
-      hapticMode = event.data.mode;
       let rendering = event.data.renderingData.entities;
 
       objHeaderIndex = rendering.findIndex((x: { entityType: string }) => x.entityType == "object")
-      console.log(objHeaderIndex);
 
       for (let i = 0; i < rendering.length; i++) {
 
@@ -182,8 +183,7 @@ self.addEventListener("message", async function (event) {
 
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
-      console.log(audioData);
-      
+
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
@@ -260,15 +260,20 @@ self.addEventListener("message", async function (event) {
     return data;
   }
 
+  /**
+   * Linearly upsamples an array of points.
+   * @param pointArray Array containing the {x, y} positions in the 2DIY frame of reference.
+   * @returns Upsampled array of {x, y} points.
+   */
   function upsample(pointArray: Vector[]) {
-    // contour index in this particular object is made up of several poconsts
-    // n lines, p poconsts for each line
     let upsampledSeg = [];
 
+    // for each point (except the last one)...
     for (let n = 0; n < pointArray.length - 1; n++) {
 
       let upsampleSubSeg: Array<Vector> = [];
 
+      // get the location of both points
       const currentPoint = new Vector(pointArray[n].x, pointArray[n].y);
       const nextPoint = new Vector(pointArray[n + 1].x, pointArray[n + 1].y);
 
@@ -276,27 +281,24 @@ self.addEventListener("message", async function (event) {
       const y1 = currentPoint.y;
       const x2 = nextPoint.x;
       const y2 = nextPoint.y;
-      const moveSpeed = 2000;
+      const k = 2000;
 
+      // find vars for equation
       const m = (y2 - y1) / (x2 - x1);
       const c = m == Number.POSITIVE_INFINITY ? 0 : y2 - (m * x2);
+
+      // let the # of sample points be a function of the distance
       const euclidean1 = currentPoint.dist(nextPoint);
+      const samplePoints = Math.round(k * euclidean1);
 
-      // console.log("dist b/w 2 points", euclidean1);
-
-      const samplePoints = Math.round(moveSpeed * euclidean1);
-      // console.log("no of points: ", samplePoints);
-
+      // get distance between the two points
       const sampleDistX = Math.abs(x2 - x1);
       const sampleDistY = Math.abs(y2 - y1);
 
-      //console.log(sampleDistX, sampleDistY);
-
       for (let v = 0; v < samplePoints; v++) {
+        // find the location of each interpolated point
         const distX = (sampleDistX / (samplePoints - 1)) * v;
         const distY = (sampleDistY / (samplePoints - 1)) * v;
-
-        //console.log("dists", distX, distY);
 
         let xLocation = 0;
         let yLocation = 0;
@@ -304,33 +306,45 @@ self.addEventListener("message", async function (event) {
         // case where the x values are the same
         if (x1 == x2) {
           xLocation = x1 + distX;
-          yLocation = y2 > y1 ? y1 + distY : y1 - distY; //m * xLocation + c;
+          yLocation = y2 > y1 ? y1 + distY : y1 - distY;
         }
 
+        // case where y values are the same
         else if (y1 == y2) {
           xLocation = x2 > x1 ? x1 + distX : x1 - distX;
           yLocation = y1 + distY;
         }
 
+        // standard case
         else {
           xLocation = x2 > x1 ? x1 + distX : x1 - distX;
           yLocation = m * xLocation + c;
         }
 
+        // add new interpolated point to vector array for these two points
         const p = new Vector(xLocation, yLocation);
         upsampleSubSeg.push(p);
       }
-      //console.log(upsampleSubSeg);
       upsampledSeg.push(...upsampleSubSeg);
     }
     return [...upsampledSeg];
   }
 
+  /**
+   * Maps coordinates from  anormalized 0 -> 1 coordinate system into the 2DIY frame of reference.
+   * @param coordinates Array of 2D coordinate data.
+   * @returns Vector array of {x, y} data.
+   */
   function mapCoords(coordinates: [number, number][]): Vector[] {
     coordinates = coordinates.map(x => transformPtToWorkspace(x));
     return coordinates;
   }
 
+  /**
+   *  Transforms a tuple into a vector.
+   * @param coords Tuple containing the coordinate data.
+   * @returns Vector containing the x and y positions.
+   */
   function transformToVector(coords: [number, number]): Vector {
     const x = (coords[0]);
     const y = (coords[1]);
