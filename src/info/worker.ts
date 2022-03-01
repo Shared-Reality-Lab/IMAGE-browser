@@ -133,13 +133,18 @@ self.addEventListener("message", async function (event) {
       tLastChangeSegment = event.data.tKeyPressTime;
     }
 
+    // Read object, segment, and audio data.
     if (event.data.renderingData != undefined) {
-      let rendering = event.data.renderingData.entities;
 
+      let rendering = event.data.renderingData.entities;
+      // index marking object start location
       objHeaderIndex = rendering.findIndex((x: { entityType: string }) => x.entityType == "object")
 
       for (let i = 0; i < rendering.length; i++) {
 
+        // find objects
+        // keep the base object data for sending to main script for renderign
+        // but also keep object data for 2DIY
         if (rendering[i].entityType == "object") {
           const name = rendering[i].name;
           const centroid = rendering[i].centroid.map((x: any) => transformToVector(x));
@@ -162,15 +167,17 @@ self.addEventListener("message", async function (event) {
           objectData.push(tObj);
         }
 
+        // find segments and map them to 2DIY workspace
         if (rendering[i].entityType == "segment") {
-          const coords = rendering[i].contours;
-          const tCoords = coords.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)));
+          const coords = rendering[i].contours.map((y: any) => y.map((x: any) => mapCoordsToVec(x.coordinates)));
+          const tCoords = rendering[i].contours.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)));
           let baseSeg = { coords: coords }
           let tSeg = { coords: tCoords }
           baseSegmentData.push(baseSeg);
           segmentData.push(tSeg);
         }
 
+        // find audio files
         let audio = {
           name: rendering[i].name,
           offset: rendering[i].offset,
@@ -184,22 +191,32 @@ self.addEventListener("message", async function (event) {
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
 
+
+      console.log("base seg data", baseSegmentData);
+      console.log("seg data", segmentData);
+      console.log("segments", segments);
+      console.log("createbase seg for info", createSegs(baseSegmentData)
+
+
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
-        segmentData: createSegs2(baseSegmentData),
+        segmentData: createSegs(baseSegmentData),
       });
     }
   }
 
 
+  /**
+   * Transforms base ML coordinate data for segments into array of segments.
+   * @param segmentInfo Array containing objects that contain segment coordinate data.
+   * @returns Array of segments.
+   */
   function createSegs(segmentInfo: any): SubSegment[][] {
     let data: SubSegment[][] = [];
     for (const segs of segmentInfo) {
       const segment: Array<SubSegment> = [];
       const segmentCoords = segs.coords[0];
-      // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
-      // each part of the segment
       for (let i = 0; i < segmentCoords.length; i++) {
         let coordinates = segmentCoords[i];
         segment[i] = { coordinates };
@@ -209,37 +226,21 @@ self.addEventListener("message", async function (event) {
     return data;
   }
 
-  // todo: get rid of
-  function createSegs2(segmentInfo: any): SubSegment[][] {
-    let data: SubSegment[][] = [];
-    for (const segs of segmentInfo) {
-      const segment: Array<SubSegment> = [];
-      const segmentCoords = segs.coords[0];
-      // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
-      // each part of the segment
-      for (let i = 0; i < segmentCoords.length; i++) {
-        let coordinates = segmentCoords[i].coordinates;
-        segment[i] = { coordinates };
-      }
-      data.push(segment);
-    }
-    return data;
-  }
-
+  /**
+   * Returns an array of objects in transformed 2DIY plane.
+   * @param objectData Array containing objects that contain object coordinate data. 
+   * @returns Array of objects.
+   */
   function createObjs(objectData: any): SubSegment[][] {
     let data: SubSegment[][] = [];
-    let j = 0;
+
+    // loop through each object entity
     for (const obj of objectData) {
       const object: Array<SubSegment> = [];
 
-      //const objCentroids = objs.centroid[0];
-      // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
-      // each part of the segment
+      // if ungrouped, just add the object directly
       if (obj.centroid.length == 1) {
         for (let i = 0; i < obj.centroid.length; i++) {
-
-          //console.log(obj);
-
           let coordinates = [obj.centroid[i]];
           let bounds = obj.coords[i];
           object[i] = { coordinates, bounds };
@@ -256,7 +257,6 @@ self.addEventListener("message", async function (event) {
       }
       data.push(object);
     }
-    j++;
     return data;
   }
 
@@ -337,6 +337,11 @@ self.addEventListener("message", async function (event) {
    */
   function mapCoords(coordinates: [number, number][]): Vector[] {
     coordinates = coordinates.map(x => transformPtToWorkspace(x));
+    return coordinates;
+  }
+
+  function mapCoordsToVec(coordinates: [number, number][]): Vector[] {
+    coordinates = coordinates.map(x => transformToVector(x));
     return coordinates;
   }
 
@@ -567,7 +572,6 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
       break;
     }
     case Mode.MoveHaply: {
-      // TODO: fix this, it's ugly
       activeGuidance(segments, t0, t1, t2);
       break;
     }
@@ -578,7 +582,14 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
   }
 }
 
-function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: number,
+/**
+ * 
+ * @param segments list of objects or segments to trace as SubSegments[]
+ * @param tSegmentDuration Buffer time when moving from one segment to the next.
+ * @param tSubSegmentDuration Buffer time when moving from one subsegment to the next.
+ * @param tSubSegmentPointDuration Buffer time when moving from one point to the next in a subsegment.
+ */
+function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   tSubSegmentDuration: number, tSubSegmentPointDuration: number) {
 
   // first check for breakout conditions by user

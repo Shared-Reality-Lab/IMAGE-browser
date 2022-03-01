@@ -82,8 +82,8 @@ export function updateAnimation(posEE: Vector,
         const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];//currentHaplyIndex;
         if (drawingInfo['haplyType'] == 0) {
             segments[i][j].coordinates.forEach(coord => {
-                const pX = coord[0];
-                const pY = coord[1];
+                const pX = coord.x;
+                const pY = coord.y;
                 let [pointX, pointY] = imgToWorldFrame(pX, pY);
                 ctx.strokeRect(pointX, pointY, 1, 1);
             })
