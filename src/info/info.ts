@@ -204,6 +204,7 @@ port.onMessage.addListener(async (message) => {
 
             const data = rendering["data"]["info"] as Array<JSON>;
 
+            const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
                 return resp.arrayBuffer();
             }).then(buffer => {
@@ -229,7 +230,10 @@ port.onMessage.addListener(async (message) => {
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
             // creating canvas
-            const [canvas, res, ctx] = utils.createCanvas(contentDiv);
+            let canvas:HTMLCanvasElement;
+            let ctx:CanvasRenderingContext2D;
+           
+            [canvas,ctx]= utils.createCanvas(contentDiv);
             const img = new Image();
             img.src = graphic_url;
 

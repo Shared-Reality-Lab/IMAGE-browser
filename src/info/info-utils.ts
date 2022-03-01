@@ -16,6 +16,8 @@
  */
 import { Vector } from "../types/vector";
 import * as worker from './worker';
+import { canvasCircle } from '../types/canvas-circle';
+import { canvasRectangle } from '../types/canvas-rectangle';
 
 export function createButton(contentDiv: HTMLElement, id: string, text: string ){
     let btn = document.createElement("button");
@@ -46,7 +48,7 @@ export function createCanvas(contentDiv: HTMLElement){
         throw new Error('Failed to get 2D context');
     }
     const ctx: CanvasRenderingContext2D = res;
-    return [canvas, res, ctx];
+    return {canvas, ctx};
 }
 
 
