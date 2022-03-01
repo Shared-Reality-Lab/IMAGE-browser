@@ -22,12 +22,7 @@
         "chrome_style": true
     },
 
-    "browser_specific_settings": {
-        "gecko": {
-          "id": "image@image.extension.ca",
-          "strict_min_version": "42.0"
-        }
-      },      
+        
 
     "permissions": [
         "contextMenus",
@@ -43,7 +38,7 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "info/worker.js",
+        "info/worker.ts",
         "info/info.html",
         "info/info.ts",
         "errors/no_renderings.html",

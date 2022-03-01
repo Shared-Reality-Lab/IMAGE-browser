@@ -22,7 +22,7 @@ let port = browser.runtime.connect();
 
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
-    console.debug(selectedElement.id);
+    console.log("element: ",selectedElement.id);
 });
 port.onMessage.addListener(message => {
     const serializer = new XMLSerializer();
