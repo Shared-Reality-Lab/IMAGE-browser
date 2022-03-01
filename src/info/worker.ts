@@ -35,9 +35,6 @@ let segmentData: any = []; //SubSegment[][] = []
 let baseSegmentData: any = [];
 let audioData: any = [];
 
-// threshold used for force calculation
-const threshold = 0.02;
-
 // store the angles and positions of the end effector, which are sent back to info.ts
 let angles = new Vector(0, 0);
 let positions = new Vector(0, 0);
@@ -57,27 +54,6 @@ let force = new Vector(0, 0);
 // the force applied to the end effector
 let fEE = new Vector(0, 0);
 
-// for force shading, sotring the last 4 end effector force vectors
-let fEE_prev1 = new Vector(0, 0);
-let fEE_prev2 = new Vector(0, 0);
-let fEE_prev3 = new Vector(0, 0);
-let fEE_prev4 = new Vector(0, 0);
-
-// end effector radius
-const rEE = 0.006;
-
-let fDamping = new Vector(0, 0);
-
-// spring constant for wall rendering [N/m]
-const kWall = 200;
-
-// force calculation for the wall rendering
-let fWall = new Vector(0, 0);
-
-// gets assinged a random force vector for vibration mode
-let randForce = new Vector(0, 0);
-let applyVibration = false; //boolean to check if vibration condition has been met
-
 // to track the status of the drop down menu
 let hapticMode: any;
 
@@ -94,10 +70,6 @@ export type SubSegment = {
 
 let segments: SubSegment[][] = [];
 let objects: SubSegment[][] = [];
-
-//const segments: 
-
-let rawObjectInfo: any = [];
 
 export const enum Mode {
   InitializeAudio,
@@ -118,20 +90,8 @@ export const enum Type {
   IDLE
 }
 
-
-// To determine whether the user has pressed a key to move to the next subsegment.
-//let breakOutKey: boolean = false;
-
-
 let haplyType = Type.IDLE;
-
 let guidance: boolean = false;
-
-// self.addEventListener("close", async function (event) {
-//   console.log("close");
-//   widgetOne.set_device_torques([0, 0]);
-//   widgetOne.device_write_torques();  
-// });
 
 function device_to_graphics(deviceFrame: any) {
   return new Vector(-deviceFrame[0], deviceFrame[1]);
@@ -223,9 +183,7 @@ self.addEventListener("message", async function (event) {
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
       console.log(audioData);
-
-      rawObjectInfo = [];
-
+      
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
