@@ -190,11 +190,11 @@ self.addEventListener("message", async function (event) {
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
 
-      this.self.postMessage({
+      this.self.postMessage([{
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
         segmentData: createSegs(baseSegmentData),
-      });
+      }]);
     }
   }
 
