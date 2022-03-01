@@ -26,8 +26,13 @@ import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 import * as worker from './worker';
 import { BreakKey } from './worker';
+import * as utils from "./info-utils";
 
-let request_uuid = window.location.search.substring(1);
+// let request_uuid = window.location.search.substring(1);
+const urlParams = new URLSearchParams(window.location.search);
+let request_uuid = urlParams.get("uuid") || "";
+let graphic_url = urlParams.get("graphicUrl") || "";
+
 let renderings: IMAGEResponse;
 let port = browser.runtime.connect();
 
@@ -43,8 +48,6 @@ port.onMessage.addListener(async (message) => {
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
-
-    console.log(renderings);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -180,18 +183,12 @@ port.onMessage.addListener(async (message) => {
 
             // end effector x/y coordinates
             let posEE: Vector;
-            // transformed canvas coordinates
-            let xE: number
-            let yE: number;
             let deviceOrigin: Vector;
+
             // virtual end effector avatar offset
             const offset = 150;
-            let objectData: any;
-            let segmentData: any;
-            let firstCall: boolean = true;
+            let firstCall = true;
 
-            // get data from the handler
-            const imageSrc = "https://raw.githubusercontent.com/Shared-Reality-Lab/auditory-haptics-graphics-DotPad/main/preprocessor_JSON/photos/1_outdoor_cycling_scene/outdoor_cycling_scene.jpg?token=GHSAT0AAAAAABLKCO6OO6OCBNKRQV4WL4HUYQ772HA";//"https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
             const data = rendering["data"]["info"] as Array<JSON>;
 
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
@@ -200,9 +197,7 @@ port.onMessage.addListener(async (message) => {
                 return audioCtx.decodeAudioData(buffer);
             }).catch(e => { console.error(e); throw e; });
 
-            console.log(data);
 
-            // add rendering button
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
@@ -213,51 +208,17 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            let options = ["Passive",
-                "Active",
-                "Vibration"];
+            // adding buttons 
+            let btn = utils.createButton(contentDiv, "btn", "Connect to Haply");
+            let btnStart = utils.createButton(contentDiv, "btnStart", "Start");
+            let btnEscape = utils.createButton(contentDiv, "btnEscape", "Stop");
+            let btnNext = utils.createButton(contentDiv, "btnNext", "Next");
+            let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
-            //Create and append select list
-            const selectList = document.createElement("select");
-            selectList.id = "mySelect";
-            contentDiv.appendChild(selectList);
-
-            //Create and append the options
-            for (let i = 0; i < options.length; i++) {
-                const option = document.createElement("option");
-                option.value = options[i];
-                option.text = options[i];
-                selectList.appendChild(option);
-            }
-
-            let btn = document.createElement("button");
-            btn.id = "btn";
-            btn.innerHTML = "Play Haptic Rendering";
-            contentDiv.append(btn);
-
-            let btnStart = document.createElement("button");
-            btnStart.id = "btnStart";
-            btnStart.innerHTML = "Start";
-            contentDiv.append(btnStart);
-
-            // set canvas properties
-            const canvas: HTMLCanvasElement = document.createElement('canvas');
-            canvas.id = "main";
-            canvas.width = 800;
-            canvas.height = 500;
-            canvas.style.zIndex = "8";
-            canvas.style.position = "relative";
-            canvas.style.border = "1px solid";
-            contentDiv.append(document.createElement("br"));
-            contentDiv.append(canvas);
-            const res = canvas.getContext('2d');
-            if (!res || !(res instanceof CanvasRenderingContext2D)) {
-                throw new Error('Failed to get 2D context');
-            }
-            const ctx: CanvasRenderingContext2D = res;
-
+            // creating canvas
+            const [canvas, res, ctx] = utils.createCanvas(contentDiv);
             const img = new Image();
-            img.src = imageSrc;
+            img.src = graphic_url;
 
             // world resolution properties
             const worldPixelWidth = 800;
@@ -295,135 +256,46 @@ port.onMessage.addListener(async (message) => {
                     ctx.fillStyle = this.color;
                     ctx.fill();
                 }
-
             };
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                updateAnimation();
+                utils.updateAnimation(posEE, endEffector, deviceOrigin, border, drawingInfo, segments, objects, ctx);
                 window.requestAnimationFrame(draw);
             }
 
-            // TODO: figure out type
-            const rec: Array<any> = [];
-            const centroids: Array<Vector> = [];
+            // define segments and objects
             let segments: worker.SubSegment[][];
             let objects: worker.SubSegment[][];
             let drawingInfo: [worker.Type, number, number];
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
-
             let breakKey: null | BreakKey;
 
+            // Audio Modes
             const enum AudioMode {
                 Play,
-                InProgress,
                 Finished,
                 Idle,
             }
+
+            // Keep track of the mode and entity index so we know which file to play
             let audioData: { entityIndex: number, mode: null | AudioMode } = {
                 entityIndex: 0,
                 mode: null
             };
 
-            function drawBoundaries() {
+            // time to wait before audio segment is considered finished
+            let tAudioBegin: number;
+            // true when playing an audio segment
+            let playingAudio = false;
 
-                // for (const objectSegment of objects) {
-                //     objectSegment.forEach(object => {
-                //         if (object.bounds != undefined) {
-
-                //             let bounds = object.bounds;
-                //             let centroid = object.coordinates;
-
-                //             let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
-                //             let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
-                //             let objWidth = Math.abs(uLX - lRX);
-                //             let objHeight = Math.abs(uLY - lRY);
-                //             ctx.strokeStyle = "black";
-                //             ctx.strokeRect(uLX, uLY, objWidth, objHeight);
-
-                //             let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
-                //             ctx.beginPath();
-                //             ctx.arc(cX, cY, 10, 0, 2 * Math.PI);
-                //             ctx.strokeStyle = 'red';
-                //             ctx.stroke();
-                //         }
-                //     })
-                // }
-                //console.log(currentHaplyIndex);
-                //if (currentHaplyIndex != undefined) {
-                //seg tracing
-                // TODO: make cleaner
-                if (drawingInfo != undefined) {
-                    const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex'];
-                    if (drawingInfo['haplyType'] == 0) {
-                        segments[i][j].coordinates.forEach((coord: any) => {
-                            const pX = coord[0];
-                            const pY = coord[1];
-                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                            ctx.strokeRect(pointX, pointY, 1, 1);
-                        })
-                    }
-                    else {
-                        objects[i][j].coordinates.forEach((coord: any) => {
-                            const pX = coord.x;
-                            const pY = coord.y;
-                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                            ctx.strokeRect(pointX, pointY, 1, 1);
-                        })
-                    }
-                }
-                // obj tracing
-
-                //console.log(objects);
-
-                //console.log(objects);
-
-                //}
-
-                // ctx.strokeStyle = "blue";
-                // let i = 0;
-                // for (const segment of segments) {
-                //     //ctx.strokeStyle = colors[i];
-                //     //i++;
-                //     segment.forEach(subSegment => {
-                //         subSegment.coordinates.forEach((coord: any) => {
-                //             const pX = coord[0];
-                //             const pY = coord[1];
-                //             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-
-                //             ctx.strokeRect(pointX, pointY, 1, 1);
-                //         });
-                //     });
-                // }
-            }
-
-            const colors: string[] = ['red', 'blue', 'orange', 'purple',
-                'green', 'brown', 'maroon', 'teal'];
-
-            function updateAnimation() {
-
-                // drawing bounding boxes and centroids
-                drawBoundaries();
-                border.draw();
-
-                //scaling end effector position to canvas
-                xE = pixelsPerMeter * (-posEE.x + 0.014);
-                yE = pixelsPerMeter * (posEE.y - 0.009);
-
-
-                // set position of virtual avatar in canvas
-                endEffector.x = deviceOrigin.x + xE - 100;
-                endEffector.y = deviceOrigin.y + yE - 167;
-                endEffector.draw();
-            }
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
             document.addEventListener('keydown', (event) => {
                 const keyName = event.key;
-
                 //test key to break out of current segment
                 if (keyName == 'c' && audioData.entityIndex != 0) {
                     if (audioData.mode == AudioMode.Play) {
@@ -448,16 +320,10 @@ port.onMessage.addListener(async (message) => {
                     }
                 }
 
-                // debug
+                // debug, for printing coords
                 if (keyName == 'e') {
-                    console.log("a");
-                    console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
+                    //console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
                     //console.log(posEE.x, posEE.y);
-                }
-
-                if (keyName == 'Escape') {
-                    sourceNode.stop();
-                    breakKey = BreakKey.Escape;
                 }
 
                 worker.postMessage({
@@ -467,6 +333,7 @@ port.onMessage.addListener(async (message) => {
                 });
             });
 
+            // Play an audio segment with a given offset and duration.
             let sourceNode: AudioBufferSourceNode;
             function playAudioSeg(audioBuffer: any, offset: number, duration: number) {
                 sourceNode = audioCtx.createBufferSource();
@@ -475,37 +342,64 @@ port.onMessage.addListener(async (message) => {
                 sourceNode.start(0, offset, duration);
             }
 
-            let tAudioBegin: number;
-            let playingAudio = false;
-
+            // Start
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
                     start: true
                 });
             })
 
-            // event listener for serial comm button
-            btn.addEventListener("click", _ => {
-                // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                const filters = [
-                    { usbVendorId: 0x2341 }
-                ];
+            // Stop
+            btnEscape.addEventListener("click", _ => {
+                sourceNode.stop();
+                breakKey = BreakKey.Escape;
+            })
 
-                let port = navigator.serial.requestPort({ filters });
+            // Next
+            btnNext.addEventListener("click", _ => {
+                if (audioData.mode == AudioMode.Play) {
+                    stopAudioNode();
+                    breakKey = BreakKey.NextFromAudio;
+                }
+                else {
+                    breakKey = BreakKey.NextHaptic;
+                }
                 worker.postMessage({
-                    renderingData: data,
-                    mode: selectList.value,
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
                 });
-                //checking for changes in drop down menu
-                selectList.onchange = function () {
-                    worker.postMessage({
-                        renderingData: data,
-                        mode: selectList.value
-                    });
-                };
+
+            });
+
+            // Prev
+            btnPrev.addEventListener("click", _ => {
+                if (audioData.mode == AudioMode.Play) {
+                    stopAudioNode();
+                    breakKey = BreakKey.PreviousFromAudio;
+                }
+                else {
+                    breakKey = BreakKey.PreviousHaptic;
+                }
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
+            });
+
+            // event listener for serial comm button
+            btn.addEventListener("click", async _ => {
+                // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+                let hapticPort = await navigator.serial.requestPort();
+
+                // send all the rendering info
+                worker.postMessage({
+                    renderingData: data
+                });
+
 
                 worker.addEventListener("message", function (msg) {
-
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
 
@@ -549,25 +443,21 @@ port.onMessage.addListener(async (message) => {
                     switch (audioData.mode) {
                         case AudioMode.Play: {
                             // prevent audio from playing multiple times
-                            if (!playingAudio) { 
+                            if (!playingAudio) {
+                                console.log("index is", audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
                                     data["entities"][audioData.entityIndex]["offset"],
                                     data["entities"][audioData.entityIndex]["duration"]);
-                                audioData.mode = AudioMode.InProgress;
                                 tAudioBegin = Date.now();
                             }
-                        }
 
-                        // wait for the audio segment to finish
-                        case AudioMode.InProgress: {
-                            // include a half second buffer
+                            // wait for the audio segment to finish
                             if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
                                 audioData.mode = AudioMode.Finished;
                             }
                             break;
                         }
-
                         // we've finished playing the audio segment
                         case AudioMode.Finished: {
                             playingAudio = false;
@@ -581,6 +471,12 @@ port.onMessage.addListener(async (message) => {
                     }
                 });
             });
+         
+            // Stop the current audio segment from progressing.
+            function stopAudioNode() {
+                sourceNode.stop();
+                audioData.mode = AudioMode.Finished;
+            }
         }
 
         document.getElementById("renderings-container")!.appendChild(container)
@@ -593,15 +489,3 @@ port.postMessage({
     "type": "info",
     "request_uuid": request_uuid
 });
-
-/**
- * 
- * @param x1 x position in the normalized 0 -> 1 coordinate system
- * @param y1 y position in the normalized 0 -> 1 coordinate system
- * @returns Tuple containing the [x, y] position for the canvas
- */
-function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    const x = x1 * canvasWidth;
-    const y = y1 * canvasHeight;
-    return [x, y]
-}
