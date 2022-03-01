@@ -44,6 +44,8 @@ port.onMessage.addListener(async (message) => {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
 
+    console.log(renderings);
+
     // Update renderings label
     let title = document.getElementById("renderingTitle");
     if (title) {
@@ -189,7 +191,7 @@ port.onMessage.addListener(async (message) => {
             let firstCall: boolean = true;
 
             // get data from the handler
-            const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
+            const imageSrc = "https://raw.githubusercontent.com/Shared-Reality-Lab/auditory-haptics-graphics-DotPad/main/preprocessor_JSON/photos/1_outdoor_cycling_scene/outdoor_cycling_scene.jpg?token=GHSAT0AAAAAABLKCO6OO6OCBNKRQV4WL4HUYQ772HA";//"https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
             const data = rendering["data"]["info"] as Array<JSON>;
 
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
@@ -355,7 +357,7 @@ port.onMessage.addListener(async (message) => {
                 //seg tracing
                 // TODO: make cleaner
                 if (drawingInfo != undefined) {
-                    const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex'];//currentHaplyIndex;
+                    const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex'];
                     if (drawingInfo['haplyType'] == 0) {
                         segments[i][j].coordinates.forEach((coord: any) => {
                             const pX = coord[0];
@@ -408,8 +410,8 @@ port.onMessage.addListener(async (message) => {
                 border.draw();
 
                 //scaling end effector position to canvas
-                xE = pixelsPerMeter * -posEE.x;
-                yE = pixelsPerMeter * posEE.y;
+                xE = pixelsPerMeter * (-posEE.x + 0.014);
+                yE = pixelsPerMeter * (posEE.y - 0.009);
 
 
                 // set position of virtual avatar in canvas
@@ -421,12 +423,6 @@ port.onMessage.addListener(async (message) => {
 
             document.addEventListener('keydown', (event) => {
                 const keyName = event.key;
-
-                // if we're waiting for input from the user, send the key state
-                // if (waitForInput && keyName == 'b') {
-                //     waitForInput = !waitForInput;
-                //     //breakOutKey = false;
-                // }
 
                 //test key to break out of current segment
                 if (keyName == 'c' && audioData.entityIndex != 0) {
@@ -452,9 +448,16 @@ port.onMessage.addListener(async (message) => {
                     }
                 }
 
+                // debug
                 if (keyName == 'e') {
-                    //console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
-                    console.log(posEE.x, posEE.y);
+                    console.log("a");
+                    console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
+                    //console.log(posEE.x, posEE.y);
+                }
+
+                if (keyName == 'Escape') {
+                    sourceNode.stop();
+                    breakKey = BreakKey.Escape;
                 }
 
                 worker.postMessage({
@@ -474,9 +477,7 @@ port.onMessage.addListener(async (message) => {
 
             let tAudioBegin: number;
             let playingAudio = false;
-            // segment #, subsegment #
-            let currentHaplyIndex: [number, number];
-
+            
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
                     start: true
@@ -486,8 +487,14 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let port = navigator.serial.requestPort();
+                const filters = [
+                    { usbVendorId: 0x2341 }
+                ];
 
+
+
+
+                let port = navigator.serial.requestPort({ filters });
                 worker.postMessage({
                     renderingData: data,
                     mode: selectList.value,
@@ -519,11 +526,6 @@ port.onMessage.addListener(async (message) => {
                     if (msg.data.drawingInfo != undefined)
                         drawingInfo = msg.data.drawingInfo;
 
-                    // if (msg.data.currentHaplyIndex != undefined) {
-                    //     currentHaplyIndex = msg.data.currentHaplyIndex;
-                    //     console.log(currentHaplyIndex);
-                    // }
-
                     if (firstCall) {
                         if (msg.data.segmentData != undefined ||
                             msg.data.objectData != undefined) {
@@ -548,14 +550,14 @@ port.onMessage.addListener(async (message) => {
                                 console.log("index is", audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
-                                    data["entityInfo"][audioData.entityIndex]["offset"],
-                                    data["entityInfo"][audioData.entityIndex]["duration"]);
+                                    data["entities"][audioData.entityIndex]["offset"],
+                                    data["entities"][audioData.entityIndex]["duration"]);
                                 audioData.mode = AudioMode.InProgress;
                                 tAudioBegin = Date.now();
                             }
                         }
                         case AudioMode.InProgress: {
-                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entityInfo"][audioData.entityIndex]["duration"])) {
+                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
                                 audioData.mode = AudioMode.Finished;
                                 console.log("waiting");
                             }
