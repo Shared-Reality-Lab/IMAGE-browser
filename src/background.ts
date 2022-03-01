@@ -42,6 +42,7 @@ function getAllStorageSyncData() {
 }
 
 var renderers : string[] = [];
+var graphicUrl : string = "";
 
 async function getRenderers(){
   renderers = [];
@@ -62,6 +63,7 @@ async function getRenderers(){
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
+  graphicUrl = message.sourceURL
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
             return resp.blob();
@@ -195,7 +197,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                       responseMap.set(query["request_uuid"], json);
                       browser.windows.create({
                         type: "panel",
-                        url: "info/info.html?" + query["request_uuid"]
+                        // url: "info/info.html?" + query["request_uuid"]
+                        url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
                      });
                     }
                       // How to handle if request_uuid was undefined??

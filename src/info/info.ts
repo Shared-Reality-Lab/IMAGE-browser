@@ -26,8 +26,13 @@ import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 import * as worker from './worker';
 import { BreakKey } from './worker';
+import * as utils from "./info_utils";
 
-let request_uuid = window.location.search.substring(1);
+// let request_uuid = window.location.search.substring(1);
+const urlParams = new URLSearchParams(window.location.search);
+let request_uuid = urlParams.get("uuid") || "";
+let graphic_url = urlParams.get("graphicUrl") || "";
+
 let renderings: IMAGEResponse;
 let port = browser.runtime.connect();
 
@@ -179,8 +184,8 @@ port.onMessage.addListener(async (message) => {
             // end effector x/y coordinates
             let posEE: Vector;
             // transformed canvas coordinates
-            let xE: number
-            let yE: number;
+            // let xE: number
+            // let yE: number;
             let deviceOrigin: Vector;
             // virtual end effector avatar offset
             const offset = 150;
@@ -189,7 +194,7 @@ port.onMessage.addListener(async (message) => {
             let firstCall: boolean = true;
 
             // get data from the handler
-            const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
+            // const imageSrc = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Canyon_no_Lago_de_Furnas.jpg/800px-Canyon_no_Lago_de_Furnas.jpg";
             const data = rendering["data"]["info"] as Array<JSON>;
 
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
@@ -198,7 +203,7 @@ port.onMessage.addListener(async (message) => {
                 return audioCtx.decodeAudioData(buffer);
             }).catch(e => { console.error(e); throw e; });
 
-            console.log(data);
+            // console.log(data);
 
             // add rendering button
             let div = document.createElement("div");
@@ -211,51 +216,18 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            let options = ["Passive",
-                "Active",
-                "Vibration"];
-
-            //Create and append select list
-            const selectList = document.createElement("select");
-            selectList.id = "mySelect";
-            contentDiv.appendChild(selectList);
-
-            //Create and append the options
-            for (let i = 0; i < options.length; i++) {
-                const option = document.createElement("option");
-                option.value = options[i];
-                option.text = options[i];
-                selectList.appendChild(option);
-            }
-
-            let btn = document.createElement("button");
-            btn.id = "btn";
-            btn.innerHTML = "Play Haptic Rendering";
-            contentDiv.append(btn);
-
-            let btnStart = document.createElement("button");
-            btnStart.id = "btnStart";
-            btnStart.innerHTML = "Start";
-            contentDiv.append(btnStart);
-
-            // set canvas properties
-            const canvas: HTMLCanvasElement = document.createElement('canvas');
-            canvas.id = "main";
-            canvas.width = 800;
-            canvas.height = 500;
-            canvas.style.zIndex = "8";
-            canvas.style.position = "relative";
-            canvas.style.border = "1px solid";
-            contentDiv.append(document.createElement("br"));
-            contentDiv.append(canvas);
-            const res = canvas.getContext('2d');
-            if (!res || !(res instanceof CanvasRenderingContext2D)) {
-                throw new Error('Failed to get 2D context');
-            }
-            const ctx: CanvasRenderingContext2D = res;
-
+        
+            let btn = utils.createButton(contentDiv,"btn", "connect to Haply");
+            let btnStart = utils.createButton(contentDiv,"btnStart", "Start");
+            let btnEscape = utils.createButton(contentDiv,"btnEscape", "Stop");
+            let btnNext = utils.createButton(contentDiv,"btnNext", "Next");
+            let btnPrev = utils.createButton(contentDiv,"btnPrev", "Previous");
+          
+            // creating canvas
+            const [canvas,res,ctx] = utils.createCanvas(contentDiv);
+            
             const img = new Image();
-            img.src = imageSrc;
+            img.src = graphic_url;
 
             // world resolution properties
             const worldPixelWidth = 800;
@@ -299,7 +271,7 @@ port.onMessage.addListener(async (message) => {
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                updateAnimation();
+                utils.updateAnimation(posEE,endEffector, deviceOrigin, border,drawingInfo, segments,objects, ctx);
                 window.requestAnimationFrame(draw);
             }
 
@@ -326,97 +298,11 @@ port.onMessage.addListener(async (message) => {
                 mode: null
             };
 
-            function drawBoundaries() {
-
-                // for (const objectSegment of objects) {
-                //     objectSegment.forEach(object => {
-                //         if (object.bounds != undefined) {
-
-                //             let bounds = object.bounds;
-                //             let centroid = object.coordinates;
-
-                //             let [uLX, uLY] = imgToWorldFrame(bounds[0], bounds[1]);
-                //             let [lRX, lRY] = imgToWorldFrame(bounds[2], bounds[3]);
-                //             let objWidth = Math.abs(uLX - lRX);
-                //             let objHeight = Math.abs(uLY - lRY);
-                //             ctx.strokeStyle = "black";
-                //             ctx.strokeRect(uLX, uLY, objWidth, objHeight);
-
-                //             let [cX, cY] = imgToWorldFrame(centroid[0], centroid[1]);
-                //             ctx.beginPath();
-                //             ctx.arc(cX, cY, 10, 0, 2 * Math.PI);
-                //             ctx.strokeStyle = 'red';
-                //             ctx.stroke();
-                //         }
-                //     })
-                // }
-                //console.log(currentHaplyIndex);
-                //if (currentHaplyIndex != undefined) {
-                //seg tracing
-                // TODO: make cleaner
-                if (drawingInfo != undefined) {
-                    const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex'];//currentHaplyIndex;
-                    if (drawingInfo['haplyType'] == 0) {
-                        segments[i][j].coordinates.forEach((coord: any) => {
-                            const pX = coord[0];
-                            const pY = coord[1];
-                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                            ctx.strokeRect(pointX, pointY, 1, 1);
-                        })
-                    }
-                    else {
-                        objects[i][j].coordinates.forEach((coord: any) => {
-                            const pX = coord.x;
-                            const pY = coord.y;
-                            let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                            ctx.strokeRect(pointX, pointY, 1, 1);
-                        })
-                    }
-                }
-                // obj tracing
-
-                //console.log(objects);
-
-                //console.log(objects);
-
-                //}
-
-                // ctx.strokeStyle = "blue";
-                // let i = 0;
-                // for (const segment of segments) {
-                //     //ctx.strokeStyle = colors[i];
-                //     //i++;
-                //     segment.forEach(subSegment => {
-                //         subSegment.coordinates.forEach((coord: any) => {
-                //             const pX = coord[0];
-                //             const pY = coord[1];
-                //             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-
-                //             ctx.strokeRect(pointX, pointY, 1, 1);
-                //         });
-                //     });
-                // }
-            }
+            
 
             const colors: string[] = ['red', 'blue', 'orange', 'purple',
                 'green', 'brown', 'maroon', 'teal'];
 
-            function updateAnimation() {
-
-                // drawing bounding boxes and centroids
-                drawBoundaries();
-                border.draw();
-
-                //scaling end effector position to canvas
-                xE = pixelsPerMeter * -posEE.x;
-                yE = pixelsPerMeter * posEE.y;
-
-
-                // set position of virtual avatar in canvas
-                endEffector.x = deviceOrigin.x + xE - 100;
-                endEffector.y = deviceOrigin.y + yE - 167;
-                endEffector.draw();
-            }
             const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
             document.addEventListener('keydown', (event) => {
@@ -483,27 +369,27 @@ port.onMessage.addListener(async (message) => {
                 });
             })
 
+            btnEscape.addEventListener("click", _ => {
+                console.log("STOP!!");
+            })
+
             // event listener for serial comm button
-            btn.addEventListener("click", _ => {
+            btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let port = navigator.serial.requestPort();
+                let hapticPort = await navigator.serial.requestPort();
 
                 worker.postMessage({
-                    renderingData: data,
-                    mode: selectList.value,
+                    renderingData: data
                 });
+
+                // btn.remove();
                 //checking for changes in drop down menu
-                selectList.onchange = function () {
-                    worker.postMessage({
-                        renderingData: data,
-                        mode: selectList.value
-                    });
-                };
+               
 
                 worker.addEventListener("message", function (msg) {
 
                     // we've selected the COM port
-                    btn.style.visibility = 'hidden';
+                    // btn.style.visibility = 'hidden';
 
                     // return end-effector x/y positions and objectData for updating the canvas
                     posEE.x = msg.data.positions.x;
@@ -518,11 +404,6 @@ port.onMessage.addListener(async (message) => {
 
                     if (msg.data.drawingInfo != undefined)
                         drawingInfo = msg.data.drawingInfo;
-
-                    // if (msg.data.currentHaplyIndex != undefined) {
-                    //     currentHaplyIndex = msg.data.currentHaplyIndex;
-                    //     console.log(currentHaplyIndex);
-                    // }
 
                     if (firstCall) {
                         if (msg.data.segmentData != undefined ||
@@ -587,10 +468,3 @@ port.postMessage({
 });
 
 // scaling of coordinates to canvas
-function imgToWorldFrame(x1: number, y1: number): [number, number] {
-    //const x = ((x1 + 0.0537) / 0.1345) * canvasWidth;
-    //const y = ((y1 - 0.0284) / 0.0834) * canvasHeight;
-    const x = x1 * canvasWidth;
-    const y = y1 * canvasHeight;
-    return [x, y]
-}

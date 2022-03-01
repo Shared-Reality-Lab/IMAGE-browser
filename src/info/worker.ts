@@ -179,18 +179,22 @@ self.addEventListener("message", async function (event) {
     }
 
     if (event.data.renderingData != undefined) {
-      hapticMode = event.data.mode;
-      let rendering = event.data.renderingData.entityInfo;
-
-      objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex((x: { name: string; }) => x.name === "Text");//rendering.indexOf(x => x.name == "Text", 1);
+      // hapticMode = event.data.mode;
+      
+      let rendering = event.data.renderingData.entities;
+      console.log("the rendering in the worker: ", rendering);
+      objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex((x: { name: string; }) => x.name === "Text",3);//rendering.indexOf(x => x.name == "Text", 1);
+      objHeaderIndex = 6; // REMOVE!!
+      console.log("the index for obj: ", objHeaderIndex);
       rendering.reverse();
 
       //TODO check if covers all segments
       for (let i = 1; i < objHeaderIndex; i++) {
 
-        const coords = rendering[i].contourPoints;
+        const coords = rendering[i].contours;
+        console.log("getting ready to map 1st time")
         const tCoords = coords.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)));
-
+        console.log("mapped first time!");
         let baseSeg = { coords: coords }
         let tSeg = { coords: tCoords }
 
@@ -206,7 +210,8 @@ self.addEventListener("message", async function (event) {
 
         const name = rendering[i].name;
         const centroid = rendering[i].centroid.map((x: any) => transformToVector(x));
-        const coords = rendering[i].contourPoints;
+        const coords = rendering[i].contours;
+        console.log("getting ready to map!");
         const tCentroid = rendering[i].centroid.map((x: any) => transformPtToWorkspace(x))
 
         let baseObj = {
