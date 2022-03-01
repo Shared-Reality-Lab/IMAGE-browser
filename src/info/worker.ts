@@ -50,7 +50,6 @@ let prevPosEE = new Vector(0.5, 0);
 let convPosEE = new Vector(0, 0);
 
 // location of target point
-let targetLoc = new Vector(0, 0);
 
 // get force needed for torques
 let force = new Vector(0, 0);
@@ -70,7 +69,7 @@ const rEE = 0.006;
 let fDamping = new Vector(0, 0);
 
 // spring constant for wall rendering [N/m]
-const kWall = 800;
+const kWall = 200;
 
 // force calculation for the wall rendering
 let fWall = new Vector(0, 0);
@@ -97,7 +96,8 @@ let segments: SubSegment[][] = [];
 let objects: SubSegment[][] = [];
 
 //const segments: 
-const keyState: number = 0;
+
+let rawObjectInfo: any = [];
 
 export const enum Mode {
   InitializeAudio,
@@ -125,7 +125,7 @@ export const enum Type {
 
 let haplyType = Type.IDLE;
 
-let guidance: boolean = true;
+let guidance: boolean = false;
 
 // self.addEventListener("close", async function (event) {
 //   console.log("close");
@@ -156,93 +156,75 @@ self.addEventListener("message", async function (event) {
       console.log("acknowledged!");
     }
 
-    // unused?
-    waitForInput = event.data.waitForInput;
-    if (waitForInput == false) {
-      guidance = true;
-    }
-
     // if the user presses a key to move back and forth
     if (event.data.breakKey != undefined) {
       breakKey = event.data.breakKey;
     }
 
     if (event.data.start != undefined) {
+      guidance = true;
       haplyType = Type.SEGMENT;
     }
 
-    // if (curSubSegmentDone) {
-    //   tLastChangeSubSegment = event.data.tKeyPressTime;
-    // }
     if (curSegmentDone) {
       tLastChangeSegment = event.data.tKeyPressTime;
     }
 
     if (event.data.renderingData != undefined) {
       hapticMode = event.data.mode;
-      let rendering = event.data.renderingData.entityInfo;
+      let rendering = event.data.renderingData.entities;
 
-      objHeaderIndex = (rendering.length - 1) - rendering.reverse().findIndex((x: { name: string; }) => x.name === "Text");//rendering.indexOf(x => x.name == "Text", 1);
-      rendering.reverse();
+      objHeaderIndex = rendering.findIndex((x: { entityType: string }) => x.entityType == "object")
+      console.log(objHeaderIndex);
 
-      //TODO check if covers all segments
-      for (let i = 1; i < objHeaderIndex; i++) {
+      for (let i = 0; i < rendering.length; i++) {
 
-        const coords = rendering[i].contourPoints;
-        const tCoords = coords.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)));
+        if (rendering[i].entityType == "object") {
+          const name = rendering[i].name;
+          const centroid = rendering[i].centroid.map((x: any) => transformToVector(x));
+          const coords = rendering[i].contours;
+          const tCentroid = rendering[i].centroid.map((x: any) => transformPtToWorkspace(x))
 
-        let baseSeg = { coords: coords }
-        let tSeg = { coords: tCoords }
+          let baseObj = {
+            name: name,
+            centroid: centroid,
+            coords: coords
+          }
 
-        baseSegmentData.push(baseSeg);
-        segmentData.push(tSeg);
-      }
-      
-      console.log(baseSegmentData);
+          let tObj = {
+            name: name,
+            centroid: tCentroid,
+            coords: coords
+          }
 
-      segments = createSegs(segmentData);
-
-      for (let i = objHeaderIndex + 1; i < rendering.length; i++) {
-
-        const name = rendering[i].name;
-        const centroid = rendering[i].centroid.map((x: any) => transformToVector(x));
-        const coords = rendering[i].contourPoints;
-        const tCentroid = rendering[i].centroid.map((x: any) => transformPtToWorkspace(x))
-
-        let baseObj = {
-          name: name,
-          centroid: centroid,
-          coords: coords
+          baseObjectData.push(baseObj);
+          objectData.push(tObj);
         }
 
-        let tObj = {
-          name: name,
-          centroid: tCentroid,
-          coords: coords
+        if (rendering[i].entityType == "segment") {
+          const coords = rendering[i].contours;
+          const tCoords = coords.map((y: any) => y.map((x: any) => mapCoords(x.coordinates)));
+          let baseSeg = { coords: coords }
+          let tSeg = { coords: tCoords }
+          baseSegmentData.push(baseSeg);
+          segmentData.push(tSeg);
         }
 
-        baseObjectData.push(baseObj);
-        objectData.push(tObj);
-      }
-      //console.log("objectData", objectData);
-      objects = createObjs(objectData);
-
-      //console.log("objects", objects);
-
-      // fetch audio data
-      // TODO: rewrite all of this to use just a single loop
-      rendering.forEach((x: { name: string; offset: number; duration: number; }) => {
-        const isStaticSegment = x.name == "Text" ? true : false;
         let audio = {
-          name: x.name,
-          offset: x.offset,
-          duration: x.duration,
-          isStaticSegment: isStaticSegment
+          name: rendering[i].name,
+          offset: rendering[i].offset,
+          duration: rendering[i].duration,
+          entityType: rendering[i].entityType,
+          isStaticSegment: rendering[i].entityType.includes("static") ? true : false
         }
         audioData.push(audio);
-      });
+      }
 
-      //console.log("audioData", audioData);
+      objects = createObjs(objectData);
+      segments = createSegs(segmentData);
+      console.log(audioData);
+
+      rawObjectInfo = [];
 
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
@@ -250,10 +232,8 @@ self.addEventListener("message", async function (event) {
         segmentData: createSegs2(baseSegmentData),
       });
     }
-    //activeGuidance(segments, 50, 50);
-    //set initial target location first object centroid coordinates
-    //targetLoc.set(imageToHaply(objectData[0].centroid[0], objectData[0].centroid[1]));
   }
+
 
   function createSegs(segmentInfo: any): SubSegment[][] {
     let data: SubSegment[][] = [];
@@ -293,11 +273,15 @@ self.addEventListener("message", async function (event) {
     let j = 0;
     for (const obj of objectData) {
       const object: Array<SubSegment> = [];
+
       //const objCentroids = objs.centroid[0];
       // seg -> coords -> (0 or 1 with diff areas/centroid/coords)
       // each part of the segment
       if (obj.centroid.length == 1) {
         for (let i = 0; i < obj.centroid.length; i++) {
+
+          //console.log(obj);
+
           let coordinates = [obj.centroid[i]];
           let bounds = obj.coords[i];
           object[i] = { coordinates, bounds };
@@ -375,8 +359,6 @@ self.addEventListener("message", async function (event) {
           yLocation = m * xLocation + c;
         }
 
-        //console.log(xLocation, yLocation);
-
         const p = new Vector(xLocation, yLocation);
         upsampleSubSeg.push(p);
       }
@@ -391,11 +373,6 @@ self.addEventListener("message", async function (event) {
     return coordinates;
   }
 
-  function arrayToVector(coordinates: [number, number][]): Vector[] {
-    coordinates = coordinates.map(a => transformToVector(a));
-    return coordinates;
-  }
-  
   function transformToVector(coords: [number, number]): Vector {
     const x = (coords[0]);
     const y = (coords[1]);
@@ -419,32 +396,13 @@ self.addEventListener("message", async function (event) {
     widgetOne.add_encoder(1, 1, 241, 10752, 2);
     widgetOne.add_encoder(2, 0, -61, 10752, 1);
     widgetOne.device_set_parameters();
+
+    fEE.set(0, 0);
   }
 
   /************************ END SETUP CODE ************************* */
 
   /**********  BEGIN CONTROL LOOP CODE *********************/
-  let func: any;
-
-  // Tells us if we are in guidance mode.
-
-  // if (hapticMode === "Active") {
-  //   (func = (function* () {
-  //     // jump to new loc based on a timer
-  //     for (let idx = 1; idx <= objectData.length; idx++) {
-  //       yield setTimeout(() => {
-  //         if (idx === objectData.length) {
-  //           doneGuidance = true;
-  //         } else {
-  //           // set next target location
-  //           targetLoc.set(imageToHaply(new Vector(objectData[idx].centroid[0], objectData[idx].centroid[1])));
-  //         }
-  //         func.next();
-  //       }, 2000);
-
-  //     }
-  //   })()).next();
-  // }
 
   while (true) {
 
@@ -462,16 +420,13 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            // this.self.postMessage({
-            //   currentHaplyIndex: [currentSegmentIndex, currentSubSegmentIndex]
-            // })
-            audioHapticContours(segments, [3000, 2000, 15]);
+            audioHapticContours(segments, [3000, 3000, 6]); // prev: 15
           }
           break;
         }
         case Type.OBJECT: {
           if (objects.length != 0) {
-            audioHapticContours(objects, [2000, 2000, 500]);
+            audioHapticContours(objects, [2000, 2000, 20]);
           }
           break;
         }
@@ -480,9 +435,10 @@ self.addEventListener("message", async function (event) {
       }
     }
 
-    else {
-      posEE.set(posEE.clone().multiply(200));
-    }
+    //else {
+    //passiveGuidance();
+    //  posEE.set(posEE.clone().multiply(200));
+    //}
 
     prevPosEE.set(convPosEE.clone());
 
@@ -557,7 +513,8 @@ export const enum BreakKey {
   PreviousHaptic,
   NextHaptic,
   PreviousFromAudio,
-  NextFromAudio
+  NextFromAudio,
+  Escape
 }
 
 let breakKey: BreakKey;
@@ -568,10 +525,8 @@ let tLastChangeSubSegment: number = Number.NEGATIVE_INFINITY;
 let tHoldTime: number = Number.NEGATIVE_INFINITY;
 let tHoldAudioTime: number = Number.NEGATIVE_INFINITY;
 
+
 // unused atm
-let tResetTime: number = Number.NEGATIVE_INFINITY;
-let tResetDuration: number = 2000;
-let tAudioWaitTime = 1000;
 
 // Let's us know if that the main script is playing audio.
 let doneWithAudio = false;
@@ -580,6 +535,8 @@ let doneWithAudio = false;
 let sendAudioSignal = false;
 
 //TODO: rewrite all of this within a class
+
+let tSavedSubSegmentDuration = 0;
 
 function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, number, number]) {
 
@@ -591,7 +548,7 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
 
     case Mode.InitializeAudio: {
       //entityIndex = 0;//objHeaderIndex; //doneWithSegments == true ? objHeaderIndex : 0;
-      entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex;
+      entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
       mode = Mode.StartAudio;
     }
 
@@ -623,6 +580,7 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
       let audioSeg = audioData[entityIndex];
       if (audioSeg.isStaticSegment) {
         mode = Mode.StartAudio;
+        console.log("region");
       }
       else {
         mode = Mode.StartHaply;
@@ -638,18 +596,17 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
       break;
     }
 
-    // start ~2 after button press
+    // start ~1.5 after button press
     case Mode.WaitHaply: {
-      //console.log("enter wait mode");
-      //console.log(Date.now(), tHoldTime);
-      if (Date.now() - tHoldTime > 1000) {
+      if (Date.now() - tHoldTime > 1500) {
         mode = Mode.MoveHaply;
+        tLastChangePoint = Date.now();
       }
       break;
     }
     case Mode.MoveHaply: {
       // TODO: fix this, it's ugly
-      activeGuidance(segments, t0, t1, t2, springConst);
+      activeGuidance(segments, t0, t1, t2);
       break;
     }
     case Mode.Reset: {
@@ -846,11 +803,20 @@ function audioHapticContours(segments: SubSegment[][], timeIntervals: [number, n
 // }
 
 function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: number,
-  tSubSegmentDuration: number, tSubSegmentPointDuration: number, springConst: number) {
+  tSubSegmentDuration: number, tSubSegmentPointDuration: number) {
 
+  tSavedSubSegmentDuration = tSubSegmentPointDuration;
   // first check for breakout conditions
   if (breakKey != BreakKey.None) {
     fEE.set(0, 0); // reset forces
+
+    if (breakKey == BreakKey.Escape) {
+      finishTracing();
+      haplyType = Type.IDLE;
+      mode = Mode.Reset;
+    }
+
+
     // the user skipped forward
     if (breakKey == BreakKey.NextHaptic) {
       finishSubSegment();
@@ -896,6 +862,7 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
 
     if (currentSegmentIndex == segments.length) {
       finishTracing();
+      switchMode();
       return;
     }
 
@@ -948,19 +915,17 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
     // we're not done with the current subsegment
     else {
       // check if we have to move to the next point in the subsegment
+
       if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
         currentSubSegmentPointIndex++;
-
-        //console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
-        // check to see if we've made it to the last point, then we know it's time to increment the subseg index
-        if (currentSubSegmentPointIndex >= currentSubSegment.coordinates.length - 1) {
+        if (currentSubSegmentPointIndex >= currentSubSegment.coordinates.length) {
           finishSubSegment();
         }
         tLastChangePoint = Date.now();
       } else {
+
         const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
-        moveToPos(coord, springConst);
-        console.log(currentSegmentIndex, currentSubSegmentIndex, currentSubSegmentPointIndex);
+        moveToPos(coord);
       }
     }
   }
@@ -968,9 +933,13 @@ function activeGuidance(this: any, segments: SubSegment[][], tSegmentDuration: n
 
 function finishTracing() {
   currentSegmentIndex = 0;
+  currentSubSegmentIndex = 0;
   curSegmentDone = false;
-  console.log("all segments traced, time for objects.");
+  console.log("all segments traced");
   mode = Mode.Reset;
+}
+
+function switchMode() {
 
   switch (haplyType) {
     case Type.SEGMENT: {
@@ -1029,6 +998,10 @@ function finishSubSegment() {
  * Change the subsegment index before calling this.
  */
 function changeSubSegment() {
+  //savedEntityIndex = entityIndex;
+  //console.log("saved entity index is", savedEntityIndex);
+  //entityIndex = 11;
+  //mode = Mode.StartAudio;
   currentSubSegmentPointIndex = 0;
   curSubSegmentDone = true;
   //waitForInput = true;
@@ -1036,34 +1009,32 @@ function changeSubSegment() {
   fEE.set(0, 0);
 }
 
-function moveToPos(vector: Vector, springConst: number) {
+function moveToPos(vector: Vector) {
 
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
-  //const multiplier = (xDiff.mag()) < threshold ? (xDiff.mag() / threshold) : 1;
 
-  const multiplier = xDiff.mag() > 0.01 ? 2 : 2;
+  // P controller
+  const multiplier = xDiff.mag() > 0.01 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
 
-  //const multiplier = xDiff.mag() * 4; // punish larger forces
-  //const xDiff = (convPosEE).subtract(targetPos);
-  // get the angle between this and the next position
-  //const angle = Math.abs(xDiff.toAngles().phi); 
-  //const multiplier = angle > 1.5 ? 1.4 : 1;
-  const kx = xDiff.multiply(200).multiply(multiplier);
+  let constrainedMax = currentSegmentIndex == 0 && currentSubSegmentIndex == 0 ? 6 : 4
+  const kx = xDiff.multiply(springConst).multiply(multiplier);
 
+  // D controller
+  const dx = (convPosEE.clone()).subtract(prevPosEE);
+  const dt = 1 / 1000;
+  const c = 3;
+  const cdxdt = (dx.divide(dt)).multiply(c);
 
+  // I controller
+  const cumError = dx.add(dx.multiply(dt));
+  const ki = 170;
 
-  //console.log(currentSubSegmentPointIndex, xDiff);
-
-  // const dx = (convPosEE.clone()).subtract(prevPosEE);
-  // const dt = 1 / 1000;
-  // const c = 1.2;
-  // const cdxdt = (dx.divide(dt)).multiply(c);
-
-  const fx = constrain(kx.x, -3, 3);
-  const fy = constrain(kx.y, -3, 3);
+  console.log("I:", cumError.x * ki, cumError.y * ki);
+  let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
+  let fy = constrain(kx.y + cdxdt.y + ki * cumError.y, -1 * constrainedMax, constrainedMax);
   force.set(fx, fy);
-  console.log(force);
+  //console.log(xDiff.x, xDiff.y, cdxdt.x, cdxdt.y, force.x, force.y);
   fEE.set(graphics_to_device(force));
 }
 
@@ -1072,170 +1043,25 @@ function constrain(val: number, min: number, max: number) {
 }
 
 export function transformPtToWorkspace(coords: [number, number]): Vector {
-  const x = (coords[0] * 0.1333) - 0.05;
-  const y = (coords[1] * 0.0833) + 0.0278;
+  const x = (coords[0] * 0.1333) - 0.064; // 0.064 before, 0.080, -0.05
+  const y = (coords[1] * 0.0833) + 0.0368; // 0.0368 before, -0.0278
   return { x, y };
 }
 
 /////////////////////////////////////////
 
-// wall rendering
-function passiveGuidance() {
-  //scaling the end effector position vector to match normalized coordinates from handler
-  let convPosEE = new Vector(posEE.x * 5 + 0.5, posEE.y * 8.07 - 0.21);
-
-  //declaration of comparision variables;
-  let nearestX = 99.9;
-  let nearestY = 99.9;
-  let nearestObj = "";
-  let wallXLine; // rendering a vertical line
-  let wallYLine; //rendering a horizontal line
-
-  // checking the distances vectros for each bounding box
-  for (let i = 0; i < objectData.length; i++) {
-    let upperLeftX = (objectData[i].coords[0]);
-    let upperLeftY = (objectData[i].coords[1]);
-    let lowerRightX = (objectData[i].coords[2]);
-    let lowerRighty = (objectData[i].coords[3]);
-    let objName = objectData[i].text;
-
-    /* x direction */
-    /* if y coord is between line seg */
-    if (convPosEE.y < lowerRighty && convPosEE.y > upperLeftY) {
-
-      //check distance between vertical lines;
-      let xDistToLeft = Math.abs((upperLeftX - 2 * rEE) - convPosEE.x);
-      let xDistToRight = Math.abs((lowerRightX + 2 * rEE) - convPosEE.x);
-
-      if (xDistToLeft < xDistToRight && xDistToLeft < nearestX) {
-
-        wallXLine = upperLeftX;
-        nearestX = xDistToLeft;
-        nearestObj = objName;
-
-      } else if (xDistToRight < xDistToLeft && xDistToRight < nearestX) {
-        wallXLine = lowerRightX;
-        nearestX = xDistToRight;
-        nearestObj = objName;
-
-      }
-    }
-
-    /* y direction, the same method */
-    if (convPosEE.x > upperLeftX && convPosEE.x < lowerRightX) {
-
-      //check distance between horizontal lines;
-      let yDistToUpper = Math.abs((upperLeftY - 2 * rEE) - convPosEE.y);
-      let yDistToLower = Math.abs((lowerRighty + 2 * rEE) - convPosEE.y);
-
-      if (yDistToUpper < yDistToLower && yDistToUpper < nearestY) {
-
-        wallYLine = upperLeftY;
-        nearestY = yDistToUpper;
-        nearestObj = objName;
-
-      } else if (yDistToLower < yDistToUpper && yDistToLower < nearestY) {
-
-        wallYLine = lowerRighty;
-        nearestY = yDistToLower;
-        nearestObj = objName;
-
-      }
-    }
-  }
-
-  fWall.set(0, 0);
-
-  /** checking to see if wall should be rendered horizontally or vertically **/
-
-  if (nearestX < nearestY && nearestX < threshold) {
-    if (wallXLine < convPosEE.x) {
-      fWall.set(kWall * (threshold - (wallXLine - convPosEE.x)), 0);
-    } else {
-      fWall.set(-kWall * (threshold - (convPosEE.x - wallXLine)), 0);
-    }
-    //setting no force if it's on the line
-    if (Math.abs(convPosEE.x - wallXLine) < rEE) {
-      fWall.set(0, 0);
-    }
-  } else if (nearestY < nearestX && nearestY < threshold) {
-
-    if (wallYLine < convPosEE.y) {
-      fWall.set(0, -kWall * (threshold - (wallYLine - convPosEE.y)));
-    } else {
-      fWall.set(0, kWall * (threshold - (convPosEE.y - wallYLine)));
-    }
-    //setting no force if it's on the line
-    if (Math.abs(convPosEE.x - wallXLine) < rEE) {
-      fWall.set(0, 0);
-    }
-  }
-  //asigning the forces calculated in fWall to the end effector
-  fEE = (fWall.clone()).multiply(-1);
-  fEE.add(fDamping);
-
-  /** keeping track of the past 4 end effector force vectors to smoothen the forces/fluctuations on the end effector**/
-  fEE.set(0.3 * fEE.x + 0.15 * fEE_prev1.x + 0.075 * fEE_prev2.x + 0.05 * fEE_prev3.x + 0.025 * fEE_prev4.x,
-    0.3 * fEE.y + 0.15 * fEE_prev1.y + 0.075 * fEE_prev2.y + 0.05 * fEE_prev3.y + 0.025 * fEE_prev4.y);
-
-  fEE_prev1 = fEE.clone();
-  fEE_prev2 = fEE_prev1.clone();
-  fEE_prev3 = fEE_prev2.clone();
-  fEE_prev4 = fEE_prev3.clone();
-
+export function ReversetransformPtToWorkspace(v: Vector) {
+  const x = (v.x + 0.064) / 0.1333;
+  const y = (v.y - 0.0368) / 0.0833;
+  return new Vector(x, y);
 }
+
+// wall rendering
 
 //vibrates if inside a bounding box
-function vib_mode() {
-  //boolean to check if EE should vibrate
-  applyVibration = false;
-
-  //same end effector vector scaling
-  let convPosEE = new Vector(posEE.x * 5 + 0.5, posEE.y * 8.07 - 0.21);
-
-  //a coefficient for force vector
-  let fCoef = -25.0;
-
-  // vector components (x &y) fo the end effector posiiton and the magnitude of the vector
-  let xDist = Math.abs(0.5 - convPosEE.x);
-  let yDist = convPosEE.y;
-  let xyDist = new Vector(convPosEE.x - 0.5, convPosEE.y).mag();
-
-  //overall force scaling
-  let forceMultiplier = 1;
-
-  /*checking to see if magnitude is within limit and scaling forceMultiplier based on magnitude of the distance*/
-  if (xyDist < 0.3) {
-    forceMultiplier = 1.0 / ((xyDist) + 0.5);
-  }
-
-  //computed coefficient for force calcualtion
-  let compCoeff = (1.0 - (yDist - 0.5) * xDist) * forceMultiplier;
-
-  /*** Iterating through all the boudning boxes to check if we are in one
-       and if we are in a shape we break out of the for loop and assign the
-       random force to cause vibration***/
-  for (let i = 0; i < objectData.length; i++) {
-
-    if (inShape(objectData[i].coords, convPosEE)) {
-      randForce.set((Math.random() * 100 - 75) / 1000, (Math.random() * 100 - 75) / 1000);
-      applyVibration = true;
-      break;
-    }
-  }
-  if (applyVibration) {
-    fEE.set(randForce.multiply(fCoef * compCoeff));
-  }
-}
 
 // transform image normalized coordinates into haply frame of reference
 // based on calibration on haply from extreme left/right and bottom positions
-function imageToHaply(vec: Vector) {
-  var x = (vec.x - 0.5) / 5.0;
-  var y = (vec.y + 0.2) / 8.0;
-
-  return new Vector(x, y);
-}
 
 //checks to see if the end effector is inside a specified shape (currently only checks for rectanlges)
 function inShape(coords: any, ee_pos: any) {
