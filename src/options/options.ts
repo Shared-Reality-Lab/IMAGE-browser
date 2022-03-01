@@ -17,6 +17,7 @@
 import  browser  from "webextension-polyfill";
 
 let port = browser.runtime.connect();
+let navigatorSerial = navigator.serial;
 
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
@@ -45,7 +46,7 @@ if (toggleButton) {
 }
 
 function showDeveloperSettings() {
-if (toggleButton.checked) {
+if (toggleButton.checked && navigatorSerial !== undefined) {
     developerSettings.style.display = "block";
   } else {
     developerSettings.style.display = "none";
@@ -61,10 +62,10 @@ function optionsCheck(){
     text:false
   })
   .then((items)=>{
-    if(items["inputUrl"]==="" && items["customServer"]=== true){
+    if(items["inputUrl"]=== "" && items["customServer"]=== true){
     window.alert("Continuing without entering Custom URL will not give any renderings.");
     } 
-    else if(items["noHaptics"]===true && items["audio"]===false && items["text"]===false ){
+    else if(items["noHaptics"]=== true && items["audio"]=== false && items["text"]=== false ){
       window.alert("No interpretations will appear when both Audio and Text are unchecked!");
     }
     else{
@@ -117,7 +118,7 @@ function restore_options() {
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
 
-        if (toggleButton.checked) {
+        if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }
     }); 

@@ -1,4 +1,5 @@
 {
+  "name": "image-browser-extension",
   "targets": {
     "webext-dev": {
       "sourceMap": {
@@ -7,35 +8,41 @@
       },
       "distDir": "build"
     },
-    "webext-prod": {
-      "distDir": "build"
+    "webext-prod-firefox": {
+      "distDir": "build-firefox"
+    },
+    "webext-prod-chrome": {
+      "distDir": "build-chrome"
     }
   },
   "scripts": {
     "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
-    "clean": "rm -rf build",
-    "pack": "npm run clean && parcel build src/manifest.json --target webext-prod",
+    "clean": "rm -rf build && rm -rf build-firefox && rm -rf build-chrome",
+    "pack": "npm run clean && parcel build src/manifest.json --target webext-prod-firefox",
+    "pack:chromium": "mv src/manifest.json src/manifest.json.bak && jq -r 'del( .browser_specific_settings )' src/manifest.json.bak > src/manifest.json && npm run clean && parcel build src/manifest.json --target webext-prod-chrome && rm src/manifest.json && mv src/manifest.json.bak src/manifest.json",
     "prestart": "(cd schemas && json2ts -i '*.json' -o ../src/types)",
     "build:ff": "npm run pack && web-ext build -s build -a dist",
-    "build:chromium": "npm run pack && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
+    "build:chromium": "npm run pack:chromium && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.2.1",
     "@parcel/transformer-sass": "^2.2.1",
     "@parcel/transformer-typescript-tsc": "^2.2.1",
     "@parcel/validator-typescript": "^2.2.1",
+    "@types/progressbar.js": "^1.1.2",
     "@types/uuid": "^8.3.3",
+    "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
-    "@types/w3c-web-serial":"1.0.2" ,
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.2.1",
     "web-ext": "^6.0.0"
   },
   "dependencies": {
-    "@types/w3c-web-serial": "1.0.2",
     "@types/chrome": "^0.0.164",
+    "@types/w3c-web-serial": "1.0.2",
     "bootstrap": "^5.0.1",
     "plyr": "^3.6.8",
+    "progressbar.js": "^1.1.0",
     "uuid": "^8.3.2",
     "webextension-polyfill": "^0.8.0"
   }
