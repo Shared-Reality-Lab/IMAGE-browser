@@ -116,7 +116,6 @@ self.addEventListener("message", async function (event) {
     if (event.data.receivedAudioSignal != undefined
       && sendAudioSignal == true) {
       sendAudioSignal = !event.data.receivedAudioSignal;
-      console.log("acknowledged!");
     }
 
     // if the user presses a key to move back and forth
@@ -190,13 +189,6 @@ self.addEventListener("message", async function (event) {
 
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
-
-
-      console.log("base seg data", baseSegmentData);
-      console.log("seg data", segmentData);
-      console.log("segments", segments);
-      console.log("createbase seg for info", createSegs(baseSegmentData)
-
 
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },

@@ -405,7 +405,6 @@ port.onMessage.addListener(async (message) => {
                         case AudioMode.Play: {
                             // prevent audio from playing multiple times
                             if (!playingAudio) {
-                                console.log("index is", audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
                                     data["entities"][audioData.entityIndex]["offset"],
