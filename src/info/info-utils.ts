@@ -48,7 +48,7 @@ export function createCanvas(contentDiv: HTMLElement){
         throw new Error('Failed to get 2D context');
     }
     const ctx: CanvasRenderingContext2D = res;
-    return {canvas, ctx};
+    return [canvas, ctx];
 }
 
 

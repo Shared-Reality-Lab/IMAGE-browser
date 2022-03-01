@@ -230,10 +230,9 @@ port.onMessage.addListener(async (message) => {
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
             // creating canvas
-            let canvas:HTMLCanvasElement;
-            let ctx:CanvasRenderingContext2D;
+          
            
-            [canvas,ctx]= utils.createCanvas(contentDiv);
+            const [canvas,ctx]= utils.createCanvas(contentDiv);
             const img = new Image();
             img.src = graphic_url;
 
