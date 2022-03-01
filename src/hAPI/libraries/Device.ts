@@ -195,7 +195,6 @@ class Device {
     }
 
     set_mechanism(mechanism: any) {
-        console.log(mechanism);
         this.mechanism = mechanism;
     }
 
