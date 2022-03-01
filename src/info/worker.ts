@@ -838,12 +838,12 @@ function moveToPos(vector: Vector) {
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 3;
+  const c = 1.8;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 20;
+  const ki = 12;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
