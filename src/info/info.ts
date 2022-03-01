@@ -373,6 +373,30 @@ port.onMessage.addListener(async (message) => {
                 console.log("STOP!!");
             })
 
+            btnNext.addEventListener("click", _ => {
+                console.log("Next!!");
+                if (audioData.mode == AudioMode.Play) {
+                    sourceNode.stop();
+                    audioData.mode = AudioMode.Finished;
+                    breakKey = BreakKey.NextFromAudio;
+                }
+                else {
+                    breakKey = BreakKey.NextHaptic;
+                }
+            })
+
+            btnPrev.addEventListener("click", _ => {
+                console.log("Prev!!");
+                if (audioData.mode == AudioMode.Play) {
+                    sourceNode.stop();
+                    audioData.mode = AudioMode.Finished;
+                    breakKey = BreakKey.PreviousFromAudio;
+                }
+                else {
+                    breakKey = BreakKey.PreviousHaptic;
+                }
+            })
+
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
