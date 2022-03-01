@@ -383,7 +383,13 @@ port.onMessage.addListener(async (message) => {
                 else {
                     breakKey = BreakKey.NextHaptic;
                 }
-            })
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
+
+            });
 
             btnPrev.addEventListener("click", _ => {
                 console.log("Prev!!");
@@ -395,7 +401,12 @@ port.onMessage.addListener(async (message) => {
                 else {
                     breakKey = BreakKey.PreviousHaptic;
                 }
-            })
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
+            });
 
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
