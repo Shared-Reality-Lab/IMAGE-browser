@@ -43,12 +43,7 @@ export function createCanvas(contentDiv: HTMLElement){
     contentDiv.append(document.createElement("br"));
     contentDiv.append(canvas);
 
-    const res = canvas.getContext('2d');
-    if (!res || !(res instanceof CanvasRenderingContext2D)) {
-        throw new Error('Failed to get 2D context');
-    }
-    const ctx: CanvasRenderingContext2D = res;
-    return [canvas, ctx];
+    return canvas;
 }
 
 

@@ -232,7 +232,14 @@ port.onMessage.addListener(async (message) => {
             // creating canvas
           
            
-            const [canvas,ctx]= utils.createCanvas(contentDiv);
+            const canvas= utils.createCanvas(contentDiv);
+            
+            const res = canvas.getContext('2d');
+            if (!res || !(res instanceof CanvasRenderingContext2D)) {
+                throw new Error('Failed to get 2D context');
+            }
+            const ctx: CanvasRenderingContext2D = res;
+            
             const img = new Image();
             img.src = graphic_url;
 

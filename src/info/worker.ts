@@ -14,7 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
-import { Vector } from "../hAPI/libraries/vector";
+import { Vector } from "../hAPI/libraries/vector.js";
 import { Board } from "../hAPI/libraries/Board";
 import { Device } from "../hAPI/libraries/Device";
 import { Pantograph } from "../hAPI/libraries/Pantograph";
