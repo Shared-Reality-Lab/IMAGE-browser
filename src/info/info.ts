@@ -388,7 +388,9 @@ port.onMessage.addListener(async (message) => {
 
                 worker.addEventListener("message", function (msg) {
 
-                    // we've selected the COM port
+                    // console.log("getting message from worker: ", msg);
+
+                //     // we've selected the COM port
                     // btn.style.visibility = 'hidden';
 
                     // return end-effector x/y positions and objectData for updating the canvas
@@ -429,14 +431,14 @@ port.onMessage.addListener(async (message) => {
                                 console.log("index is", audioData.entityIndex);
                                 playingAudio = true;
                                 playAudioSeg(audioBuffer,
-                                    data["entityInfo"][audioData.entityIndex]["offset"],
-                                    data["entityInfo"][audioData.entityIndex]["duration"]);
+                                    data["entities"][audioData.entityIndex]["offset"],
+                                    data["entities"][audioData.entityIndex]["duration"]);
                                 audioData.mode = AudioMode.InProgress;
                                 tAudioBegin = Date.now();
                             }
                         }
                         case AudioMode.InProgress: {
-                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entityInfo"][audioData.entityIndex]["duration"])) {
+                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
                                 audioData.mode = AudioMode.Finished;
                                 console.log("waiting");
                             }
@@ -454,6 +456,11 @@ port.onMessage.addListener(async (message) => {
                     }
                 });
             });
+
+            // worker.addEventListener("message", function (msg) {
+            //     console.log("getting message from worker: ", msg);
+
+            // });
         }
 
         document.getElementById("renderings-container")!.appendChild(container)

@@ -31,7 +31,6 @@ export function createCanvas(contentDiv:HTMLElement){
 }
 
 
-
 const worldPixelWidth = 800;
 const pixelsPerMeter = 6000;
 
