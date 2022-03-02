@@ -209,7 +209,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                       function createPanel(){
                         return browser.windows.create({
                           type: "panel",
-                          url: "info/info.html?" + query["request_uuid"]
+                          url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
+
                         })
                       }
                       if(renderingsPanel !== undefined){
