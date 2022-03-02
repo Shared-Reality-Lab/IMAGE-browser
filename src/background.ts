@@ -22,6 +22,7 @@ import { IMAGERequest } from "./types/request.schema";
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 var serverUrl : RequestInfo;
+var renderingsPanel : browser.Windows.Window;
 
 function getAllStorageSyncData() {
   return browser.storage.sync.get({
@@ -200,23 +201,34 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   console.error(textContent);
                   throw new Error(textContent);
                 }
-              }).then((json: IMAGEResponse) => {
+              }).then(async (json: IMAGEResponse) => {
                   if (json["renderings"].length > 0) {
                     if(query["request_uuid"] !== undefined){
                       responseMap.set(query["request_uuid"], json);
-                      browser.windows.create({
-                        type: "panel",
-                        url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
-                     });
-                    }
+
+                      function createPanel(){
+                        return browser.windows.create({
+                          type: "panel",
+                          url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
+
+                        })
+                      }
+                      if(renderingsPanel !== undefined){
+                        browser.windows.remove(renderingsPanel.id!)
+                        .then(() => createPanel().then((window) => renderingsPanel =  window))
+                        .catch(() => createPanel().then((window) => renderingsPanel =  window))
+                      }else{
+                        await createPanel().then((window) => renderingsPanel = window);
+                      }
                       // How to handle if request_uuid was undefined??
-                  } else {
+                    } else {
                       browser.windows.create({
                         type: "panel",
                         url: "errors/no_renderings.html"
                       });
                     // throw new Error("Received no renderings from test URL!");
                     }
+                  }
               }).catch(err => {
               console.error(err);
             });
