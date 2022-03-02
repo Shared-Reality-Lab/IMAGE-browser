@@ -120,6 +120,18 @@ async function generateMapSearchQuery(message: { context: string, placeID: strin
   } as IMAGERequest;
 }
 
+async function generateChartQuery(message: {highChartsData: {[k: string]: unknown}}): Promise<IMAGERequest> {
+  getRenderers();
+  return {
+      "request_uuid": uuidv4(),
+      "timestamp": Math.round(Date.now() / 1000),
+      "highChartsData": message.highChartsData,
+      "language": "en",
+      "capabilities": [],
+      "renderers": renderers
+  } as IMAGERequest;
+}
+
 function generateLocalQuery(message: { context: string, dims: [number, number], image: string}): IMAGERequest {
     getRenderers();
     return {
@@ -147,6 +159,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "localResource":
     case "mapResource":
     case "settingsSaved":
+    case "chartResource":
     case "mapSearch":
       // Get response and open new window
       if (message["type"] === "resource") {
@@ -157,7 +170,10 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }else if (message["type"] === "mapSearch") {
         console.debug("Generating map query");
         query = await generateMapSearchQuery(message);
-      }else{
+      } else if (message["type"] === "chartResource"){
+        query = await generateChartQuery(message);
+      }
+      else{
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
