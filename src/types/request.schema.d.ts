@@ -27,6 +27,12 @@ export interface IMAGERequest1 {
    */
   graphic?: string;
   /**
+   * Chart data in the HighCharts format (https://api.highcharts.com/highcharts/)
+   */
+  highChartsData?: {
+    [k: string]: unknown;
+  };
+  /**
    * The width and height of the graphic as requested in pixels.
    */
   dimensions?: [number, number];
