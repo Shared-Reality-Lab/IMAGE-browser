@@ -1,9 +1,4 @@
-interface Point {
-	x: number;
-	y: number;
-}
-
-class Vector implements Point {
+class Vector {
   x:number=0;
   y:number=0;
  

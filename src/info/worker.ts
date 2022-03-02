@@ -39,6 +39,7 @@ let audioData: any = [];
 let angles = new Vector(0, 0);
 let positions = new Vector(0, 0);
 
+
 // end-effector x/y coords
 let posEE = new Vector(0, 0);
 let prevPosEE = new Vector(0.5, 0);
@@ -96,8 +97,8 @@ export const enum Type {
 
 let haplyType = Type.IDLE;
 
-function device_to_graphics(deviceFrame: any) {
-  return new Vector(-deviceFrame[0], deviceFrame[1]);
+function device_to_graphics(deviceFrame: Vector) {
+  return new Vector(-deviceFrame.x, deviceFrame.y);
 }
 
 function graphics_to_device(graphicsFrame: any) {
@@ -190,11 +191,11 @@ self.addEventListener("message", async function (event) {
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
 
-      this.self.postMessage([{
+      this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
         segmentData: createSegs(baseSegmentData),
-      }]);
+      });
     }
   }
 
@@ -328,6 +329,7 @@ self.addEventListener("message", async function (event) {
    * @returns Vector array of {x, y} data.
    */
   function mapCoords(coordinates: [number, number][]): Vector[] {
+
     return coordinates.map(x => transformPtToWorkspace(x));
   }
 
@@ -374,12 +376,14 @@ self.addEventListener("message", async function (event) {
   while (true) {
 
     // find position and angle data
-    widgetOne.device_read_data();
+    widgetOne.device_read_data();    
     angles = widgetOne.get_device_angles();
-    positions = widgetOne.get_device_position(angles);
+    
+    positions = transformToVector(widgetOne.get_device_position(angles));
 
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
+
 
     if (guidance) {
       posEE.set(device_to_graphics(posEE));
@@ -417,7 +421,7 @@ self.addEventListener("message", async function (event) {
      */
     const data = {
       positions:
-        { x: positions.x, y: positions.y },
+        { x: positions.x, y: positions.y},
       waitForInput: waitForInput,
       audioInfo: {
         entityIndex: entityIndex,

@@ -388,12 +388,15 @@ port.onMessage.addListener(async (message) => {
                 worker.addEventListener("message", function (msg) {
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
+                   
 
-                    const msgdata = msg.data[0];
+                    const msgdata = msg.data;
 
                     // return end-effector x/y positions and objectData for updating the canvas
+                    
                     posEE.x = msgdata.positions.x;
                     posEE.y = msgdata.positions.y;
+                  
                     waitForInput = msgdata.waitForInput;
 
                     // grab segment data if available
