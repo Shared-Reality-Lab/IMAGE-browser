@@ -14,7 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
-import { Vector } from "../hAPI/libraries/vector.js";
+import { Vector } from "../hAPI/libraries/Vector";
 import { Board } from "../hAPI/libraries/Board";
 import { Device } from "../hAPI/libraries/Device";
 import { Pantograph } from "../hAPI/libraries/Pantograph";
@@ -328,13 +328,11 @@ self.addEventListener("message", async function (event) {
    * @returns Vector array of {x, y} data.
    */
   function mapCoords(coordinates: [number, number][]): Vector[] {
-    coordinates = coordinates.map(x => transformPtToWorkspace(x));
-    return coordinates;
+    return coordinates.map(x => transformPtToWorkspace(x));
   }
 
   function mapCoordsToVec(coordinates: [number, number][]): Vector[] {
-    coordinates = coordinates.map(x => transformToVector(x));
-    return coordinates;
+    return coordinates.map(x => transformToVector(x));
   }
 
   /**
@@ -345,7 +343,7 @@ self.addEventListener("message", async function (event) {
   function transformToVector(coords: [number, number]): Vector {
     const x = (coords[0]);
     const y = (coords[1]);
-    return { x, y };
+    return new Vector (x, y);
   }
 
   /************ BEGIN SETUP CODE *****************/
@@ -419,7 +417,7 @@ self.addEventListener("message", async function (event) {
      */
     const data = {
       positions:
-        { x: positions[0], y: positions[1] },
+        { x: positions.x, y: positions.y },
       waitForInput: waitForInput,
       audioInfo: {
         entityIndex: entityIndex,
@@ -846,5 +844,5 @@ function constrain(val: number, min: number, max: number) {
 export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
   const y = (coords[1] * 0.0833) + 0.0368;
-  return { x, y };
+  return  new Vector(x, y);
 }
