@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "__MSG_extensionName__",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "__MSG_extensionDescription__",
     "homepage_url": "https://image.a11y.mcgill.ca",
     "default_locale": "en",
@@ -22,6 +22,13 @@
         "chrome_style": true
     },
 
+    "browser_specific_settings": {
+        "gecko": {
+          "id": "image@image.extension.ca",
+          "strict_min_version": "42.0"
+        }
+      },      
+
     "permissions": [
         "contextMenus",
         "downloads",
@@ -39,9 +46,12 @@
         "info/worker.js",
         "info/info.html",
         "info/info.ts",
+        "progressBar/progressBar.html",
         "errors/no_renderings.html",
         "errors/http_error.html",
-        "./image_request_sent.mp3"
+        "./progressBar/image_request_sent.mp3",
+        "./progressBar/earcon_server_communication_IMAGE_results-arrived.mp3",
+        "./progressBar/earcon_server_communication_IMAGE_processing-data.mp3"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"

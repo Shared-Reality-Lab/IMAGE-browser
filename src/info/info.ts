@@ -25,7 +25,10 @@ import { vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 
-let request_uuid = window.location.search.substring(1);
+const urlParams = new URLSearchParams(window.location.search);
+let request_uuid = urlParams.get("uuid") || "";
+let graphic_url = urlParams.get("graphicUrl") || "";
+
 let renderings: IMAGEResponse;
 let port = browser.runtime.connect();
 
