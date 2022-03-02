@@ -20,6 +20,26 @@ var selectedElement: HTMLElement | null = null;
 
 let port = browser.runtime.connect();
 
+var script = document.createElement('script');
+script.src = chrome.extension.getURL('charts/highcharts.js');
+(document.head||document.documentElement).appendChild(script);
+script.onload = function() {
+    script.remove();
+};
+
+window.addEventListener("message", function(event) {
+    // We only accept messages from our script in highcharts.js
+    if (event.source != window)
+        return;
+    if (event.data.messageFrom && (event.data.messageFrom == "imageCharts")) {
+        port.postMessage({
+            "type": "chartResource",
+            "highChartsData": event.data.charts || null,
+            "toRender": "full"
+        });
+    }
+});
+
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
     console.debug(selectedElement.id);

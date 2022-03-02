@@ -135,6 +135,18 @@ function generateLocalQuery(message: { context: string, dims: [number, number], 
     } as IMAGERequest;
 }
 
+async function generateChartQuery(message: {highChartsData: {[k: string]: unknown}}): Promise<IMAGERequest> {
+  getRenderers();
+  return {
+      "request_uuid": uuidv4(),
+      "timestamp": Math.round(Date.now() / 1000),
+      "highChartsData": message.highChartsData,
+      "language": "en",
+      "capabilities": [],
+      "renderers": renderers
+  } as IMAGERequest;
+}
+
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message");
   let query: IMAGERequest;
@@ -148,6 +160,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "localResource":
     case "mapResource":
     case "settingsSaved":
+    case "chartResource":
     case "mapSearch":
       // Get response and open new window
       if (message["type"] === "resource") {
@@ -158,6 +171,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
       }else if (message["type"] === "mapSearch") {
         console.debug("Generating map query");
         query = await generateMapSearchQuery(message);
+      }else if (message["type"] === "chartResource"){
+        query = await generateChartQuery(message);
       }else{
         query = generateLocalQuery(message);
       }
@@ -167,25 +182,25 @@ async function handleMessage(p: Runtime.Port, message: any) {
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
             serverUrl = "https://image.a11y.mcgill.ca/";
-            var progressWindow = await browser.windows.create({
-              type:"popup",
-              url: "progressBar/progressBar.html",
-              height: 100,
-              width: 400,
-            })
-             // Value from 0.0 to 1.0
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
             }
           }
+          var progressWindow = await browser.windows.create({
+              type:"popup",
+              url: "progressBar/progressBar.html",
+              height: 100,
+              width: 400,
+          })
+          // Value from 0.0 to 1.0
           fetch(serverUrl + "render", {
             "method": "POST",
             "headers": {
               "Content-Type": "application/json"
             },
             "body": JSON.stringify(query)
-          }).then(async (resp) => {
+            }).then(async (resp) => {
               browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
                 let completionAudio = new Audio(chrome.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
@@ -221,15 +236,15 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         await createPanel().then((window) => renderingsPanel = window);
                       }
                       // How to handle if request_uuid was undefined??
-                    } else {
+                    }
+                  } else {
                       browser.windows.create({
                         type: "panel",
                         url: "errors/no_renderings.html"
                       });
                     // throw new Error("Received no renderings from test URL!");
                     }
-                  }
-              }).catch(err => {
+                  }).catch(err => {
               console.error(err);
             });
         });
