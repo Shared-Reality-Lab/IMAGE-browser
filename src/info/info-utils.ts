@@ -64,7 +64,7 @@ export function updateAnimation(posEE: Vector,
     endEffector: canvasCircle, 
     deviceOrigin: Vector, 
     border: canvasRectangle, 
-    drawingInfo: [worker.Type, number, number], 
+    drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number},
     segments: worker.SubSegment[][],objects:worker.SubSegment[][], 
     ctx: CanvasRenderingContext2D) {
 
@@ -90,9 +90,10 @@ export function updateAnimation(posEE: Vector,
  * @param objects List of objects to draw.
  * @param ctx 
  */
- export function drawBoundaries(drawingInfo: [worker.Type, number, number], segments:worker.SubSegment[][],objects:worker.SubSegment[][], ctx:CanvasRenderingContext2D){
+ export function drawBoundaries(drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number}, segments:worker.SubSegment[][],objects:worker.SubSegment[][], ctx:CanvasRenderingContext2D){
     if (drawingInfo != undefined) {
         const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];//currentHaplyIndex;
+        
         if (drawingInfo['haplyType'] == 0) {
             segments[i][j].coordinates.forEach(coord => {
                 const pX = coord.x;

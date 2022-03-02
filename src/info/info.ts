@@ -202,10 +202,12 @@ port.onMessage.addListener(async (message) => {
             const offset = 150;
             let firstCall = true;
 
-            const data = rendering["data"]["info"] as Array<JSON>;
+            const data = rendering["data"]["info"] as any;
 
             const audioCtx = new window.AudioContext();
+        
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
+                
                 return resp.arrayBuffer();
             }).then(buffer => {
                 return audioCtx.decodeAudioData(buffer);
@@ -291,7 +293,7 @@ port.onMessage.addListener(async (message) => {
             // define segments and objects
             let segments: worker.SubSegment[][];
             let objects: worker.SubSegment[][];
-            let drawingInfo: [worker.Type, number, number];
+            let drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number};
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
