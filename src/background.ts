@@ -23,8 +23,6 @@ let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
 var serverUrl : RequestInfo;
 var renderingsPanel : browser.Windows.Window;
-//browser.Windows.Window; //remove any type
-
 
 function getAllStorageSyncData() {
   return browser.storage.sync.get({
