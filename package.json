@@ -33,6 +33,8 @@
     "@types/uuid": "^8.3.3",
     "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
+    "get-pixels": "^3.3.3",
+    "image-resize-compress": "^1.0.8",
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.2.1",
     "web-ext": "^6.0.0"
@@ -41,8 +43,6 @@
     "@types/chrome": "^0.0.164",
     "@types/w3c-web-serial": "1.0.2",
     "bootstrap": "^5.0.1",
-    "get-pixels": "^3.3.3",
-    "image-resize-compress": "^1.0.8",
     "plyr": "^3.6.8",
     "progressbar.js": "^1.1.0",
     "uuid": "^8.3.2",
