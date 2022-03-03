@@ -56,6 +56,7 @@ async function getRenderers(){
     }
     if(items["haply2diy"]){
       renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
+      renderers.push("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     }
   });
 }

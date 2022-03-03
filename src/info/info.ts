@@ -21,9 +21,12 @@ import "./info.scss";
 import browser from "webextension-polyfill";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
-import { vector } from '../types/vector';
+import { Vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
+import * as worker from './worker';
+import { BreakKey } from './worker';
+import * as utils from "./info-utils";
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -42,7 +45,6 @@ port.onMessage.addListener(async (message) => {
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
-    console.debug(renderings);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -186,81 +188,61 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleHaptics") {
+        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
 
             let endEffector: canvasCircle;
             let border: canvasRectangle;
 
             // end effector x/y coordinates
-            let posEE: vector;
-            // transformed canvas coordinates
-            let xE, yE: number;
-            let deviceOrigin: vector;
+            let posEE: Vector;
+            let deviceOrigin: Vector;
+
             // virtual end effector avatar offset
-            const offset = 100;
-            let objectData: any;
-            var firstCall: boolean = true;
+            let firstCall:boolean = true;
 
-            // get data from the handler
-            const imageSrc = rendering["data"]["graphic"] as string;
-            const data = rendering["data"]["data"] as Array<JSON>;
+            const data = rendering["data"]["info"] as any;
 
-            // add rendering button
+            const audioCtx = new window.AudioContext();
+        
+            const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
+                
+                return resp.arrayBuffer();
+            }).then(buffer => {
+                return audioCtx.decodeAudioData(buffer);
+            }).catch(e => { console.error(e); throw e; });
+
+
             let div = document.createElement("div");
             div.classList.add("row");
             container.append(div);
             let contentDiv = document.createElement("div");
             contentDiv.classList.add("collapse");
             contentDiv.classList.add("rendering-content");
+
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            var options = ["Passive",
-                "Active",
-                "Vibration"];
+            // adding buttons 
+            let btn = utils.createButton(contentDiv, "btn", "Connect to Haply");
+            let btnStart = utils.createButton(contentDiv, "btnStart", "Start");
+            let btnEscape = utils.createButton(contentDiv, "btnEscape", "Stop");
+            let btnNext = utils.createButton(contentDiv, "btnNext", "Next");
+            let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
-            //Create and append select list
-            var selectList = document.createElement("select");
-            selectList.id = "mySelect";
-            contentDiv.appendChild(selectList);
-
-            //Create and append the options
-            for (var i = 0; i < options.length; i++) {
-                var option = document.createElement("option");
-                option.value = options[i];
-                option.text = options[i];
-                selectList.appendChild(option);
-            }
-
-            let btn = document.createElement("button");
-            btn.id = "btn";
-            btn.innerHTML = "Play Haptic Rendering";
-            contentDiv.append(btn);
-
-            // set canvas properties
-            const canvas: HTMLCanvasElement = document.createElement('canvas');
-            canvas.id = "main";
-            canvas.width = 800;
-            canvas.height = 500;
-            canvas.style.zIndex = "8";
-            canvas.style.position = "relative";
-            canvas.style.border = "1px solid";
-            contentDiv.append(document.createElement("br"));
-            contentDiv.append(canvas);
+            // creating canvas
+            const canvas= utils.createCanvas(contentDiv,800,500);
+            
             const res = canvas.getContext('2d');
             if (!res || !(res instanceof CanvasRenderingContext2D)) {
                 throw new Error('Failed to get 2D context');
             }
             const ctx: CanvasRenderingContext2D = res;
-
-            var img = new Image();
-            img.src = imageSrc;
-
-            let worker;
+            
+            const img = new Image();
+            img.src = graphic_url;
 
             // world resolution properties
-            const worldPixelWidth = 1000;
-            const pixelsPerMeter = 4000;
+            const worldPixelWidth = 800;
 
             posEE = {
                 x: 0,
@@ -286,7 +268,7 @@ port.onMessage.addListener(async (message) => {
                 vx: 5,
                 vy: 2,
                 radius: 8,
-                color: 'red',
+                color: 'brown',
                 draw: function () {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
@@ -294,114 +276,190 @@ port.onMessage.addListener(async (message) => {
                     ctx.fillStyle = this.color;
                     ctx.fill();
                 }
-
             };
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                updateAnimation();
+                utils.updateAnimation(posEE, endEffector, deviceOrigin, border, drawingInfo, segments, objects, ctx);
                 window.requestAnimationFrame(draw);
             }
 
-            var rec: Array<any> = [];
-            var centroids: Array<vector> = [];
-            // creating bounding boxes and centroid circles using the coordinates from haptics handler
-            function createRect() {
-                for (var i = 0; i < objectData.length; i++) {
+            // define segments and objects
+            let segments: worker.SubSegment[][];
+            let objects: worker.SubSegment[][];
+            let drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number};
+            // when haply needs to move to a next segment
+            let waitForInput: boolean = false;
+            // when user presses a key to break out of the current haply segment
+            let breakKey: null | BreakKey;
 
-                    // transform coordinates into haply frame of reference
-                    // horizontal/vertical positions
-                    let [uLX, uLY] = imgToWorldFrame(objectData[i].coords[0], objectData[i].coords[1]);
-                    let [lRX, lRY] = imgToWorldFrame(objectData[i].coords[2], objectData[i].coords[3]);
-                    // centroid
-                    let [cX, cY] = imgToWorldFrame(objectData[i].centroid[0], objectData[i].centroid[1]);
+            // Audio Modes
+            const enum AudioMode {
+                Play,
+                Finished,
+                Idle,
+            }
 
-                    let objWidth = Math.abs(uLX - lRX);
-                    let objHeight = Math.abs(uLY - lRY);
+            // Keep track of the mode and entity index so we know which file to play
+            let audioData: { entityIndex: number, mode: null | AudioMode } = {
+                entityIndex: 0,
+                mode: null
+            };
 
-                    rec.push({
-                        x: uLX,
-                        y: uLY,
-                        width: objWidth,
-                        height: objHeight,
-                    });
+            // time to wait before audio segment is considered finished
+            let tAudioBegin: number;
+            // true when playing an audio segment
+            let playingAudio = false;
 
-                    centroids.push({
-                        x: cX,
-                        y: cY
-                    })
+            const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+
+            // Play an audio segment with a given offset and duration.
+            let sourceNode: AudioBufferSourceNode;
+            function playAudioSeg(audioBuffer: any, offset: number, duration: number) {
+                sourceNode = audioCtx.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+                sourceNode.connect(audioCtx.destination);
+                sourceNode.start(0, offset, duration);
+            }
+
+            // Start
+            btnStart.addEventListener("click", _ => {
+                worker.postMessage({
+                    start: true
+                });
+            })
+
+            // Stop
+            btnEscape.addEventListener("click", _ => {
+                sourceNode.stop();
+                breakKey = BreakKey.Escape;
+            })
+
+            // Next
+            btnNext.addEventListener("click", _ => {
+                if (audioData.mode == AudioMode.Play) {
+                    stopAudioNode();
+                    breakKey = BreakKey.NextFromAudio;
                 }
-            }
-
-            function drawBoundaries() {
-
-                for (var i = 0; i < rec.length; i++) {
-                    var s = rec[i];
-                    ctx.strokeStyle = "red";
-                    ctx.strokeRect(s.x, s.y, s.width, s.height);
-
-                    var c = centroids[i];
-                    ctx.beginPath();
-                    ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
-                    ctx.strokeStyle = "white";
-                    ctx.stroke();
+                else {
+                    breakKey = BreakKey.NextHaptic;
                 }
-            }
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
 
-            function updateAnimation() {
+            });
 
-                // drawing bounding boxes and centroids
-                drawBoundaries();
-                border.draw();
-
-                //scaling end effector position to canvas
-                xE = pixelsPerMeter * -posEE.x;
-                yE = pixelsPerMeter * posEE.y;
-
-                // set position of virtual avatar in canvas
-                endEffector.x = deviceOrigin.x + xE - offset;
-                endEffector.y = deviceOrigin.y + yE - offset;
-                endEffector.draw();
-
-            }
-
-            endEffector.draw();
+            // Prev
+            btnPrev.addEventListener("click", _ => {
+                if (audioData.mode == AudioMode.Play) {
+                    stopAudioNode();
+                    breakKey = BreakKey.PreviousFromAudio;
+                }
+                else {
+                    breakKey = BreakKey.PreviousHaptic;
+                }
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
+            });
 
             // event listener for serial comm button
-            btn.addEventListener("click", _ => {
-                const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let port = navigator.serial.requestPort();
+            btn.addEventListener("click", async _ => {
+                // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+                let hapticPort = await navigator.serial.requestPort();
+
+                // send all the rendering info
                 worker.postMessage({
-                    renderingData: data,
-                    mode: selectList.value
+                    renderingData: data
                 });
-                //checking for changes in drop down menu
-                selectList.onchange = function () {
-                    worker.postMessage({
-                        renderingData: data,
-                        mode: selectList.value
-                    });
-                };
+
 
                 worker.addEventListener("message", function (msg) {
-
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
+                   
+
+                    const msgdata = msg.data;
 
                     // return end-effector x/y positions and objectData for updating the canvas
-                    posEE.x = msg.data.positions.x;
-                    posEE.y = msg.data.positions.y;
-                    objectData = msg.data.objectData;
+                    
+                    posEE.x = msgdata.positions.x;
+                    posEE.y = msgdata.positions.y;
+                  
+                    waitForInput = msgdata.waitForInput;
 
-                    // latch to call the refresh of the animation once after which the call is recursive in draw() function
+                    // grab segment data if available
+                    if (msgdata.segmentData != undefined)
+                        segments = msgdata.segmentData;
+
+                    // grab object data if available
+                    if (msgdata.objectData != undefined)
+                        objects = msgdata.objectData;
+
+                    // grab drawing info if available
+                    if (msgdata.drawingInfo != undefined)
+                        drawingInfo = msgdata.drawingInfo;
+
+                    // only request to run draw() once
                     if (firstCall) {
-                        createRect();
-                        window.requestAnimationFrame(draw);
-                        firstCall = false;
+                        if (msgdata.segmentData != undefined ||
+                            msgdata.objectData != undefined) {
+                            window.requestAnimationFrame(draw);
+                            firstCall = false;
+                        }
+                    }
+
+                    // see if the worker wants us to play any audio
+                    if (msgdata.audioInfo != undefined &&msgdata.audioInfo.sendAudioSignal ) {
+                        audioData.entityIndex = msgdata.audioInfo.entityIndex;
+                        audioData.mode = AudioMode.Play;
+                        worker.postMessage({
+                            receivedAudioSignal: true
+                        }) 
+                    }
+
+                    switch (audioData.mode) {
+                        case AudioMode.Play: {
+                            // prevent audio from playing multiple times
+                            if (!playingAudio) {
+                                playingAudio = true;
+                                playAudioSeg(audioBuffer,
+                                    data["entities"][audioData.entityIndex]["offset"],
+                                    data["entities"][audioData.entityIndex]["duration"]);
+                                tAudioBegin = Date.now();
+                            }
+
+                            // wait for the audio segment to finish
+                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
+                                audioData.mode = AudioMode.Finished;
+                            }
+                            break;
+                        }
+                        // we've finished playing the audio segment
+                        case AudioMode.Finished: {
+                            playingAudio = false;
+                            worker.postMessage({
+                                doneWithAudio: true
+                            });
+                            audioData.mode = AudioMode.Idle;
+                        }
+                        case AudioMode.Idle:
+                            break;
                     }
                 });
             });
+         
+            // Stop the current audio segment from progressing.
+            function stopAudioNode() {
+                sourceNode.stop();
+                audioData.mode = AudioMode.Finished;
+            }
         }
 
         document.getElementById("renderings-container")!.appendChild(container)
@@ -414,10 +472,3 @@ port.postMessage({
     "type": "info",
     "request_uuid": request_uuid
 });
-
-// scaling of coordinates to canvas
-function imgToWorldFrame(x1: number, y1: number) {
-    var x = x1 * canvasWidth;
-    var y = y1 * canvasHeight;
-    return [x, y];
-}
