@@ -32,11 +32,11 @@ export function createButton(contentDiv: HTMLElement, id: string, text: string )
  * @param contentDiv container for canvas.
  * @returns Canvas with context.
  */
-export function createCanvas(contentDiv: HTMLElement){
+export function createCanvas(contentDiv: HTMLElement, width:number, height:number){
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "main";
-    canvas.width = 800;
-    canvas.height = 500;
+    canvas.width = width;
+    canvas.height = height;
     canvas.style.zIndex = "8";
     canvas.style.position = "relative";
     canvas.style.border = "1px solid";

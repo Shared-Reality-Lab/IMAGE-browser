@@ -28,7 +28,6 @@ import * as worker from './worker';
 import { BreakKey } from './worker';
 import * as utils from "./info-utils";
 
-// let request_uuid = window.location.search.substring(1);
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
@@ -199,8 +198,7 @@ port.onMessage.addListener(async (message) => {
             let deviceOrigin: Vector;
 
             // virtual end effector avatar offset
-            const offset = 150;
-            let firstCall = true;
+            let firstCall:boolean = true;
 
             const data = rendering["data"]["info"] as any;
 
@@ -232,9 +230,7 @@ port.onMessage.addListener(async (message) => {
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
             // creating canvas
-          
-           
-            const canvas= utils.createCanvas(contentDiv);
+            const canvas= utils.createCanvas(contentDiv,800,500);
             
             const res = canvas.getContext('2d');
             if (!res || !(res instanceof CanvasRenderingContext2D)) {
@@ -247,7 +243,6 @@ port.onMessage.addListener(async (message) => {
 
             // world resolution properties
             const worldPixelWidth = 800;
-            const pixelsPerMeter = 6000;
 
             posEE = {
                 x: 0,
@@ -421,14 +416,12 @@ port.onMessage.addListener(async (message) => {
                     }
 
                     // see if the worker wants us to play any audio
-                    if (msgdata.audioInfo != undefined) {
-                        if (msgdata.audioInfo.sendAudioSignal) {
-                            audioData.entityIndex = msgdata.audioInfo.entityIndex;
-                            audioData.mode = AudioMode.Play;
-                            worker.postMessage({
-                                receivedAudioSignal: true
-                            })
-                        }
+                    if (msgdata.audioInfo != undefined &&msgdata.audioInfo.sendAudioSignal ) {
+                        audioData.entityIndex = msgdata.audioInfo.entityIndex;
+                        audioData.mode = AudioMode.Play;
+                        worker.postMessage({
+                            receivedAudioSignal: true
+                        }) 
                     }
 
                     switch (audioData.mode) {

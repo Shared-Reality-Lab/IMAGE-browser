@@ -29,11 +29,11 @@ let pantograph;
 let haplyBoard;
 
 // store required handler json
-let baseObjectData: any = [];
-let objectData: any = []
-let segmentData: any = [];
-let baseSegmentData: any = [];
-let audioData: any = [];
+let baseObjectData: Array<any> = [];
+let objectData: Array<any> = []
+let segmentData: Array<any> = [];
+let baseSegmentData: Array<any> = [];
+let audioData: Array<any> = [];
 
 // store the angles and positions of the end effector, which are sent back to info.ts
 let angles = new Vector(0, 0);
@@ -54,7 +54,7 @@ let force = new Vector(0, 0);
 let fEE = new Vector(0, 0);
 
 // keeps track of many times a message has been received in the worker
-let messageCount = 0;
+let messageCount:number = 0;
 
 // Index for where objects begin.
 let objHeaderIndex: number = 0;
@@ -232,7 +232,7 @@ self.addEventListener("message", async function (event) {
       const object: Array<SubSegment> = [];
 
       // if ungrouped, just add the object directly
-      if (obj.centroid.length == 1) {
+      if (obj.centroid && obj.centroid.length == 1) {
         for (let i = 0; i < obj.centroid.length; i++) {
           let coordinates = [obj.centroid[i]];
           let bounds = obj.coords[i];
