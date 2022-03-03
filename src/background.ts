@@ -20,7 +20,7 @@ import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 
 let ports: Runtime.Port[] = [];
-const responseMap: Map<string, IMAGEResponse> = new Map();
+const responseMap: Map<string, { response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl : RequestInfo;
 var renderingsPanel : browser.Windows.Window;
 
@@ -219,7 +219,9 @@ async function handleMessage(p: Runtime.Port, message: any) {
               }).then(async (json: IMAGEResponse) => {
                   if (json["renderings"].length > 0) {
                     if(query["request_uuid"] !== undefined){
-                      responseMap.set(query["request_uuid"], json);
+                      responseMap.set(query["request_uuid"],
+                        { "response": json, "request": query }
+                      );
 
                       function createPanel(){
                         return browser.windows.create({

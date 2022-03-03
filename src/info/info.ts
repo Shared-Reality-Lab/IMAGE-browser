@@ -21,6 +21,7 @@ import "./info.scss";
 import browser from "webextension-polyfill";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
+import { IMAGERequest } from "../types/request.schema";
 import { vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
@@ -30,6 +31,7 @@ let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
 
 let renderings: IMAGEResponse;
+let request: IMAGERequest;
 let port = browser.runtime.connect();
 
 // canvas dimensions for haptic rendering
@@ -38,11 +40,13 @@ const canvasHeight = 500;
 
 port.onMessage.addListener(async (message) => {
     if (message) {
-        renderings = message;
+        renderings = message["response"];
+        request = message["request"];
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
     console.debug(renderings);
+    console.debug(request);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
