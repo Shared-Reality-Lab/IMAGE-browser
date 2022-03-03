@@ -35,7 +35,7 @@ function getAllStorageSyncData() {
     noHaptics: true,
     haply2diy: false,
     audio: true,
-    text: false,
+    text: true,
     processItem: "",
     requestItem: "",
     mweItem: ""
