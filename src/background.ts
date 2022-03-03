@@ -18,6 +18,9 @@ import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
+import { fromBlob } from 'image-resize-compress';
+var getPixels = require("get-pixels")
+const util = require('util')
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
@@ -63,12 +66,31 @@ async function getRenderers(){
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
   graphicUrl = message.sourceURL
+  var graphicWidth:number;
+  var graphicHeight:number;
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
-            return resp.blob();
+          return resp.blob();
         } else {
-            throw resp;
+          throw resp;
         }
+    }).then(async(blobFile) => {
+      console.log("I am here")
+      const getPixelsPromise = util.promisify(getPixels);
+      const pixels = await getPixelsPromise(graphicUrl)
+      graphicWidth = pixels.shape.slice()[0];
+      graphicHeight = pixels.shape.slice()[1];
+      console.log("the pixels are", pixels.shape.slice()[1])
+      console.log("Array is ", graphicHeight);
+      if(graphicWidth> 1200 && graphicWidth > graphicHeight){
+        return fromBlob(blobFile, undefined, 1200, 'auto', 'webp');
+      } else if(graphicHeight > 1200){
+        return fromBlob(blobFile, undefined, 'auto', 1200, 'webp');
+      } else {
+        return blobFile
+      }
+      //return fromBlob(blobFile, 120, 'auto', 'webp');
+      //return blobFile
     }).then(blob => {
         return new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
