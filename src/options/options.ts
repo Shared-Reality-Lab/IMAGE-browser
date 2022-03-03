@@ -105,7 +105,7 @@ function restore_options() {
       noHaptics:true,
       haply2diy:false,
       audio:true,
-      text:true
+       text:true
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
