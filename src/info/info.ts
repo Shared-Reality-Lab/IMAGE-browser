@@ -19,6 +19,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import Plyr from "plyr";
 import "./info.scss";
 import browser from "webextension-polyfill";
+import hash from "object-hash";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
 import { IMAGERequest } from "../types/request.schema";
@@ -32,6 +33,7 @@ let graphic_url = urlParams.get("graphicUrl") || "";
 
 let renderings: IMAGEResponse;
 let request: IMAGERequest;
+let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
 // canvas dimensions for haptic rendering
@@ -42,6 +44,7 @@ port.onMessage.addListener(async (message) => {
     if (message) {
         renderings = message["response"];
         request = message["request"];
+        serverUrl = message["server"];
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
@@ -412,6 +415,26 @@ port.onMessage.addListener(async (message) => {
         count++;
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+
+    const footer = document.getElementById("footer");
+    if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
+        // Display button for saving data on server
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "Save Request Data"; // TODO replace with i18n version and explanatory text!
+        saveButton.addEventListener("click", () => {
+            console.log("Clicked! Trying to save request/response data on server " + serverUrl);
+            const objectHash = hash(request);
+            const saveEndPointUrl = new URL("/authenticate/" + request_uuid + "/" + objectHash, serverUrl);
+            console.debug(saveEndPointUrl);
+            fetch(saveEndPointUrl.toString()).then(response => {
+                // TODO make these available to the user
+                console.debug(response);
+            }).catch(err => {
+               console.error(err);
+            });
+        });
+        footer.appendChild(saveButton);
+    }
 });
 
 port.postMessage({
