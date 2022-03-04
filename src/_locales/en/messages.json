@@ -82,5 +82,20 @@
     "saveDataButtonLabel": {
         "message": "Save Request and Response Data",
         "description": "Label of button that triggers preservation of request/response data on the server."
+    },
+    "saveDataSuccess": {
+        "message": "Your data has been saved successfully."
+    },
+    "saveDataInvalid": {
+        "message": "The message sent by the extension was invalid. This should not happen."
+    },
+    "savedataUnauthorized": {
+        "message": "The message sent by the extension was not authenticated for this response. If it has been over an hour, your data had already been deleted."
+    },
+    "saveDataServerError": {
+        "message": "An error occurred while processing this request. This should not happen."
+    },
+    "saveDataNotImplemented": {
+        "message": "Your data could not be saved as the server in use does not support this feature."
     }
 }

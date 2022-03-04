@@ -416,7 +416,7 @@ port.onMessage.addListener(async (message) => {
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
-    const footer = document.getElementById("footer");
+    const footer = document.getElementById("footer") as HTMLElement;
     if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
         // Display button for saving data on server
         const messageText = document.createElement("p");
@@ -430,9 +430,22 @@ port.onMessage.addListener(async (message) => {
             console.debug(saveEndPointUrl);
             fetch(saveEndPointUrl.toString()).then(response => {
                 // TODO make these available to the user
-                console.debug(response);
+                let message: string;
+                if (response.status === 200) {
+                    message = browser.i18n.getMessage("saveDataSuccess");
+                } else if (response.status === 400) {
+                    message = browser.i18n.getMessage("saveDataInvalid");
+                } else if (response.status === 401) {
+                    message = browser.i18n.getMessage("saveDataUnauthorized");
+                } else if (response.status === 500) {
+                    message = browser.i18n.getMessage("saveDataServerError");
+                } else if (response.status === 503) {
+                    message = browser.i18n.getMessage("saveDataNotImplemented");
+                }
+                alert(message);
             }).catch(err => {
                console.error(err);
+               alert(browser.i18n.getMessage("saveDataUnknownError"));
             });
         });
         footer.appendChild(messageText);
