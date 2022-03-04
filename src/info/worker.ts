@@ -188,7 +188,6 @@ self.addEventListener("message", async function (event) {
         audioData.push(audio);
       }
 
-
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
 
@@ -772,7 +771,7 @@ function moveToSeg(vTargetLoc: Vector) {
     }
     moveToPos(upSampled[i]);
     i++;
-  }, 5);
+  }, 8);
 
 }
 
@@ -788,8 +787,9 @@ function moveToPos(vector: Vector) {
   const xDiff = targetPos.subtract(convPosEE.clone());
 
   // P controller
-  //const multiplier = xDiff.mag() > 0.01 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
-  const kx = xDiff.multiply(springConst).multiply(2);
+  // for really small distance we will use a slightly larger spring const
+  const multiplier = xDiff.mag() > 0.005 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
+  const kx = xDiff.multiply(springConst).multiply(multiplier);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
@@ -798,17 +798,26 @@ function moveToPos(vector: Vector) {
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 1.5;
+  const c = 1.2;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 12;
+  const ki = 6;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
   let fy = constrain(kx.y + cdxdt.y + ki * cumError.y, -1 * constrainedMax, constrainedMax);
+
+  //const forceMag = new Vector(fx, fy).mag();
+  //const maxMag = new Vector(constrainedMax, constrainedMax).mag() 
+
+  //console.log(haplyType, currentSegmentIndex, currentSubSegmentIndex);
+
+  //!atHomePos() && forceMag < maxMag)
   force.set(fx, fy);
+
+  console.log(force);
   fEE.set(graphics_to_device(force));
 }
 
