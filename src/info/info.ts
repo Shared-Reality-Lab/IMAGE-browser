@@ -429,7 +429,6 @@ port.onMessage.addListener(async (message) => {
             const saveEndPointUrl = new URL("/authenticate/" + request_uuid + "/" + objectHash, serverUrl);
             console.debug(saveEndPointUrl);
             fetch(saveEndPointUrl.toString()).then(response => {
-                // TODO make these available to the user
                 let message: string;
                 if (response.status === 200) {
                     message = browser.i18n.getMessage("saveDataSuccess");
