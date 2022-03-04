@@ -47,6 +47,8 @@ port.onMessage.addListener(async (message) => {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
 
+    console.log(renderings);
+
     // Update renderings label
     let title = document.getElementById("renderingTitle");
     if (title) {
@@ -202,7 +204,7 @@ port.onMessage.addListener(async (message) => {
             const offset = 150;
             let firstCall = true;
 
-            const data = rendering["data"]["info"] as Array<JSON>;
+            const data = rendering["data"]["info"] as any;
 
             const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
@@ -326,6 +328,18 @@ port.onMessage.addListener(async (message) => {
                 sourceNode.start(0, offset, duration);
             }
 
+            document.addEventListener('keydown', (event) => {
+                const keyName = event.key;
+                // debug, for printing coords
+
+                let xE = pixelsPerMeter * (-posEE.x + 0.014);
+                let yE = pixelsPerMeter * (posEE.y - 0.009);
+                
+                if (keyName == 'e') {
+                    console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
+                }
+            });
+
             // Start
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
@@ -387,36 +401,38 @@ port.onMessage.addListener(async (message) => {
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
 
+                    const msgdata = msg.data;
+
                     // return end-effector x/y positions and objectData for updating the canvas
-                    posEE.x = msg.data.positions.x;
-                    posEE.y = msg.data.positions.y;
-                    waitForInput = msg.data.waitForInput;
+                    posEE.x = msgdata.positions.x;
+                    posEE.y = msgdata.positions.y;
+                    waitForInput = msgdata.waitForInput;
 
                     // grab segment data if available
-                    if (msg.data.segmentData != undefined)
-                        segments = msg.data.segmentData;
+                    if (msgdata.segmentData != undefined)
+                        segments = msgdata.segmentData;
 
                     // grab object data if available
-                    if (msg.data.objectData != undefined)
-                        objects = msg.data.objectData;
+                    if (msgdata.objectData != undefined)
+                        objects = msgdata.objectData;
 
                     // grab drawing info if available
-                    if (msg.data.drawingInfo != undefined)
-                        drawingInfo = msg.data.drawingInfo;
+                    if (msgdata.drawingInfo != undefined)
+                        drawingInfo = msgdata.drawingInfo;
 
                     // only request to run draw() once
                     if (firstCall) {
-                        if (msg.data.segmentData != undefined ||
-                            msg.data.objectData != undefined) {
+                        if (msgdata.segmentData != undefined ||
+                            msgdata.objectData != undefined) {
                             window.requestAnimationFrame(draw);
                             firstCall = false;
                         }
                     }
 
                     // see if the worker wants us to play any audio
-                    if (msg.data.audioInfo != undefined) {
-                        if (msg.data.audioInfo.sendAudioSignal) {
-                            audioData.entityIndex = msg.data.audioInfo.entityIndex;
+                    if (msgdata.audioInfo != undefined) {
+                        if (msgdata.audioInfo.sendAudioSignal) {
+                            audioData.entityIndex = msgdata.audioInfo.entityIndex;
                             audioData.mode = AudioMode.Play;
                             worker.postMessage({
                                 receivedAudioSignal: true
