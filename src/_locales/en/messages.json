@@ -74,5 +74,13 @@
     "preprocessMap": {
         "message": "Get Preprocessed Map Data",
         "description": "Fetch preprocessed JSON data for a map without renderings."
+    },
+    "saveDataMessageText": {
+        "message": "Is something wrong in the interpretations? Do you want someone on the IMAGE team to be able to look at this later? If so, please click the button that follows this message. Otherwise, the data associated with this request will be permanently deleted.",
+        "description": "Text to explain the Save Request Data button"
+    },
+    "saveDataButtonLabel": {
+        "message": "Save Request and Response Data",
+        "description": "Label of button that triggers preservation of request/response data on the server."
     }
 }

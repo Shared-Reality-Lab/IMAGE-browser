@@ -419,8 +419,10 @@ port.onMessage.addListener(async (message) => {
     const footer = document.getElementById("footer");
     if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
         // Display button for saving data on server
+        const messageText = document.createElement("p");
+        messageText.textContent = browser.i18n.getMessage("saveDataMessageText");
         const saveButton = document.createElement("button");
-        saveButton.textContent = "Save Request Data"; // TODO replace with i18n version and explanatory text!
+        saveButton.textContent = browser.i18n.getMessage("saveDataButtonLabel");
         saveButton.addEventListener("click", () => {
             console.log("Clicked! Trying to save request/response data on server " + serverUrl);
             const objectHash = hash(request);
@@ -433,6 +435,7 @@ port.onMessage.addListener(async (message) => {
                console.error(err);
             });
         });
+        footer.appendChild(messageText);
         footer.appendChild(saveButton);
     }
 });
