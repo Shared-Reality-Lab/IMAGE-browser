@@ -322,7 +322,7 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, 3000, 3000, 4); // prev: 15
+            audioHapticContours(segments, 3000, 3000, 5); // prev: 15
           }
           break;
         }
@@ -788,8 +788,9 @@ function moveToPos(vector: Vector) {
 
   // P controller
   // for really small distance we will use a slightly larger spring const
+  console.log(xDiff.mag() > 0.005, (14.377 * xDiff.mag()) + 1.8168);
   const multiplier = xDiff.mag() > 0.005 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
-  const kx = xDiff.multiply(springConst).multiply(multiplier);
+  const kx = xDiff.multiply(springConst).multiply(1.75);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
@@ -798,12 +799,12 @@ function moveToPos(vector: Vector) {
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 1.2;
+  const c = 1.8;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 6;
+  const ki = 15;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
