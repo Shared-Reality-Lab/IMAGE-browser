@@ -19,7 +19,11 @@ import * as worker from './worker';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
 
-export function createButton(contentDiv: HTMLElement, id: string, text: string ){
+const pixelsPerMeter = 6000;
+const canvasWidth = 800;
+const canvasHeight = 500;
+
+export function createButton(contentDiv: HTMLElement, id: string, text: string) {
     let btn = document.createElement("button");
     btn.id = id;
     btn.innerHTML = text;
@@ -32,7 +36,7 @@ export function createButton(contentDiv: HTMLElement, id: string, text: string )
  * @param contentDiv container for canvas.
  * @returns Canvas with context.
  */
-export function createCanvas(contentDiv: HTMLElement){
+export function createCanvas(contentDiv: HTMLElement) {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "main";
     canvas.width = 800;
@@ -46,9 +50,6 @@ export function createCanvas(contentDiv: HTMLElement){
     return canvas;
 }
 
-
-const pixelsPerMeter = 6000;
-
 /**
  * Updates the canvas at each timeframe.
  * @param posEE The 2DIY workspace position.
@@ -60,16 +61,16 @@ const pixelsPerMeter = 6000;
  * @param objects List of objects to draw.
  * @param ctx Canvas context.
  */
-export function updateAnimation(posEE: Vector, 
-    endEffector: canvasCircle, 
-    deviceOrigin: Vector, 
-    border: canvasRectangle, 
-    drawingInfo: [worker.Type, number, number], 
-    segments: worker.SubSegment[][],objects:worker.SubSegment[][], 
+export function updateAnimation(posEE: Vector,
+    endEffector: canvasCircle,
+    deviceOrigin: Vector,
+    border: canvasRectangle,
+    drawingInfo: [worker.Type, number, number],
+    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
     ctx: CanvasRenderingContext2D) {
 
     // drawing bounding boxes and centroids
-    drawBoundaries(drawingInfo, segments,objects, ctx);
+    drawBoundaries(drawingInfo, segments, objects, ctx);
     border.draw();
 
     //scaling end effector position to canvas
@@ -90,10 +91,18 @@ export function updateAnimation(posEE: Vector,
  * @param objects List of objects to draw.
  * @param ctx 
  */
- export function drawBoundaries(drawingInfo: [worker.Type, number, number], segments:worker.SubSegment[][],objects:worker.SubSegment[][], ctx:CanvasRenderingContext2D){
+export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
+    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
+    ctx: CanvasRenderingContext2D) {
     if (drawingInfo != undefined) {
-        const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];//currentHaplyIndex;
+
+        // subsegment and segment index
+        const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];
+        ctx.lineWidth = 4;
+
+        // segments
         if (drawingInfo['haplyType'] == 0) {
+            ctx.strokeStyle = "blue";
             segments[i][j].coordinates.forEach(coord => {
                 const pX = coord.x;
                 const pY = coord.y;
@@ -101,20 +110,24 @@ export function updateAnimation(posEE: Vector,
                 ctx.strokeRect(pointX, pointY, 1, 1);
             })
         }
-        else {
+
+        // objects
+        else if (drawingInfo['haplyType'] == 1) {
+            ctx.strokeStyle = "orange";
             objects[i][j].coordinates.forEach(coord => {
                 const pX = coord.x;
                 const pY = coord.y;
                 let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                ctx.strokeRect(pointX, pointY, 1, 1);
+
+                // bigger size for single point objects
+                const size = objects[i][j].coordinates.length == 1 ? 20 : 1
+                ctx.strokeRect(pointX, pointY, size, size);
             })
         }
     }
 
 }
 
-const canvasWidth = 800;
-const canvasHeight = 500;
 /**
  * Converts 2DIY coordinates to Canvas frame of reference coords.
  * @param x1 x position in the normalized 0 -> 1 coordinate system
