@@ -75,14 +75,16 @@ async function generateQuery(message: { context: string, url: string, dims: [num
           throw resp;
         }
     }).then(async(blobFile) => {
-      const getPixelsPromise = util.promisify(getPixels);
-      const pixels = await getPixelsPromise(graphicUrl)
-      graphicWidth = pixels.shape.slice()[0];
-      graphicHeight = pixels.shape.slice()[1];
+      graphicWidth = message.dims[0];
+      graphicHeight = message.dims[1];
       if(graphicWidth> 1200 && graphicWidth > graphicHeight){
-        return fromBlob(blobFile, undefined, 1200, 'auto', 'webp');
+        message.dims[0] = 1200;
+        message.dims[1] = Math.round(graphicHeight*1200/graphicWidth);
+        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
       } else if(graphicHeight > 1200){
-        return fromBlob(blobFile, undefined, 'auto', 1200, 'webp');
+        message.dims[0] = Math.round(graphicWidth*1200/graphicHeight);
+        message.dims[1] = 1200;
+        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
       } else {
         return blobFile;
       }
@@ -94,7 +96,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
-
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
