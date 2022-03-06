@@ -614,7 +614,18 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
     // we're not done with the current subsegment
     else {
 
-      tSubSegmentPointDuration = currentSubSegmentPointIndex == 0 ? 3000 : tSubSegmentPointDuration;
+      const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
+      const setPoint = new Vector(coord.x, coord.y);
+      const diff = setPoint.subtract(convPosEE.clone());
+
+      //console.log(diff);
+
+      if (currentSubSegmentPointIndex == 0 && diff.mag() > 0.005)
+        tSubSegmentPointDuration = Number.POSITIVE_INFINITY;
+      else
+        tSubSegmentPointDuration = 6;
+
+      //tSubSegmentPointDuration = currentSubSegmentPointIndex == 0 ? 3000 : tSubSegmentPointDuration;
 
       // check if we have to move to the next point in the subsegment
       if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
@@ -629,7 +640,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       } else {
         // move to the point
 
-        const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
+
 
         // if we are moving to a new subsegment, handle differently
         // to avoid setting large forces, we upsample
@@ -746,16 +757,28 @@ function changeSubSegment() {
 let reachedSubSegStart = false;
 let i = 0;
 
+// higher spring constant => more accurate tracing
+// potentially more unstable between segments, so set k variable
+// experiment with # of points that get upsampled
+
 function moveToSeg(vTargetLoc: Vector) {
   // get distance between the two points and upsample
   // to avoid setting a large force at once
   const vEndEffector: Vector = { x: convPosEE.x, y: convPosEE.y };
-  const upSampled = upsample([vEndEffector, vTargetLoc]);
+  const upSampled = upsample([vEndEffector, vTargetLoc], 4000);
+
+  const end = upSampled[upSampled.length - 1];
+  // const setPoint = new Vector(end.x, end.y);
+  // const startPoint = new Vector(vEndEffector.x, vEndEffector.y);
+  // const diff = startPoint.subtract(setPoint);
+
+  // if (diff.mag() < 0.005)
+  //   return;
 
   // crude distance check through number of samples
   // return if too few, means we're there
-  if (upSampled.length <= 5)
-    return;
+  //if (upSampled.length <= 5)
+  //  return;
 
   reachedSubSegStart = true;
   let intervalId = setInterval(() => {
@@ -769,18 +792,22 @@ function moveToSeg(vTargetLoc: Vector) {
       fEE.set(graphics_to_device(force));
       return;
     }
-    moveToPos(upSampled[i]);
+    moveToPos(upSampled[i], 4);
     i++;
-  }, 8);
+  }, 6);
 
 }
 
+let kp = 0;
 
 /**
  * Moves the end-effector to the specified vector position.
  * @param vector Vector containing {x,y} position of the Haply coordinates.
  */
-function moveToPos(vector: Vector) {
+function moveToPos(vector: Vector, springConstMultiplier = 4) {
+
+  if (vector == undefined)
+    return;
 
   // find the distance between our current position and target
   const targetPos = new Vector(vector.x, vector.y);
@@ -788,37 +815,44 @@ function moveToPos(vector: Vector) {
 
   // P controller
   // for really small distance we will use a slightly larger spring const
-  console.log(xDiff.mag() > 0.005, (14.377 * xDiff.mag()) + 1.8168);
-  const multiplier = xDiff.mag() > 0.005 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
-  const kx = xDiff.multiply(springConst).multiply(1.75);
+  //console.log(xDiff.mag() > 0.005, (14.377 * xDiff.mag()) + 1.8168);
+  //const multiplier = xDiff.mag() > 0.005 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
+  const kx = xDiff.multiply(springConst).multiply(springConstMultiplier);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
-  let constrainedMax = currentSegmentIndex == 0 && currentSubSegmentIndex == 0 ? 6 : 3
+  let constrainedMax = atHomePos() ? 6 : 3
 
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 1.8;
+  const c = 0;//1.8;
   const cdxdt = (dx.divide(dt)).multiply(c);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 15;
+  const ki = 0;//0.5;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
   let fy = constrain(kx.y + cdxdt.y + ki * cumError.y, -1 * constrainedMax, constrainedMax);
 
-  //const forceMag = new Vector(fx, fy).mag();
-  //const maxMag = new Vector(constrainedMax, constrainedMax).mag() 
+  const forceMag = new Vector(fx, fy).mag();
+  const maxMag = new Vector(constrainedMax, constrainedMax).mag();
 
-  //console.log(haplyType, currentSegmentIndex, currentSubSegmentIndex);
+  //const p = (haplyType == Type.SEGMENT && currentSegmentIndex == 0 && currentSubSegmentIndex == 0 && currentSubSegmentPointIndex == 0);
+  //console.log("p", p);
 
-  //!atHomePos() && forceMag < maxMag)
-  force.set(fx, fy);
+  // don't set the force if it's too low
+  //if (atHomePos() || (!atHomePos && forceMag < maxMag))
+  //  force.set(fx, fy);
 
-  console.log(force);
+  if (!atHomePos() && forceMag >= maxMag)
+    force.set(0, 0);
+  else
+    force.set(fx, fy);
+
+  console.log(currentSubSegmentPointIndex, force);
   fEE.set(graphics_to_device(force));
 }
 
@@ -838,7 +872,7 @@ function constrain(val: number, min: number, max: number) {
  * @param pointArray Array containing the {x, y} positions in the 2DIY frame of reference.
  * @returns Upsampled array of {x, y} points.
  */
-function upsample(pointArray: Vector[]) {
+function upsample(pointArray: Vector[], k = 2000) {
   let upsampledSeg = [];
 
   // for each point (except the last one)...
@@ -854,7 +888,6 @@ function upsample(pointArray: Vector[]) {
     const y1 = currentPoint.y;
     const x2 = nextPoint.x;
     const y2 = nextPoint.y;
-    const k = 2000;
 
     // find vars for equation
     const m = (y2 - y1) / (x2 - x1);
