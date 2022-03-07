@@ -824,7 +824,7 @@ function changeSubSegment() {
  * @param vector Vector containing {x,y} position of the Haply coordinates.
  */
 function moveToPos(vector: Vector,
-  springConstMultiplier = 3.4,
+  springConstMultiplier = 3,
   ki = 0.5,
   kd = 1.2) {
 
