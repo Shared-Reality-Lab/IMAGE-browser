@@ -19,8 +19,6 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import { fromBlob } from 'image-resize-compress';
-var getPixels = require("get-pixels")
-const util = require('util')
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, IMAGEResponse> = new Map();
