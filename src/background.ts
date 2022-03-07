@@ -35,7 +35,7 @@ function getAllStorageSyncData() {
     noHaptics: true,
     haply2diy: false,
     audio: true,
-    text: false,
+    text: true,
     processItem: "",
     requestItem: "",
     mweItem: ""
@@ -56,6 +56,7 @@ async function getRenderers(){
     }
     if(items["haply2diy"]){
       renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
+      renderers.push("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     }
   });
 }
