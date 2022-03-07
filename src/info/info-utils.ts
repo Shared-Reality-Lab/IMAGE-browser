@@ -77,6 +77,12 @@ export function updateAnimation(posEE: Vector,
     let xE = pixelsPerMeter * (-posEE.x + 0.014);
     let yE = pixelsPerMeter * (posEE.y - 0.009);
 
+    // Y1 = posEE.y - 0.009;
+    // posEE.y = x * a + b;
+
+    // Y2 = posEE.y - 0.0311;
+    // posEE.y = 
+
 
     // set position of virtual avatar in canvas
     endEffector.x = deviceOrigin.x + xE - 100;
@@ -109,8 +115,8 @@ export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: 
                     const pY = coord.y;
                     let [pointX, pointY] = imgToWorldFrame(pX, pY);
                     ctx.strokeRect(pointX, pointY, 1, 1);
-                }
-            })
+                })
+            }      
         }
 
         // objects
