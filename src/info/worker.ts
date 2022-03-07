@@ -194,13 +194,6 @@ self.addEventListener("message", async function (event) {
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
 
-      const p: Vector = { x: -0.06384317647058824, y: 0.0368 };
-      const q: Vector = { x: segments[3][0].coordinates[0].x, y: segments[3][0].coordinates[0].y }
-
-      console.log("b", baseSegmentData);
-      console.log("o", segmentData);
-      console.log(upsample([p, q]));
-
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
         objectData: createObjs(baseObjectData),
@@ -255,7 +248,7 @@ self.addEventListener("message", async function (event) {
         // make hull from the obj centroids and then upsample
         const objCoords: Vector[] = obj.centroid;
         const hull: Vector[] = convexhull.makeHull(objCoords);
-        const coordinates: Vector[] = upsample(hull);
+        const coordinates: Vector[] = upsample(hull, 5000);
         object[0] = { coordinates };
       }
       data.push(object);
@@ -633,10 +626,15 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
       // don't set the time-based guidance until we have reached the first position
       // set dist threshold
-      if (currentSubSegmentPointIndex == 0 && diff.mag() > 0.005)
+      if (currentSubSegmentPointIndex == 0 && diff.mag() >= threshold) {
         tSubSegmentPointDuration = Number.POSITIVE_INFINITY;
-      else
-        tSubSegmentPointDuration = 5;
+      }
+      else {
+        // set back original point duration and reset variables
+        tSubSegmentPointDuration = tSubSegmentPointDuration;
+        idx = 0;
+        transition = Transition.GetPoints;
+      }
 
       // check if we have to move to the next point in the subsegment
       if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
@@ -658,10 +656,52 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         // except in the case of setting the force from home pos
         // which needs a larger force to compensate
         if (currentSubSegmentPointIndex == 0 && !atHomePos()) {
-          if (!reachedSubSegStart) {
-            moveToSegPos(coord);
+
+          // case where we need to transition from segment to segment
+          switch (transition) {
+            case Transition.GetPoints: {
+              // interpolate point data
+              const vEndEffector: Vector = { x: convPosEE.x, y: convPosEE.y };
+              upSampled = upsample([vEndEffector, coord], 6500);
+              console.log(upSampled);
+              tHoldTimeSegToSeg = Date.now();
+              transition = Transition.Move;
+              break;
+            }
+            case Transition.Move: {
+              // if we are done then end
+              if (idx >= upSampled.length - 1) {
+                transition = Transition.Rest;
+                idx = 0;
+                break;
+              }
+              else {
+                // force reduction as we approach the threshold
+                let k = 3;
+                let coeff = 1;
+                if (diff.mag() < 0.025) {
+                  let unit = diff.unit();
+                  const multiplier = 1 / (diff.mag() + 0.9);
+                  const coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier * multiplier));
+                  console.log(coeff);
+                }
+                // move to new point with the WaitTime refresh rate
+                if (Date.now() - tHoldTimeSegToSeg > tWaitTime) {
+                  moveToPos(upSampled[idx], k * coeff);
+                  idx++;
+                  tHoldTimeSegToSeg = Date.now();
+                }
+              }
+              break;
+            }
+            case Transition.Rest: {
+              force.set(0, 0);
+              fEE.set(graphics_to_device(force));
+              break;
+            }
           }
         }
+        // case where we need to transition from point to point in a segment
         else {
           moveToPos(coord);
         }
@@ -670,8 +710,26 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   }
 }
 
+enum Transition {
+  GetPoints,
+  Move,
+  Rest
+}
+
+// for transition between segments
+let transition: Transition = Transition.GetPoints;
+let idx: number = 0;
+let upSampled: Vector[] = [];
+const tWaitTime = 8;
+let tHoldTimeSegToSeg: number;
+
+// distance threshold for stopping segment to segment guidance
+const threshold = 0.008;
+
 function atHomePos() {
-  if (haplyType == Type.SEGMENT && currentSegmentIndex == 0 && currentSubSegmentIndex == 0)
+  if (haplyType == Type.SEGMENT &&
+    currentSegmentIndex == 0 &&
+    currentSubSegmentIndex == 0)
     return true;
   return false;
 }
@@ -765,48 +823,10 @@ function changeSubSegment() {
  * Moves the end-effector to the specified vector position.
  * @param vector Vector containing {x,y} position of the Haply coordinates.
  */
-let reachedSubSegStart = false;
-let i = 0;
-
-// higher spring constant => more accurate tracing
-// potentially more unstable between segments, so set k variable
-// experiment with # of points that get upsampled
-
-function moveToSegPos(vTargetLoc: Vector) {
-
-  // get distance between the two points and upsample
-  const vEndEffector: Vector = { x: convPosEE.x, y: convPosEE.y };
-  const upSampled = upsample([vEndEffector, vTargetLoc], 4000);
-
-  const end = upSampled[upSampled.length - 1];
-  console.log(upSampled);
-
-  reachedSubSegStart = true;
-  const refreshRate = 6;
-  let intervalId = setInterval(() => {
-
-    // when we are done just reset the variables, reset the force and end
-    if (i == upSampled.length - 1) {
-      reachedSubSegStart = false;
-      i = 0;
-      clearInterval(intervalId);
-      force.set(0, 0);
-      fEE.set(graphics_to_device(force));
-      return;
-    }
-    // spring const and refresh rate in ms
-    moveToPos(upSampled[i], 4);
-    i++;
-  }, refreshRate);
-
-}
-
-
-/**
- * Moves the end-effector to the specified vector position.
- * @param vector Vector containing {x,y} position of the Haply coordinates.
- */
-function moveToPos(vector: Vector, springConstMultiplier = 4) {
+function moveToPos(vector: Vector,
+  springConstMultiplier = 3.4,
+  ki = 0.5,
+  kd = 1.2) {
 
   if (vector == undefined)
     return;
@@ -816,22 +836,20 @@ function moveToPos(vector: Vector, springConstMultiplier = 4) {
   const xDiff = targetPos.subtract(convPosEE.clone());
   const xHomeDiff = convPosEE.clone().subtract(xHome);
 
-  const forceCompensation = getForceCompensation(xHomeDiff);
+  const forceCompensation = 1;//getForceCompensation(xHomeDiff);
   const kx = xDiff.multiply(springConst).multiply(springConstMultiplier).multiply(forceCompensation);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
-  let constrainedMax = atHomePos() ? 6 : 2.5
+  const constrainedMax = atHomePos() ? 6 : 3
 
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 1.8;
-  const cdxdt = (dx.divide(dt)).multiply(c);
+  const cdxdt = (dx.divide(dt)).multiply(kd);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 10;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
@@ -846,14 +864,14 @@ function moveToPos(vector: Vector, springConstMultiplier = 4) {
   else
     force.set(fx, fy);
 
-  //console.log(currentSubSegmentPointIndex, force);
+  //console.log(force);
   fEE.set(graphics_to_device(force));
 }
 
 function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
   const v = new Vector(xHomeDiff.x, xHomeDiff.y);
 
-  if (v.mag() > 0.03)
+  if (v.mag() > 0.1)
     return 1;
 
   // ignore case where we are starting from the origin
@@ -863,9 +881,8 @@ function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
   // return normalized vector
   let p = transformWorkspaceToPt(v);
 
-  const multiplier = 1 / (v.mag() + 0.05);
-  const coeff = 1 - (p.x * p.y) * multiplier;//Math.min(1, 1 - (p.x * p.y) * multiplier);
-  console.log(coeff);
+  const multiplier = 1 / (v.mag() + 0.5);
+  const coeff = Math.max(1, 1 - (p.x * p.y) * multiplier);
   return coeff;
 }
 
@@ -956,7 +973,9 @@ function upsample(pointArray: Vector[], k = 2000) {
  */
 export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
-  const y = (coords[1] * 0.0833) + 0.0368;
+  //const y = (coords[1] * 0.0833) + 0.0368;
+  //const y = 0.0875x + 0.0394
+  const y = (coords[1] * 0.0547) + 0.0589;
   return new Vector(x, y);
 }
 
