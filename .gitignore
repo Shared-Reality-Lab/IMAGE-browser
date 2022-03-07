@@ -134,5 +134,4 @@ temp/
 build/
 build-firefox/
 build-chrome/
-schemas/
 .DS_Store
