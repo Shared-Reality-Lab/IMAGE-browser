@@ -497,6 +497,9 @@ port.onMessage.addListener(async (message) => {
                     message = browser.i18n.getMessage("saveDataServerError");
                 } else if (response.status === 503) {
                     message = browser.i18n.getMessage("saveDataNotImplemented");
+                } else {
+                    message = "An unexpected response was received! Status " + response.status;
+                    console.warn(response);
                 }
                 alert(message);
             }).catch(err => {
