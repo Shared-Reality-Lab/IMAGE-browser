@@ -132,5 +132,6 @@ temp/
 
 *.swp
 build/
-
+build-firefox/
+build-chrome/
 .DS_Store
