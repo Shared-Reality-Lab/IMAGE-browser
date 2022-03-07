@@ -103,26 +103,30 @@ export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: 
         // segments
         if (drawingInfo['haplyType'] == 0) {
             ctx.strokeStyle = "blue";
-            segments[i][j].coordinates.forEach(coord => {
-                const pX = coord.x;
-                const pY = coord.y;
-                let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                ctx.strokeRect(pointX, pointY, 1, 1);
+            if (segments[i][j] != undefined) {
+                segments[i][j].coordinates.forEach(coord => {
+                    const pX = coord.x;
+                    const pY = coord.y;
+                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
+                    ctx.strokeRect(pointX, pointY, 1, 1);
+                }
             })
         }
 
         // objects
         else if (drawingInfo['haplyType'] == 1) {
             ctx.strokeStyle = "orange";
-            objects[i][j].coordinates.forEach(coord => {
-                const pX = coord.x;
-                const pY = coord.y;
-                let [pointX, pointY] = imgToWorldFrame(pX, pY);
+            if (objects[i][j] != undefined) {
+                objects[i][j].coordinates.forEach(coord => {
+                    const pX = coord.x;
+                    const pY = coord.y;
+                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
 
-                // bigger size for single point objects
-                const size = objects[i][j].coordinates.length == 1 ? 20 : 1
-                ctx.strokeRect(pointX, pointY, size, size);
-            })
+                    // bigger size for single point objects
+                    const size = objects[i][j].coordinates.length == 1 ? 20 : 1
+                    ctx.strokeRect(pointX, pointY, size, size);
+                })
+            }
         }
     }
 
