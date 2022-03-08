@@ -18,6 +18,7 @@ import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
+import { fromBlob } from 'image-resize-compress';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo , response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -64,12 +65,28 @@ async function getRenderers(){
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   getRenderers();
   graphicUrl = message.sourceURL
+  var graphicWidth:number;
+  var graphicHeight:number;
     return fetch(message.sourceURL).then(resp => {
         if (resp.ok) {
-            return resp.blob();
+          return resp.blob();
         } else {
-            throw resp;
+          throw resp;
         }
+    }).then(async(blobFile) => {
+      graphicWidth = message.dims[0];
+      graphicHeight = message.dims[1];
+      if(graphicWidth> 1200 && graphicWidth > graphicHeight){
+        message.dims[0] = 1200;
+        message.dims[1] = Math.round(graphicHeight*1200/graphicWidth);
+        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
+      } else if(graphicHeight > 1200){
+        message.dims[0] = Math.round(graphicWidth*1200/graphicHeight);
+        message.dims[1] = 1200;
+        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
+      } else {
+        return blobFile;
+      }
     }).then(blob => {
         return new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -78,7 +95,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
-
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
