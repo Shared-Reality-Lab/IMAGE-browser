@@ -351,6 +351,11 @@ port.onMessage.addListener(async (message) => {
             btnEscape.addEventListener("click", _ => {
                 sourceNode.stop();
                 breakKey = BreakKey.Escape;
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
             })
 
             // Next
@@ -389,7 +394,11 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let hapticPort = await navigator.serial.requestPort();
+                const filters = [
+                    { usbVendorId: 0x2341, usbProductId: 0x804D }
+                  ];
+
+                let hapticPort = await navigator.serial.requestPort({filters});
 
                 // send all the rendering info
                 worker.postMessage({
