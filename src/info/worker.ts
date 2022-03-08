@@ -738,18 +738,18 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
               }
               else {
                 // force reduction as we approach the threshold
-                let k = 4;
-                let coeff = 1;
-                if (diff.mag() < 0.025) {
-                  let unit = diff.unit();
-                  const multiplier = 1 / (diff.mag() + 0.9);
-                  coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
-                  console.log(coeff);
-                }
+                let k = 3;
+                // let coeff = 1;
+                // if (diff.mag() < 0.025) {
+                //   let unit = diff.unit();
+                //   const multiplier = 1 / (diff.mag() + 0.9);
+                //   coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
+                //   console.log(coeff);
+                //}
                 // move to new point with the WaitTime refresh rate
                 if (performance.now() - tHoldTimeSegToSeg > tWaitTime) {
                   //console.log(interpolation[seg][subseg][idx]);
-                  moveToPos(interpolation[seg][subseg][idx], k * coeff);
+                  moveToPos(interpolation[seg][subseg][idx], k);
                   //console.log(interpolation[seg][subseg][idx]);
                   idx++;
                   tHoldTimeSegToSeg = performance.now();
@@ -919,7 +919,7 @@ function moveToPos(vector: Vector,
   //const xHomeDiff = convPosEE.clone().subtract(xHome);
 
   const forceCompensation = 1;//getForceCompensation(xHomeDiff);
-  const kx = xDiff.multiply(springConst).multiply(springConstMultiplier).multiply(forceCompensation);
+  const kx = xDiff.multiply(200);//.multiply(springConstMultiplier).multiply(forceCompensation);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
@@ -960,7 +960,7 @@ function moveToPos(vector: Vector,
         fy = 1.4 * prevAvgY;
       }
 
-      fx = (6 / 7 * prevAvgX) + (1 / 7 * fx);
+      fx = ((6 / 7 * prevAvgX) + (1 / 7 * fx));
       fy = (6 / 7 * prevAvgY) + (1 / 7 * fy);
 
       if (!isFinite(fx))
