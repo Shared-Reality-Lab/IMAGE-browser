@@ -19,8 +19,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import Plyr from "plyr";
 import "./info.scss";
 import browser from "webextension-polyfill";
+import hash from "object-hash";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
+import { IMAGERequest } from "../types/request.schema";
 import { Vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
@@ -34,6 +36,8 @@ let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
 
 let renderings: IMAGEResponse;
+let request: IMAGERequest;
+let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
 // canvas dimensions for haptic rendering
@@ -42,7 +46,9 @@ const canvasHeight = 500;
 
 port.onMessage.addListener(async (message) => {
     if (message) {
-        renderings = message;
+        renderings = message["response"];
+        request = message["request"];
+        serverUrl = message["server"];
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
@@ -86,6 +92,9 @@ port.onMessage.addListener(async (message) => {
             const p = document.createElement("p");
             p.textContent = text;
             contentDiv.append(p);
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
             let div = document.createElement("div");
@@ -105,6 +114,9 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
             let div = document.createElement("div");
@@ -152,7 +164,9 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
             // Set up audio controls
             const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
@@ -224,24 +238,25 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            // adding buttons 
+            // adding buttons
             let btn = utils.createButton(contentDiv, "btn", "Connect to Haply");
             let btnStart = utils.createButton(contentDiv, "btnStart", "Start");
             let btnEscape = utils.createButton(contentDiv, "btnEscape", "Stop");
             let btnNext = utils.createButton(contentDiv, "btnNext", "Next");
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
-            // creating canvas
-          
-           
+            // creating canvas   
             const canvas= utils.createCanvas(contentDiv);
-            
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
+
             const res = canvas.getContext('2d');
             if (!res || !(res instanceof CanvasRenderingContext2D)) {
                 throw new Error('Failed to get 2D context');
             }
             const ctx: CanvasRenderingContext2D = res;
-            
+
             const img = new Image();
             img.src = graphic_url;
 
@@ -467,7 +482,7 @@ port.onMessage.addListener(async (message) => {
                     }
                 });
             });
-         
+
             // Stop the current audio segment from progressing.
             function stopAudioNode() {
                 sourceNode.stop();
@@ -479,6 +494,18 @@ port.onMessage.addListener(async (message) => {
         count++;
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+
+    const footer = document.getElementById("footer") as HTMLElement;
+    if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
+        const feedbackAnchor = document.createElement("a");
+        feedbackAnchor.textContent = browser.i18n.getMessage("feedbackLinkText");
+        feedbackAnchor.href = "./feedback.html?uuid=" +
+            encodeURIComponent(request_uuid) + "&hash=" +
+            encodeURIComponent(hash(request)) + "&serverURL=" +
+            encodeURIComponent(serverUrl);
+        feedbackAnchor.target = "_blank";
+        footer.appendChild(feedbackAnchor);
+    }
 });
 
 port.postMessage({

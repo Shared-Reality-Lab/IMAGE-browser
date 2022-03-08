@@ -21,7 +21,7 @@ import { IMAGERequest } from "./types/request.schema";
 import { fromBlob } from 'image-resize-compress';
 
 let ports: Runtime.Port[] = [];
-const responseMap: Map<string, IMAGEResponse> = new Map();
+const responseMap: Map<string, { server: RequestInfo , response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl : RequestInfo;
 var renderingsPanel : browser.Windows.Window;
 
@@ -195,7 +195,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
-        let audio = new Audio(chrome.runtime.getURL("progressBar/image_request_sent.mp3"));
+        let audio = new Audio(browser.runtime.getURL("progressBar/image_request_sent.mp3"));
         audio.play();
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
@@ -222,7 +222,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
             }).then(async (resp) => {
               browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
-                let completionAudio = new Audio(chrome.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
+                let completionAudio = new Audio(browser.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
                 completionAudio.play();
                 return resp.json();
               } else {
@@ -238,7 +238,9 @@ async function handleMessage(p: Runtime.Port, message: any) {
               }).then(async (json: IMAGEResponse) => {
                   if (json["renderings"].length > 0) {
                     if(query["request_uuid"] !== undefined){
-                      responseMap.set(query["request_uuid"], json);
+                      responseMap.set(query["request_uuid"],
+                        { "response": json, "request": query, "server": serverUrl }
+                      );
 
                       function createPanel(){
                         return browser.windows.create({

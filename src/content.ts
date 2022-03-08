@@ -21,7 +21,7 @@ var selectedElement: HTMLElement | null = null;
 let port = browser.runtime.connect();
 
 var script = document.createElement('script');
-script.src = chrome.extension.getURL('charts/highcharts.js');
+script.src = browser.runtime.getURL('charts/highcharts.js');
 (document.head||document.documentElement).appendChild(script);
 script.onload = function() {
     script.remove();

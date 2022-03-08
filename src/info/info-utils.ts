@@ -18,6 +18,23 @@ import { Vector } from "../types/vector";
 import * as worker from './worker';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
+import browser from "webextension-polyfill";
+
+/**
+ * Adds explanation Link to the rendering
+ * @param contentDiv container for rendering.
+ * @param link added to explain the rendering.
+ */
+export function addRenderingExplanation(contentDiv : HTMLElement, explanationLink : string ){
+    const explainDivContainer = document.createElement("p");
+    const textContainer = document.createElement("a");
+    let link = document.createTextNode(browser.i18n.getMessage("explainRendering"));                
+    textContainer.href = explanationLink; 
+    textContainer.target = "_blank";
+    textContainer.appendChild(link); 
+    explainDivContainer.append(textContainer)
+    contentDiv.append(explainDivContainer)
+}
 
 const pixelsPerMeter = 6000;
 const canvasWidth = 800;
