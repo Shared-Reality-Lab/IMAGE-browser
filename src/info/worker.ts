@@ -736,7 +736,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
               }
               else {
                 // force reduction as we approach the threshold
-                let k = 3;
+                let k = 4;
                 let coeff = 1;
                 if (diff.mag() < 0.025) {
                   let unit = diff.unit();
@@ -798,7 +798,7 @@ function getPrevIndex(i: number, j: number): [number, number] {
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
 const tWaitTime = 8;
-const interpolateRate = 2300;
+const interpolateRate = 600;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
@@ -954,18 +954,18 @@ function moveToPos(vector: Vector,
       //const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
       //const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
 
-      if (Math.abs(fx) > 1.5 && xDelta > 1) {
+     // if (Math.abs(fx) > 1.5 && xDelta > 1) {
         //console.log("correcting x", fx, fEEPrev.x);
         fx = (1 / 5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
-      }
-      if (Math.abs(fy) > 1.5 && yDelta > 1) {
+      //}
+     // if (Math.abs(fy) > 1.5 && yDelta > 1) {
         //console.log("correcting y", fy, fEEPrev.y);
         fy = (1 / 5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
-      }
+      //}
 
       if (!isFinite(fx))
         fx = 0;
-      if (!isFinite(fx))
+      if (!isFinite(fy))
         fy = 0;
 
       fx = constrain(fx, -constrainedMax, constrainedMax);
