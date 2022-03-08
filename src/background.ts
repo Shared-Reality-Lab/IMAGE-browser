@@ -55,7 +55,7 @@ async function getRenderers(){
     if(items["text"]){
       renderers.push("ca.mcgill.a11y.image.renderer.Text");
     }
-    if(items["haply2diy"]){
+    if(items["haply2diy"]||true){
       renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
       renderers.push("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     }
@@ -198,7 +198,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
         audio.play();
         await getAllStorageSyncData().then(async items => {
           if(items["mcgillServer"]===true){
-            serverUrl = "https://image.a11y.mcgill.ca/";
+            // serverUrl = "https://image.a11y.mcgill.ca/";
+            serverUrl = "https://unicorn.cim.mcgill.ca/image/"
           }else{
             if(items["inputUrl"]!== "" && items["customServer"]===true){
             serverUrl = items["inputUrl"];
@@ -269,7 +270,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
       else if (message["toRender"] === "preprocess") {
           await getAllStorageSyncData().then(async items => {
             if(items["mcgillServer"]===true){
-              serverUrl = "https://image.a11y.mcgill.ca/";
+              // serverUrl = "https://image.a11y.mcgill.ca/";
+              serverUrl ="https://unicorn.cim.mcgill.ca/image/"
             }else{
               if(items["inputUrl"]!== "" && items["customServer"]===true){
               serverUrl = items["inputUrl"];

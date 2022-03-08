@@ -53,14 +53,30 @@ let force = new Vector(0, 0);
 // the force applied to the end effector
 let fEE = new Vector(0, 0);
 
+// the previous force applied to the end effector
+let fEEPrev = new Vector(0, 0);
+let fEEPrev2 = new Vector(0, 0);
+let fEEPrev3 = new Vector(0, 0);
+let fEEPrev4 = new Vector(0, 0);
+let fEEPrev5 = new Vector(0, 0);
+
+let prev1 = new Vector(0, 0);
+let prev2 = new Vector(0, 0);
+let prev3 = new Vector(0, 0);
+let prev4 = new Vector(0, 0);
+let prev5 = new Vector(0, 0);
+
 // keeps track of many times a message has been received in the worker
-let messageCount:number = 0;
+let messageCount: number = 0;
 
 // Index for where objects begin.
 let objHeaderIndex: number = 0;
 
 // Bool to let us know when to start guidance.
 let guidance: boolean = false;
+
+// Home position of end-effector
+let xHome = new Vector(-0.00001291268703669304, 0.022095726821870526);
 
 /**
  * Defines a subsegment.
@@ -245,82 +261,12 @@ self.addEventListener("message", async function (event) {
         // make hull from the obj centroids and then upsample
         const objCoords: Vector[] = obj.centroid;
         const hull: Vector[] = convexhull.makeHull(objCoords);
-        const coordinates: Vector[] = upsample(hull);
+        const coordinates: Vector[] = upsample(hull, 5000);
         object[0] = { coordinates };
       }
       data.push(object);
     }
     return data;
-  }
-
-  /**
-   * Linearly upsamples an array of points.
-   * @param pointArray Array containing the {x, y} positions in the 2DIY frame of reference.
-   * @returns Upsampled array of {x, y} points.
-   */
-  function upsample(pointArray: Vector[]) {
-    let upsampledSeg = [];
-
-    // for each point (except the last one)...
-    for (let n = 0; n < pointArray.length - 1; n++) {
-
-      let upsampleSubSeg: Array<Vector> = [];
-
-      // get the location of both points
-      const currentPoint = new Vector(pointArray[n].x, pointArray[n].y);
-      const nextPoint = new Vector(pointArray[n + 1].x, pointArray[n + 1].y);
-
-      const x1 = currentPoint.x;
-      const y1 = currentPoint.y;
-      const x2 = nextPoint.x;
-      const y2 = nextPoint.y;
-      const k = 2000;
-
-      // find vars for equation
-      const m = (y2 - y1) / (x2 - x1);
-      const c = m == Number.POSITIVE_INFINITY ? 0 : y2 - (m * x2);
-
-      // let the # of sample points be a function of the distance
-      const euclidean1 = currentPoint.dist(nextPoint);
-      const samplePoints = Math.round(k * euclidean1);
-
-      // get distance between the two points
-      const sampleDistX = Math.abs(x2 - x1);
-      const sampleDistY = Math.abs(y2 - y1);
-
-      for (let v = 0; v < samplePoints; v++) {
-        // find the location of each interpolated point
-        const distX = (sampleDistX / (samplePoints - 1)) * v;
-        const distY = (sampleDistY / (samplePoints - 1)) * v;
-
-        let xLocation = 0;
-        let yLocation = 0;
-
-        // case where the x values are the same
-        if (x1 == x2) {
-          xLocation = x1 + distX;
-          yLocation = y2 > y1 ? y1 + distY : y1 - distY;
-        }
-
-        // case where y values are the same
-        else if (y1 == y2) {
-          xLocation = x2 > x1 ? x1 + distX : x1 - distX;
-          yLocation = y1 + distY;
-        }
-
-        // standard case
-        else {
-          xLocation = x2 > x1 ? x1 + distX : x1 - distX;
-          yLocation = m * xLocation + c;
-        }
-
-        // add new interpolated point to vector array for these two points
-        const p = new Vector(xLocation, yLocation);
-        upsampleSubSeg.push(p);
-      }
-      upsampledSeg.push(...upsampleSubSeg);
-    }
-    return [...upsampledSeg];
   }
 
   /**
@@ -345,7 +291,7 @@ self.addEventListener("message", async function (event) {
   function transformToVector(coords: [number, number]): Vector {
     const x = (coords[0]);
     const y = (coords[1]);
-    return new Vector (x, y);
+    return new Vector(x, y);
   }
 
   /************ BEGIN SETUP CODE *****************/
@@ -376,14 +322,13 @@ self.addEventListener("message", async function (event) {
   while (true) {
 
     // find position and angle data
-    widgetOne.device_read_data();    
+    widgetOne.device_read_data();
     angles = widgetOne.get_device_angles();
-    
+
     positions = transformToVector(widgetOne.get_device_position(angles));
 
     posEE.set(device_to_graphics(positions));
     convPosEE = posEE.clone();
-
 
     if (guidance) {
       posEE.set(device_to_graphics(posEE));
@@ -392,7 +337,7 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, 3000, 3000, 6); // prev: 15
+            audioHapticContours(segments, 3000, 3000, 4); // prev: 15
           }
           break;
         }
@@ -406,6 +351,9 @@ self.addEventListener("message", async function (event) {
           break;
       }
     }
+
+    const xHomeDiff = convPosEE.clone().subtract(xHome);
+    const f = getForceCompensation(xHomeDiff);
 
     prevPosEE.set(convPosEE.clone());
 
@@ -421,7 +369,7 @@ self.addEventListener("message", async function (event) {
      */
     const data = {
       positions:
-        { x: positions.x, y: positions.y},
+        { x: positions.x, y: positions.y },
       waitForInput: waitForInput,
       audioInfo: {
         entityIndex: entityIndex,
@@ -430,7 +378,7 @@ self.addEventListener("message", async function (event) {
       drawingInfo: {
         haplyType: haplyType,
         segIndex: currentSegmentIndex,
-        subSegIndex: currentSubSegmentIndex
+        subSegIndex: currentSubSegmentIndex,
       }
     }
 
@@ -508,7 +456,8 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
       // depending on the type, the starting audio index may vary
       // objHeaderIndex contains the index of the first object returned in the entities list
       entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
-      mode = Mode.StartAudio;
+      mode = Mode.StartHaply;
+      break;
     }
 
     case Mode.StartAudio: {
@@ -683,6 +632,24 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
 
     // we're not done with the current subsegment
     else {
+
+      // get the distance from where we currently are
+      const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
+      const setPoint = new Vector(coord.x, coord.y);
+      const diff = setPoint.subtract(convPosEE.clone());
+
+      // don't set the time-based guidance until we have reached the first position
+      // set dist threshold
+      if (currentSubSegmentPointIndex == 0 && diff.mag() >= threshold) {
+        tSubSegmentPointDuration = Number.POSITIVE_INFINITY;
+      }
+      else {
+        // set back original point duration and reset variables
+        tSubSegmentPointDuration = tSubSegmentPointDuration;
+        idx = 0;
+        transition = Transition.GetPoints;
+      }
+
       // check if we have to move to the next point in the subsegment
       if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
         currentSubSegmentPointIndex++;
@@ -692,16 +659,96 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
           finishSubSegment();
         }
         tLastChangePoint = Date.now();
+
       } else {
 
-        // move to end effector to the point
-        const coord = currentSubSegment.coordinates[currentSubSegmentPointIndex];
-        moveToPos(coord);
+        // move to the point
+        // to avoid setting a large force at once
+        // when moving from the end of one segment to the beginning of another
+        // we linear interpolate the # of points
+        // to avoid setting large forces
+        // except in the case of setting the force from home pos
+        // which needs a larger force to compensate
+        if (currentSubSegmentPointIndex == 0 && !atHomePos()) {
+
+          // case where we need to transition from segment to segment
+          switch (transition) {
+            case Transition.GetPoints: {
+              // interpolate point data
+              const vEndEffector: Vector = new Vector (convPosEE.x,convPosEE.y);
+              upSampled = upsample([vEndEffector, coord], 9000);
+              //console.log(upSampled);
+              tHoldTimeSegToSeg = Date.now();
+              transition = Transition.Move;
+              console.log("Starting Transition");
+              break;
+            }
+            case Transition.Move: {
+              // if we are done then end
+              if (idx >= upSampled.length - 1) {
+                console.log("Ending Transition");
+                transition = Transition.Rest;
+                idx = 0;
+                break;
+              }
+              else {
+                // force reduction as we approach the threshold
+                let k = 3;
+                let coeff = 1;
+                if (diff.mag() < 0.025) {
+                  let unit = diff.unit();
+                  const multiplier = 1 / (diff.mag() + 0.9);
+                  const coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
+                  //console.log(coeff);
+                }
+                // move to new point with the WaitTime refresh rate
+                if (Date.now() - tHoldTimeSegToSeg > tWaitTime) {
+                  moveToPos(upSampled[idx], k * coeff);
+                  idx++;
+                  tHoldTimeSegToSeg = Date.now();
+                }
+              }
+              break;
+            }
+            case Transition.Rest: {
+              force.set(0, 0);
+              fEE.set(graphics_to_device(force));
+              break;
+            }
+          }
+        }
+        // case where we need to transition from point to point in a segment
+        else {
+          moveToPos(coord);
+        }
       }
     }
   }
 }
 
+enum Transition {
+  GetPoints,
+  Move,
+  Rest
+}
+
+// for transition between segments
+let transition: Transition = Transition.GetPoints;
+let idx: number = 0;
+let upSampled: Vector[] = [];
+const tWaitTime = 4;
+let tHoldTimeSegToSeg: number;
+
+// distance threshold for stopping segment to segment guidance
+const threshold = 0.008;
+
+function atHomePos() {
+  if (haplyType == Type.SEGMENT &&
+    currentSegmentIndex == 0 &&
+    currentSubSegmentIndex == 0)
+    return true;
+  return false;
+}
 /**
  * Called when we are done tracing all entities or want to cancel.
  */
@@ -711,7 +758,6 @@ function finishTracing() {
   curSegmentDone = false;
   mode = Mode.Reset;
 }
-
 /**
  * Switch between guidance modes.
  */
@@ -728,7 +774,6 @@ function switchMode() {
     }
   }
 }
-
 /**
  * Called when moving to the previous subsegment.
  */
@@ -751,7 +796,6 @@ function startNewSegment() {
   curSegmentDone = false;
   waitForInput = false;
 }
-
 /**
  * Called when starting a new subsegment.
  */
@@ -761,7 +805,6 @@ function startNewSubSegment() {
   // reset the point to point time buffer
   tLastChangePoint = Date.now();
 }
-
 /**
  * Called as soon as we are done tracing a full segment.
  */
@@ -774,7 +817,6 @@ function finishSegment() {
   waitForInput = true;
   fEE.set(0, 0);
 }
-
 /**
  * Called when we are done tracing a subsegment.
  */
@@ -782,7 +824,6 @@ function finishSubSegment() {
   currentSubSegmentIndex++;
   changeSubSegment();
 }
-
 /**
  * Called by either prevSubSegment() or nextSubSegment().
  * Change the subsegment index before calling this.
@@ -794,39 +835,116 @@ function changeSubSegment() {
   fEE.set(0, 0);
 }
 
+const forceThreshold = 0.5;
+
 /**
  * Moves the end-effector to the specified vector position.
  * @param vector Vector containing {x,y} position of the Haply coordinates.
  */
-function moveToPos(vector: Vector) {
+function moveToPos(vector: Vector,
+  springConstMultiplier = 3,
+  ki = 0.5,
+  kd = 1.2) {
+
+  if (vector == undefined)
+    return;
 
   // find the distance between our current position and target
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
+  const xHomeDiff = convPosEE.clone().subtract(xHome);
 
-  // P controller
-  const multiplier = xDiff.mag() > 0.01 ? ((14.377 * xDiff.mag()) + 1.8168) : 2
-  const kx = xDiff.multiply(springConst).multiply(multiplier);
+  const forceCompensation = 1;//getForceCompensation(xHomeDiff);
+  const kx = xDiff.multiply(springConst).multiply(springConstMultiplier).multiply(forceCompensation);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
-  let constrainedMax = currentSegmentIndex == 0 && currentSubSegmentIndex == 0 ? 6 : 4
+  const constrainedMax = atHomePos() ? 6 : 3
 
   // D controller
   const dx = (convPosEE.clone()).subtract(prevPosEE);
   const dt = 1 / 1000;
-  const c = 1.8;
-  const cdxdt = (dx.divide(dt)).multiply(c);
+  const cdxdt = (dx.divide(dt)).multiply(kd);
 
   // I controller
   const cumError = dx.add(dx.multiply(dt));
-  const ki = 12;
 
   // set forces
   let fx = constrain(kx.x + cdxdt.x + ki * cumError.x, -1 * constrainedMax, constrainedMax);
   let fy = constrain(kx.y + cdxdt.y + ki * cumError.y, -1 * constrainedMax, constrainedMax);
-  force.set(fx, fy);
+
+  const forceMag = new Vector(fx, fy).mag();
+  const maxMag = new Vector(constrainedMax, constrainedMax).mag();
+
+  // if outside of the initial movement from the home position the force is too high, ignore it
+  if (!atHomePos() && forceMag >= maxMag) {
+    force.set(0, 0);
+  }
+  else {
+    if (!atHomePos()) {
+      // console.log("fx", fx, fEEPrev.x);
+      //console.log(Math.abs(fx) - Math.abs(fEEPrev.x));
+      const xDelta = Math.abs(Math.abs(fx) - Math.abs(fEEPrev.x));
+      const yDelta = Math.abs(Math.abs(fy) - Math.abs(fEEPrev.y));
+      const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
+      const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
+
+      if (Math.abs(fx) > 1.5 && xDelta > 0.5) {
+        console.log("correcting x", fx, fEEPrev.x);
+        fx = (1/5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
+      }
+      if (Math.abs(fy) > 1.5 && yDelta > 0.5) {
+        console.log("correcting y", fy, fEEPrev.y);
+        fy = (1/5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
+      }
+    }
+    force.set(fx, fy);
+  }
+
+  console.log(idx, force, fEEPrev, fEEPrev2, fEEPrev3);
   fEE.set(graphics_to_device(force));
+
+  prev5 = prev4.clone();
+  prev4 = prev3.clone();
+  prev3 = prev2.clone();
+  prev2 = prev1.clone();
+  prev1 = fEE.clone();
+
+  fEEPrev5 = new Vector(-prev5.x, prev5.y);
+  fEEPrev4 = new Vector(-prev4.x, prev4.y);
+  fEEPrev3 = new Vector(-prev3.x, prev3.y);
+  fEEPrev2 = new Vector(-prev2.x, prev2.y);
+  fEEPrev = new Vector(-prev1.x, prev1.y);
+}
+
+// let xAvg = 0;
+// let yAvg = 0;
+// let movAvg = [];
+
+// function movingAverage() {
+//   movAvg
+// }
+
+let xN = 0;
+let yN = 0;
+
+// TODO: force delta fix
+function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
+  const v = new Vector(xHomeDiff.x, xHomeDiff.y);
+
+  if (v.mag() > 0.1)
+    return 1;
+
+  // ignore case where we are starting from the origin
+  if (atHomePos())
+    return 1;
+
+  // return normalized vector
+  let p = transformWorkspaceToPt(v);
+
+  const multiplier = 1 / (v.mag() + 0.5);
+  const coeff = Math.max(1, 1 - (p.x * p.y) * multiplier);
+  return coeff;
 }
 
 /**
@@ -841,12 +959,93 @@ function constrain(val: number, min: number, max: number) {
 }
 
 /**
- * 
+ * Linearly upsamples an array of points.
+ * @param pointArray Array containing the {x, y} positions in the 2DIY frame of reference.
+ * @param k Constant that determines the sampling resolution.
+ * @returns Upsampled array of {x, y} points.
+ */
+function upsample(pointArray: Vector[], k = 2000) {
+  let upsampledSeg = [];
+
+  // for each point (except the last one)...
+  for (let n = 0; n < pointArray.length - 1; n++) {
+
+    let upsampleSubSeg: Array<Vector> = [];
+
+    // get the location of both points
+    const currentPoint = new Vector(pointArray[n].x, pointArray[n].y);
+    const nextPoint = new Vector(pointArray[n + 1].x, pointArray[n + 1].y);
+
+    const x1 = currentPoint.x;
+    const y1 = currentPoint.y;
+    const x2 = nextPoint.x;
+    const y2 = nextPoint.y;
+
+    // find vars for equation
+    const m = (y2 - y1) / (x2 - x1);
+    const c = m == Number.POSITIVE_INFINITY ? 0 : y2 - (m * x2);
+
+    // let the # of sample points be a function of the distance
+    const euclidean1 = currentPoint.dist(nextPoint);
+    const samplePoints = Math.round(k * euclidean1);
+
+    // get distance between the two points
+    const sampleDistX = Math.abs(x2 - x1);
+    const sampleDistY = Math.abs(y2 - y1);
+
+    for (let v = 0; v < samplePoints; v++) {
+      // find the location of each interpolated point
+      const distX = (sampleDistX / (samplePoints - 1)) * v;
+      const distY = (sampleDistY / (samplePoints - 1)) * v;
+
+      let xLocation = 0;
+      let yLocation = 0;
+
+      // case where the x values are the same
+      if (x1 == x2) {
+        xLocation = x1;// + distX;
+        yLocation = y2;// > y1 ? y1 + distY : y1 - distY;
+      }
+
+      // case where y values are the same
+      else if (y1 == y2) {
+        xLocation = x2;// > x1 ? x1 + distX : x1 - distX;
+        yLocation = y1;// + distY;
+      }
+
+      // standard case
+      else {
+        xLocation = x2 > x1 ? x1 + distX : x1 - distX;
+        yLocation = m * xLocation + c;
+      }
+
+      // add new interpolated point to vector array for these two points
+      const p = new Vector(xLocation, yLocation);
+      upsampleSubSeg.push(p);
+    }
+    upsampledSeg.push(...upsampleSubSeg);
+  }
+  return [...upsampledSeg];
+}
+
+/**
  * @param coords 2D array containing normalized x/y positions
  * @returns Vector of {x,y} corresponding to position on Haply 2DIY workspace.
  */
 export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
-  const y = (coords[1] * 0.0833) + 0.0368;
-  return  new Vector(x, y);
+  //const y = (coords[1] * 0.0833) + 0.0368;
+  //const y = 0.0875x + 0.0394
+  const y = (coords[1] * 0.0547) + 0.0589;
+  return new Vector(x, y);
+}
+
+/**
+ * @param coords 2D array containing normalized x/y positions
+ * @returns Vector of {x,y} corresponding to position on Haply 2DIY workspace.
+ */
+export function transformWorkspaceToPt(v: Vector): Vector {
+  const x = (v.x + 0.05) / 0.1333;
+  const y = (v.y - 0.0278) / 0.0833;
+  return new Vector(x, y);
 }

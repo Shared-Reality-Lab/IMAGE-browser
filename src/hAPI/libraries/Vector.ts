@@ -45,12 +45,12 @@ class Vector {
   //   );
   // }
 
-  // length() {
-  //   return Math.sqrt(this.dot(this));
-  // }
-  // unit() {
-  //   return this.divide(this.length());
-  // }
+  length() {
+    return Math.sqrt(this.dot(this));
+  }
+  unit() {
+    return this.divide(this.length());
+  }
   min() {
     return Math.min(this.x, this.y);
   }
