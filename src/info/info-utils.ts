@@ -82,7 +82,7 @@ export function updateAnimation(posEE: Vector,
     endEffector: canvasCircle,
     deviceOrigin: Vector,
     border: canvasRectangle,
-    drawingInfo: [worker.Type, number, number],
+    drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
     segments: worker.SubSegment[][], objects: worker.SubSegment[][],
     ctx: CanvasRenderingContext2D) {
 
