@@ -39,7 +39,6 @@ let audioData: Array<any> = [];
 let angles = new Vector(0, 0);
 let positions = new Vector(0, 0);
 
-
 // end-effector x/y coords
 let posEE = new Vector(0, 0);
 let prevPosEE = new Vector(0.5, 0);
@@ -951,6 +950,5 @@ function upsample(pointArray: Vector[], k = 2000) {
 export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
   const y = (coords[1] * 0.0547) + 0.0589;
-  //const y = (coords[1] * 0.0833) + 0.0368;
   return new Vector(x, y);
 }
