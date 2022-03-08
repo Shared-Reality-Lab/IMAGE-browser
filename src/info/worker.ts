@@ -456,7 +456,7 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
       // depending on the type, the starting audio index may vary
       // objHeaderIndex contains the index of the first object returned in the entities list
       entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
-      mode = Mode.StartHaply;
+      //mode = Mode.StartHaply;
       break;
     }
 
