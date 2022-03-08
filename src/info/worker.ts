@@ -229,7 +229,7 @@ self.addEventListener("message", async function (event) {
         let p1 = 0;
         let p2 = 0;
 
-          console.log(i, j);
+        console.log(i, j);
 
         // is this the last subsegment?
         if (j == segments[i].length - 1) {
@@ -248,7 +248,7 @@ self.addEventListener("message", async function (event) {
           p1 = subSeg.coordinates[subSeg.coordinates.length - 1];
           p2 = nextSubSeg.coordinates[0];
         }
-        const interpolatedSeg = upsample([p1, p2], 2500);
+        const interpolatedSeg = upsample([p1, p2], interpolateRate);
         upSampledSubSegArray.push(interpolatedSeg);
       }
       upSampledSegArray.push(upSampledSubSegArray);
@@ -548,15 +548,15 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
 
     // grace 1.5s buffer before we actually begin
     case Mode.StartHaply: {
-      tHoldTime = Date.now();
+      tHoldTime = performance.now();
       mode = Mode.WaitHaply;
       break;
     }
 
     case Mode.WaitHaply: {
-      if (Date.now() - tHoldTime > 1000) {
+      if (performance.now() - tHoldTime > 1000) {
         mode = Mode.MoveHaply;
-        tLastChangePoint = Date.now();
+        tLastChangePoint = performance.now();
       }
       break;
     }
@@ -648,7 +648,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
     if (curSegmentDone) {
 
       // check if the buffer time is over, then play audio
-      if (Date.now() - tLastChangeSegment > tSegmentDuration) {
+      if (performance.now() - tLastChangeSegment > tSegmentDuration) {
         mode = Mode.StartAudio;
         startNewSegment();
       }
@@ -665,7 +665,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
         }
         // we'll only start a new subsegment once the buffer time is over
         else {
-          if (Date.now() - tLastChangeSubSegment > tSubSegmentDuration) {
+          if (performance.now() - tLastChangeSubSegment > tSubSegmentDuration) {
             startNewSubSegment();
           }
         }
@@ -697,14 +697,14 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
       }
 
       // check if we have to move to the next point in the subsegment
-      if (Date.now() - tLastChangePoint > tSubSegmentPointDuration) {
+      if (performance.now() - tLastChangePoint > tSubSegmentPointDuration) {
         currentSubSegmentPointIndex++;
 
         // if we are done tracing each point in this subsegment, end it
         if (currentSubSegmentPointIndex >= currentSubSegment.coordinates.length) {
           finishSubSegment();
         }
-        tLastChangePoint = Date.now();
+        tLastChangePoint = performance.now();
 
       } else {
 
@@ -721,10 +721,9 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
           switch (transition) {
             case Transition.GetPoints: {
               console.log("start transition");
-              tHoldTimeSegToSeg = Date.now();
+              tHoldTimeSegToSeg = performance.now();
               transition = Transition.Move;
               [seg, subseg] = getPrevIndex(currentSegmentIndex, currentSubSegmentIndex);
-              console.log(seg, subseg);
               break;
             }
             case Transition.Move: {
@@ -746,12 +745,12 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
                   //console.log(coeff);
                 }
                 // move to new point with the WaitTime refresh rate
-                if (Date.now() - tHoldTimeSegToSeg > tWaitTime) {
+                if (performance.now() - tHoldTimeSegToSeg > tWaitTime) {
                   //console.log(interpolation[seg][subseg][idx]);
                   moveToPos(interpolation[seg][subseg][idx], k * coeff);
-                  console.log(interpolation[seg][subseg][idx]);
+                  //console.log(interpolation[seg][subseg][idx]);
                   idx++;
-                  tHoldTimeSegToSeg = Date.now();
+                  tHoldTimeSegToSeg = performance.now();
                 }
               }
               break;
@@ -799,6 +798,7 @@ function getPrevIndex(i: number, j: number): [number, number] {
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
 const tWaitTime = 8;
+const interpolateRate = 2300;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
@@ -865,7 +865,7 @@ function startNewSubSegment() {
   curSubSegmentDone = false;
   waitForInput = false;
   // reset the point to point time buffer
-  tLastChangePoint = Date.now();
+  tLastChangePoint = performance.now();
 }
 /**
  * Called as soon as we are done tracing a full segment.
@@ -893,7 +893,7 @@ function finishSubSegment() {
 function changeSubSegment() {
   currentSubSegmentPointIndex = 0;
   curSubSegmentDone = true;
-  tLastChangeSubSegment = Date.now();
+  tLastChangeSubSegment = performance.now();
   fEE.set(0, 0);
 }
 
@@ -908,7 +908,7 @@ function moveToPos(vector: Vector,
   ki = 0,
   kd = 1.5) {
 
-  if (vector == undefined)
+  if (vector === undefined)
     return;
 
   // find the distance between our current position and target
@@ -962,23 +962,38 @@ function moveToPos(vector: Vector,
         //console.log("correcting y", fy, fEEPrev.y);
         fy = (1 / 5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
       }
+
+      if (!isFinite(fx))
+        fx = 0;
+      if (!isFinite(fx))
+        fy = 0;
+
+      fx = constrain(fx, -constrainedMax, constrainedMax);
+      fy = constrain(fy, -constrainedMax, constrainedMax);
     }
     force.set(fx, fy);
   }
 
+  prev5 = prev4.clone();
+  prev4 = prev3.clone();
+  prev3 = prev2.clone();
+  prev2 = prev1.clone();
+  prev1 = force.clone();
+
+  fEEPrev5 = new Vector(prev5.x, prev5.y);
+  fEEPrev4 = new Vector(prev4.x, prev4.y);
+  fEEPrev3 = new Vector(prev3.x, prev3.y);
+  fEEPrev2 = new Vector(prev2.x, prev2.y);
+  fEEPrev = new Vector(prev1.x, prev1.y);
+
+  console.log(idx, performance.now(), interpolation[seg][subseg][idx].x, interpolation[seg][subseg][idx].y, kx.mag(), force.x, force.y)
   fEE.set(graphics_to_device(force));
 
-  fEEPrev5 = prev4.clone();
-  fEEPrev4 = prev3.clone();
-  fEEPrev3 = prev2.clone();
-  fEEPrev2 = prev1.clone();
-  fEEPrev = fEE.clone();
-
-  // fEEPrev5 = new Vector(prev5.x, prev5.y);
-  // fEEPrev4 = new Vector(prev4.x, prev4.y);
-  // fEEPrev3 = new Vector(prev3.x, prev3.y);
-  // fEEPrev2 = new Vector(prev2.x, prev2.y);
-  // fEEPrev = new Vector(prev1.x, prev1.y);
+  // fEEPrev5 = new Vector(-prev5.x, prev5.y);
+  // fEEPrev4 = new Vector(-prev4.x, prev4.y);
+  // fEEPrev3 = new Vector(-prev3.x, prev3.y);
+  // fEEPrev2 = new Vector(-prev2.x, prev2.y);
+  // fEEPrev = new Vector(-prev1.x, prev1.y);
 }
 
 // TODO: force delta fix
