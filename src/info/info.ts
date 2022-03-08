@@ -475,40 +475,14 @@ port.onMessage.addListener(async (message) => {
 
     const footer = document.getElementById("footer") as HTMLElement;
     if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
-        // Display button for saving data on server
-        const messageText = document.createElement("p");
-        messageText.textContent = browser.i18n.getMessage("saveDataMessageText");
-        const saveButton = document.createElement("button");
-        saveButton.textContent = browser.i18n.getMessage("saveDataButtonLabel");
-        saveButton.addEventListener("click", () => {
-            console.log("Clicked! Trying to save request/response data on server " + serverUrl);
-            const objectHash = hash(request);
-            const saveEndPointUrl = new URL("/authenticate/" + request_uuid + "/" + objectHash, serverUrl);
-            console.debug(saveEndPointUrl);
-            fetch(saveEndPointUrl.toString()).then(response => {
-                let message: string;
-                if (response.status === 200) {
-                    message = browser.i18n.getMessage("saveDataSuccess");
-                } else if (response.status === 400) {
-                    message = browser.i18n.getMessage("saveDataInvalid");
-                } else if (response.status === 401) {
-                    message = browser.i18n.getMessage("saveDataUnauthorized");
-                } else if (response.status === 500) {
-                    message = browser.i18n.getMessage("saveDataServerError");
-                } else if (response.status === 503) {
-                    message = browser.i18n.getMessage("saveDataNotImplemented");
-                } else {
-                    message = "An unexpected response was received! Status " + response.status;
-                    console.warn(response);
-                }
-                alert(message);
-            }).catch(err => {
-               console.error(err);
-               alert(browser.i18n.getMessage("saveDataUnknownError"));
-            });
-        });
-        footer.appendChild(messageText);
-        footer.appendChild(saveButton);
+        const feedbackAnchor = document.createElement("a");
+        feedbackAnchor.textContent = browser.i18n.getMessage("feedbackLinkText");
+        feedbackAnchor.href = "./feedback.html?uuid=" +
+            encodeURIComponent(request_uuid) + "&hash=" +
+            encodeURIComponent(hash(request)) + "&serverURL=" +
+            encodeURIComponent(serverUrl);
+        feedbackAnchor.target = "_blank";
+        footer.appendChild(feedbackAnchor);
     }
 });
 

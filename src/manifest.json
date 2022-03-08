@@ -27,7 +27,7 @@
           "id": "image@image.extension.ca",
           "strict_min_version": "42.0"
         }
-      },      
+      },
 
     "permissions": [
         "contextMenus",
@@ -46,6 +46,8 @@
         "info/worker.ts",
         "info/info.html",
         "info/info.ts",
+        "info/feedback.html",
+        "info/feedback.ts",
         "charts/highcharts.js",
         "errors/no_renderings.html",
         "errors/http_error.html",
