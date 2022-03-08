@@ -53,19 +53,6 @@ let force = new Vector(0, 0);
 // the force applied to the end effector
 let fEE = new Vector(0, 0);
 
-// the previous force applied to the end effector
-let fEEPrev = new Vector(0, 0);
-let fEEPrev2 = new Vector(0, 0);
-let fEEPrev3 = new Vector(0, 0);
-let fEEPrev4 = new Vector(0, 0);
-let fEEPrev5 = new Vector(0, 0);
-
-let prev1 = new Vector(0, 0);
-let prev2 = new Vector(0, 0);
-let prev3 = new Vector(0, 0);
-let prev4 = new Vector(0, 0);
-let prev5 = new Vector(0, 0);
-
 // keeps track of many times a message has been received in the worker
 let messageCount: number = 0;
 
@@ -337,7 +324,7 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, 3000, 3000, 4); // prev: 15
+            audioHapticContours(segments, 3000, 3000, 5); // prev: 15
           }
           break;
         }
@@ -378,7 +365,7 @@ self.addEventListener("message", async function (event) {
       drawingInfo: {
         haplyType: haplyType,
         segIndex: currentSegmentIndex,
-        subSegIndex: currentSubSegmentIndex,
+        subSegIndex: currentSubSegmentIndex
       }
     }
 
@@ -456,8 +443,7 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
       // depending on the type, the starting audio index may vary
       // objHeaderIndex contains the index of the first object returned in the entities list
       entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
-      mode = Mode.StartHaply;
-      break;
+      mode = Mode.StartAudio;
     }
 
     case Mode.StartAudio: {
@@ -675,18 +661,16 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
           switch (transition) {
             case Transition.GetPoints: {
               // interpolate point data
-              const vEndEffector: Vector = new Vector (convPosEE.x,convPosEE.y);
-              upSampled = upsample([vEndEffector, coord], 9000);
-              //console.log(upSampled);
+              const vEndEffector: Vector = { x: convPosEE.x, y: convPosEE.y };
+              upSampled = upsample([vEndEffector, coord], 6500);
+              console.log(upSampled);
               tHoldTimeSegToSeg = Date.now();
               transition = Transition.Move;
-              console.log("Starting Transition");
               break;
             }
             case Transition.Move: {
               // if we are done then end
               if (idx >= upSampled.length - 1) {
-                console.log("Ending Transition");
                 transition = Transition.Rest;
                 idx = 0;
                 break;
@@ -698,8 +682,8 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
                 if (diff.mag() < 0.025) {
                   let unit = diff.unit();
                   const multiplier = 1 / (diff.mag() + 0.9);
-                  const coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
-                  //console.log(coeff);
+                  const coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier * multiplier));
+                  console.log(coeff);
                 }
                 // move to new point with the WaitTime refresh rate
                 if (Date.now() - tHoldTimeSegToSeg > tWaitTime) {
@@ -736,7 +720,7 @@ enum Transition {
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
 let upSampled: Vector[] = [];
-const tWaitTime = 4;
+const tWaitTime = 8;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
@@ -835,8 +819,6 @@ function changeSubSegment() {
   fEE.set(0, 0);
 }
 
-const forceThreshold = 0.5;
-
 /**
  * Moves the end-effector to the specified vector position.
  * @param vector Vector containing {x,y} position of the Haply coordinates.
@@ -877,58 +859,15 @@ function moveToPos(vector: Vector,
   const maxMag = new Vector(constrainedMax, constrainedMax).mag();
 
   // if outside of the initial movement from the home position the force is too high, ignore it
-  if (!atHomePos() && forceMag >= maxMag) {
+  if (!atHomePos() && forceMag >= maxMag)
     force.set(0, 0);
-  }
-  else {
-    if (!atHomePos()) {
-      // console.log("fx", fx, fEEPrev.x);
-      //console.log(Math.abs(fx) - Math.abs(fEEPrev.x));
-      const xDelta = Math.abs(Math.abs(fx) - Math.abs(fEEPrev.x));
-      const yDelta = Math.abs(Math.abs(fy) - Math.abs(fEEPrev.y));
-      const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
-      const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
-
-      if (Math.abs(fx) > 1.5 && xDelta > 0.5) {
-        console.log("correcting x", fx, fEEPrev.x);
-        fx = (1/5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
-      }
-      if (Math.abs(fy) > 1.5 && yDelta > 0.5) {
-        console.log("correcting y", fy, fEEPrev.y);
-        fy = (1/5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
-      }
-    }
+  else
     force.set(fx, fy);
-  }
 
-  console.log(idx, force, fEEPrev, fEEPrev2, fEEPrev3);
+  //console.log(force);
   fEE.set(graphics_to_device(force));
-
-  prev5 = prev4.clone();
-  prev4 = prev3.clone();
-  prev3 = prev2.clone();
-  prev2 = prev1.clone();
-  prev1 = fEE.clone();
-
-  fEEPrev5 = new Vector(-prev5.x, prev5.y);
-  fEEPrev4 = new Vector(-prev4.x, prev4.y);
-  fEEPrev3 = new Vector(-prev3.x, prev3.y);
-  fEEPrev2 = new Vector(-prev2.x, prev2.y);
-  fEEPrev = new Vector(-prev1.x, prev1.y);
 }
 
-// let xAvg = 0;
-// let yAvg = 0;
-// let movAvg = [];
-
-// function movingAverage() {
-//   movAvg
-// }
-
-let xN = 0;
-let yN = 0;
-
-// TODO: force delta fix
 function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
   const v = new Vector(xHomeDiff.x, xHomeDiff.y);
 
