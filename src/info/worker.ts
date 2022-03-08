@@ -59,12 +59,14 @@ let fEEPrev2 = new Vector(0, 0);
 let fEEPrev3 = new Vector(0, 0);
 let fEEPrev4 = new Vector(0, 0);
 let fEEPrev5 = new Vector(0, 0);
+let fEEPrev6 = new Vector(0, 0);
 
 let prev1 = new Vector(0, 0);
 let prev2 = new Vector(0, 0);
 let prev3 = new Vector(0, 0);
 let prev4 = new Vector(0, 0);
 let prev5 = new Vector(0, 0);
+let prev6 = new Vector(0, 0);
 
 // keeps track of many times a message has been received in the worker
 let messageCount: number = 0;
@@ -797,8 +799,8 @@ function getPrevIndex(i: number, j: number): [number, number] {
 // for transition between segments
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
-const tWaitTime = 8;
-const interpolateRate = 600;
+const tWaitTime = 9;
+const interpolateRate = 3000;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
@@ -947,21 +949,19 @@ function moveToPos(vector: Vector,
   // }
   else {
     if (!atHomePos()) {
-      // console.log("fx", fx, fEEPrev.x);
-      //console.log(Math.abs(fx) - Math.abs(fEEPrev.x));
-      const xDelta = Math.abs(Math.abs(fx) - Math.abs(fEEPrev.x));
-      const yDelta = Math.abs(Math.abs(fy) - Math.abs(fEEPrev.y));
-      //const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
-      //const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
 
-     // if (Math.abs(fx) > 1.5 && xDelta > 1) {
-        //console.log("correcting x", fx, fEEPrev.x);
-        fx = (1 / 5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
-      //}
-     // if (Math.abs(fy) > 1.5 && yDelta > 1) {
-        //console.log("correcting y", fy, fEEPrev.y);
-        fy = (1 / 5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
-      //}
+      const prevAvgX = (1 / 6) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x + fEEPrev6.x)
+      const prevAvgY = (1 / 6) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y + fEEPrev6.y)
+      
+      if (fx >= 2) {
+        fx = fx * 0.5;
+      }
+      if (fy >= 2) {
+        fy = fy * 0.5;
+      }
+
+      fx = prevAvgX + fx;
+      fy = prevAvgY + fy;
 
       if (!isFinite(fx))
         fx = 0;
@@ -974,12 +974,14 @@ function moveToPos(vector: Vector,
     force.set(fx, fy);
   }
 
+  prev6 = prev5.clone();
   prev5 = prev4.clone();
   prev4 = prev3.clone();
   prev3 = prev2.clone();
   prev2 = prev1.clone();
   prev1 = force.clone();
 
+  fEEPrev6 = new Vector(prev6.x, prev6.y);
   fEEPrev5 = new Vector(prev5.x, prev5.y);
   fEEPrev4 = new Vector(prev4.x, prev4.y);
   fEEPrev3 = new Vector(prev3.x, prev3.y);
