@@ -91,6 +91,8 @@ export type SubSegment = {
 let segments: SubSegment[][] = [];
 let objects: SubSegment[][] = [];
 
+let interpolation: Vector[][][] = [];
+
 export const enum Mode {
   InitializeAudio,
   StartAudio,
@@ -206,6 +208,9 @@ self.addEventListener("message", async function (event) {
 
       objects = createObjs(objectData);
       segments = createSegs(segmentData);
+      interpolation = createInterpolation(segments);
+      console.log(segments);
+      console.log(interpolation);
 
       this.self.postMessage({
         positions: { x: positions.x, y: positions.y },
@@ -213,6 +218,42 @@ self.addEventListener("message", async function (event) {
         segmentData: createSegs(baseSegmentData),
       });
     }
+  }
+
+  function createInterpolation(segments: SubSegment[][]): Array<Array<Vector[]>> {
+
+    let upSampledSegArray: Array<Array<Vector[]>> = [];
+    for (let i = 0; i < segments.length; i++) {
+      let upSampledSubSegArray: Array<Vector[]> = [];
+      for (let j = 0; j < segments[i].length; j++) {
+        let p1 = 0;
+        let p2 = 0;
+
+          console.log(i, j);
+
+        // is this the last subsegment?
+        if (j == segments[i].length - 1) {
+          // if it's the last segment in the entire list then end
+          if (i == segments.length - 1) {
+            return upSampledSegArray;
+          }
+          const subSeg = segments[i][j];
+          const nextSeg = segments[i + 1][0];
+          p1 = subSeg.coordinates[subSeg.coordinates.length - 1];
+          p2 = nextSeg.coordinates[0];
+        }
+        else {
+          const subSeg = segments[i][j];
+          const nextSubSeg = segments[i][j + 1];
+          p1 = subSeg.coordinates[subSeg.coordinates.length - 1];
+          p2 = nextSubSeg.coordinates[0];
+        }
+        const interpolatedSeg = upsample([p1, p2], 2500);
+        upSampledSubSegArray.push(interpolatedSeg);
+      }
+      upSampledSegArray.push(upSampledSubSegArray);
+    }
+    return upSampledSegArray;
   }
 
 
@@ -337,7 +378,7 @@ self.addEventListener("message", async function (event) {
       switch (haplyType) {
         case Type.SEGMENT: {
           if (segments.length != 0) {
-            audioHapticContours(segments, 3000, 3000, 4); // prev: 15
+            audioHapticContours(segments, 3000, 3000, 6); // prev: 15
           }
           break;
         }
@@ -354,6 +395,11 @@ self.addEventListener("message", async function (event) {
 
     const xHomeDiff = convPosEE.clone().subtract(xHome);
     const f = getForceCompensation(xHomeDiff);
+
+    //TODO: moving average filter is apparently  bad here?
+    // N points
+    // tWaitTime
+    // y coord resolutiion
 
     prevPosEE.set(convPosEE.clone());
 
@@ -456,7 +502,7 @@ function audioHapticContours(segments: SubSegment[][], tSegDuration: number,
       // depending on the type, the starting audio index may vary
       // objHeaderIndex contains the index of the first object returned in the entities list
       entityIndex = haplyType == Type.SEGMENT ? 0 : objHeaderIndex - 1;
-      mode = Mode.StartAudio;
+      mode = Mode.StartHaply;
       break;
     }
 
@@ -674,18 +720,16 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
           // case where we need to transition from segment to segment
           switch (transition) {
             case Transition.GetPoints: {
-              // interpolate point data
-              const vEndEffector: Vector = { x: convPosEE.x, y: convPosEE.y };
-              upSampled = upsample([vEndEffector, coord], 9000);
-              //console.log(upSampled);
+              console.log("start transition");
               tHoldTimeSegToSeg = Date.now();
               transition = Transition.Move;
-              console.log("Starting Transition");
+              [seg, subseg] = getPrevIndex(currentSegmentIndex, currentSubSegmentIndex);
+              console.log(seg, subseg);
               break;
             }
             case Transition.Move: {
               // if we are done then end
-              if (idx >= upSampled.length - 1) {
+              if (idx >= interpolation[seg][subseg].length) {
                 console.log("Ending Transition");
                 transition = Transition.Rest;
                 idx = 0;
@@ -703,7 +747,9 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
                 }
                 // move to new point with the WaitTime refresh rate
                 if (Date.now() - tHoldTimeSegToSeg > tWaitTime) {
-                  moveToPos(upSampled[idx], k * coeff);
+                  //console.log(interpolation[seg][subseg][idx]);
+                  moveToPos(interpolation[seg][subseg][idx], k * coeff);
+                  console.log(interpolation[seg][subseg][idx]);
                   idx++;
                   tHoldTimeSegToSeg = Date.now();
                 }
@@ -732,11 +778,27 @@ enum Transition {
   Rest
 }
 
+let [seg, subseg] = [0, 0];
+function getPrevIndex(i: number, j: number): [number, number] {
+  // 0 1 -> 0 0
+  // 1 0 -> 0 1
+  if (j != 0) {
+    return [i, j - 1];
+  }
+  else {
+    if (i == 0) {
+      return [0, 0];
+    }
+    else {
+      return [i - 1, segments[i - 1].length - 1];
+    }
+  }
+}
+
 // for transition between segments
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
-let upSampled: Vector[] = [];
-const tWaitTime = 5;
+const tWaitTime = 8;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
@@ -843,8 +905,8 @@ const forceThreshold = 0.5;
  */
 function moveToPos(vector: Vector,
   springConstMultiplier = 3,
-  ki = 0.5,
-  kd = 1.2) {
+  ki = 0,
+  kd = 1.5) {
 
   if (vector == undefined)
     return;
@@ -852,7 +914,7 @@ function moveToPos(vector: Vector,
   // find the distance between our current position and target
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
-  const xHomeDiff = convPosEE.clone().subtract(xHome);
+  //const xHomeDiff = convPosEE.clone().subtract(xHome);
 
   const forceCompensation = 1;//getForceCompensation(xHomeDiff);
   const kx = xDiff.multiply(springConst).multiply(springConstMultiplier).multiply(forceCompensation);
@@ -880,41 +942,43 @@ function moveToPos(vector: Vector,
   if (!atHomePos() && forceMag >= maxMag) {
     force.set(0, 0);
   }
+  // if (transition == Transition.Move && idx < 5) {
+  //   force.set(0, 0);
+  // }
   else {
     if (!atHomePos()) {
       // console.log("fx", fx, fEEPrev.x);
       //console.log(Math.abs(fx) - Math.abs(fEEPrev.x));
       const xDelta = Math.abs(Math.abs(fx) - Math.abs(fEEPrev.x));
       const yDelta = Math.abs(Math.abs(fy) - Math.abs(fEEPrev.y));
-      const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
-      const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
+      //const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
+      //const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
 
       if (Math.abs(fx) > 1.5 && xDelta > 1) {
-        console.log("correcting x", fx, fEEPrev.x);
-        fx = (1/5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
+        //console.log("correcting x", fx, fEEPrev.x);
+        fx = (1 / 5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
       }
       if (Math.abs(fy) > 1.5 && yDelta > 1) {
-        console.log("correcting y", fy, fEEPrev.y);
-        fy = (1/5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
+        //console.log("correcting y", fy, fEEPrev.y);
+        fy = (1 / 5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
       }
     }
     force.set(fx, fy);
   }
 
-  console.log(idx, force, fEEPrev);
   fEE.set(graphics_to_device(force));
 
-  prev5 = prev4.clone();
-  prev4 = prev3.clone();
-  prev3 = prev2.clone();
-  prev2 = prev1.clone();
-  prev1 = fEE.clone();
+  fEEPrev5 = prev4.clone();
+  fEEPrev4 = prev3.clone();
+  fEEPrev3 = prev2.clone();
+  fEEPrev2 = prev1.clone();
+  fEEPrev = fEE.clone();
 
-  fEEPrev5 = new Vector(-prev5.x, prev5.y);
-  fEEPrev4 = new Vector(-prev4.x, prev4.y);
-  fEEPrev3 = new Vector(-prev3.x, prev3.y);
-  fEEPrev2 = new Vector(-prev2.x, prev2.y);
-  fEEPrev = new Vector(-prev1.x, prev1.y);
+  // fEEPrev5 = new Vector(prev5.x, prev5.y);
+  // fEEPrev4 = new Vector(prev4.x, prev4.y);
+  // fEEPrev3 = new Vector(prev3.x, prev3.y);
+  // fEEPrev2 = new Vector(prev2.x, prev2.y);
+  // fEEPrev = new Vector(prev1.x, prev1.y);
 }
 
 // TODO: force delta fix
@@ -953,7 +1017,7 @@ function constrain(val: number, min: number, max: number) {
  * @param k Constant that determines the sampling resolution.
  * @returns Upsampled array of {x, y} points.
  */
-function upsample(pointArray: Vector[], k = 2000) {
+function upsample(pointArray: Vector[], k = 2000): Vector[] {
   let upsampledSeg = [];
 
   // for each point (except the last one)...
@@ -1025,6 +1089,7 @@ export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
   //const y = (coords[1] * 0.0833) + 0.0368;
   //const y = 0.0875x + 0.0394
+  //const x = (coords[0] * 0.1001) - 0.0517;
   const y = (coords[1] * 0.0547) + 0.0589;
   return new Vector(x, y);
 }
