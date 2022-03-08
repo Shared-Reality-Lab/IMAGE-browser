@@ -74,5 +74,9 @@
     "preprocessMap": {
         "message": "Get Preprocessed Map Data",
         "description": "Fetch preprocessed JSON data for a map without renderings."
+    },
+    "explainRendering":{
+        "message": "Explain this rendering to me.",
+        "description": "Link with Explanation of Renderings"
     }
 }
