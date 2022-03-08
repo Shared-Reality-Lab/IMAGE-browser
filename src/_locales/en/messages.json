@@ -93,5 +93,9 @@
     },
     "saveDataNotImplemented": {
         "message": "Your data could not be saved as the server in use does not support this feature."
+    },
+    "explainRendering":{
+        "message": "Explain this rendering to me.",
+        "description": "Link with Explanation of Renderings"
     }
 }

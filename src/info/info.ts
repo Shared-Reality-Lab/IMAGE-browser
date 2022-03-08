@@ -89,6 +89,9 @@ port.onMessage.addListener(async (message) => {
             const p = document.createElement("p");
             p.textContent = text;
             contentDiv.append(p);
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
             let div = document.createElement("div");
@@ -108,6 +111,9 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
             let div = document.createElement("div");
@@ -155,7 +161,9 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
             // Set up audio controls
             const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
@@ -236,8 +244,11 @@ port.onMessage.addListener(async (message) => {
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
             // creating canvas
-            const canvas= utils.createCanvas(contentDiv,800,500);
+            const canvas= utils.createCanvas(contentDiv,canvasWidth,canvasHeight);
 
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
             const res = canvas.getContext('2d');
             if (!res || !(res instanceof CanvasRenderingContext2D)) {
                 throw new Error('Failed to get 2D context');
