@@ -743,8 +743,8 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
                 if (diff.mag() < 0.025) {
                   let unit = diff.unit();
                   const multiplier = 1 / (diff.mag() + 0.9);
-                  const coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
-                  //console.log(coeff);
+                  coeff = Math.min(1, 1 - ((unit.x * unit.y) * multiplier));
+                  console.log(coeff);
                 }
                 // move to new point with the WaitTime refresh rate
                 if (performance.now() - tHoldTimeSegToSeg > tWaitTime) {
@@ -950,18 +950,18 @@ function moveToPos(vector: Vector,
   else {
     if (!atHomePos()) {
 
-      const prevAvgX = (1 / 6) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x + fEEPrev6.x)
-      const prevAvgY = (1 / 6) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y + fEEPrev6.y)
-      
-      if (fx >= 2) {
-        fx = fx * 0.5;
+      const prevAvgX = (1 / 6) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x + fEEPrev6.x);
+      const prevAvgY = (1 / 6) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y + fEEPrev6.y);
+
+      if (fx >= 1.4 * prevAvgX) {
+        fx = 1.4 * prevAvgX;
       }
-      if (fy >= 2) {
-        fy = fy * 0.5;
+      if (fy >= 1.4 * prevAvgY) {
+        fy = 1.4 * prevAvgY;
       }
 
-      fx = prevAvgX + fx;
-      fy = prevAvgY + fy;
+      fx = (6 / 7 * prevAvgX) + (1 / 7 * fx);
+      fy = (6 / 7 * prevAvgY) + (1 / 7 * fy);
 
       if (!isFinite(fx))
         fx = 0;
