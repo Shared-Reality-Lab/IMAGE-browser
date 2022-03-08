@@ -328,18 +328,6 @@ port.onMessage.addListener(async (message) => {
                 sourceNode.start(0, offset, duration);
             }
 
-            document.addEventListener('keydown', (event) => {
-                const keyName = event.key;
-                // debug, for printing coords
-
-                let xE = pixelsPerMeter * (-posEE.x + 0.014);
-                let yE = pixelsPerMeter * (posEE.y - 0.009);
-                
-                if (keyName == 'e') {
-                    console.log((xE + 300) / 800, (yE - 167) / 500, posEE.x, posEE.y);
-                }
-            });
-
             // Start
             btnStart.addEventListener("click", _ => {
                 worker.postMessage({
