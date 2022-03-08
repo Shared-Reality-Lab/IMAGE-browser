@@ -736,11 +736,11 @@ enum Transition {
 let transition: Transition = Transition.GetPoints;
 let idx: number = 0;
 let upSampled: Vector[] = [];
-const tWaitTime = 4;
+const tWaitTime = 5;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
-const threshold = 0.008;
+const threshold = 0.007;
 
 function atHomePos() {
   if (haplyType == Type.SEGMENT &&
@@ -889,11 +889,11 @@ function moveToPos(vector: Vector,
       const xDir = fx - fEEPrev.x;// fEEPrev.x - fx;
       const yDir = fy - fEEPrev.y;// fEEPrev.y - fy;
 
-      if (Math.abs(fx) > 1.5 && xDelta > 0.5) {
+      if (Math.abs(fx) > 1.5 && xDelta > 1) {
         console.log("correcting x", fx, fEEPrev.x);
         fx = (1/5) * (fEEPrev.x + fEEPrev2.x + fEEPrev3.x + fEEPrev4.x + fEEPrev5.x);//fEEPrev.x + Math.sign(xDir) * 0.4;
       }
-      if (Math.abs(fy) > 1.5 && yDelta > 0.5) {
+      if (Math.abs(fy) > 1.5 && yDelta > 1) {
         console.log("correcting y", fy, fEEPrev.y);
         fy = (1/5) * (fEEPrev.y + fEEPrev2.y + fEEPrev3.y + fEEPrev4.y + fEEPrev5.y);//fEEPrev.y + Math.sign(yDir) * 0.4;
       }
@@ -901,7 +901,7 @@ function moveToPos(vector: Vector,
     force.set(fx, fy);
   }
 
-  console.log(idx, force, fEEPrev, fEEPrev2, fEEPrev3);
+  console.log(idx, force, fEEPrev);
   fEE.set(graphics_to_device(force));
 
   prev5 = prev4.clone();
@@ -916,17 +916,6 @@ function moveToPos(vector: Vector,
   fEEPrev2 = new Vector(-prev2.x, prev2.y);
   fEEPrev = new Vector(-prev1.x, prev1.y);
 }
-
-// let xAvg = 0;
-// let yAvg = 0;
-// let movAvg = [];
-
-// function movingAverage() {
-//   movAvg
-// }
-
-let xN = 0;
-let yN = 0;
 
 // TODO: force delta fix
 function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
