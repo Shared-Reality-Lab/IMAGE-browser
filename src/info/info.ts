@@ -19,8 +19,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import Plyr from "plyr";
 import "./info.scss";
 import browser from "webextension-polyfill";
+import hash from "object-hash";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
+import { IMAGERequest } from "../types/request.schema";
 import { Vector } from '../types/vector';
 import { canvasCircle } from '../types/canvas-circle';
 import { canvasRectangle } from '../types/canvas-rectangle';
@@ -33,6 +35,8 @@ let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
 
 let renderings: IMAGEResponse;
+let request: IMAGERequest;
+let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
 // canvas dimensions for haptic rendering
@@ -41,7 +45,9 @@ const canvasHeight = 500;
 
 port.onMessage.addListener(async (message) => {
     if (message) {
-        renderings = message;
+        renderings = message["response"];
+        request = message["request"];
+        serverUrl = message["server"];
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
@@ -211,9 +217,9 @@ port.onMessage.addListener(async (message) => {
             const data = rendering["data"]["info"] as any;
 
             const audioCtx = new window.AudioContext();
-        
+
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
-                
+
                 return resp.arrayBuffer();
             }).then(buffer => {
                 return audioCtx.decodeAudioData(buffer);
@@ -230,7 +236,7 @@ port.onMessage.addListener(async (message) => {
             contentDiv.id = contentId;
             div.append(contentDiv);
 
-            // adding buttons 
+            // adding buttons
             let btn = utils.createButton(contentDiv, "btn", "Connect to Haply");
             let btnStart = utils.createButton(contentDiv, "btnStart", "Start");
             let btnEscape = utils.createButton(contentDiv, "btnEscape", "Stop");
@@ -239,7 +245,7 @@ port.onMessage.addListener(async (message) => {
 
             // creating canvas
             const canvas= utils.createCanvas(contentDiv,canvasWidth,canvasHeight);
-            
+
             if (rendering["metadata"] && rendering["metadata"]["homepage"]){
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
@@ -248,7 +254,7 @@ port.onMessage.addListener(async (message) => {
                 throw new Error('Failed to get 2D context');
             }
             const ctx: CanvasRenderingContext2D = res;
-            
+
             const img = new Image();
             img.src = graphic_url;
 
@@ -394,15 +400,15 @@ port.onMessage.addListener(async (message) => {
                 worker.addEventListener("message", function (msg) {
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
-                   
+
 
                     const msgdata = msg.data;
 
                     // return end-effector x/y positions and objectData for updating the canvas
-                    
+
                     posEE.x = msgdata.positions.x;
                     posEE.y = msgdata.positions.y;
-                  
+
                     waitForInput = msgdata.waitForInput;
 
                     // grab segment data if available
@@ -432,7 +438,7 @@ port.onMessage.addListener(async (message) => {
                         audioData.mode = AudioMode.Play;
                         worker.postMessage({
                             receivedAudioSignal: true
-                        }) 
+                        })
                     }
 
                     switch (audioData.mode) {
@@ -465,7 +471,7 @@ port.onMessage.addListener(async (message) => {
                     }
                 });
             });
-         
+
             // Stop the current audio segment from progressing.
             function stopAudioNode() {
                 sourceNode.stop();
@@ -477,6 +483,18 @@ port.onMessage.addListener(async (message) => {
         count++;
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+
+    const footer = document.getElementById("footer") as HTMLElement;
+    if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
+        const feedbackAnchor = document.createElement("a");
+        feedbackAnchor.textContent = browser.i18n.getMessage("feedbackLinkText");
+        feedbackAnchor.href = "./feedback.html?uuid=" +
+            encodeURIComponent(request_uuid) + "&hash=" +
+            encodeURIComponent(hash(request)) + "&serverURL=" +
+            encodeURIComponent(serverUrl);
+        feedbackAnchor.target = "_blank";
+        footer.appendChild(feedbackAnchor);
+    }
 });
 
 port.postMessage({
