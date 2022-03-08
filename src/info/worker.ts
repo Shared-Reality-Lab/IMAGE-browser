@@ -340,8 +340,6 @@ self.addEventListener("message", async function (event) {
     }
 
     const xHomeDiff = convPosEE.clone().subtract(xHome);
-    const f = getForceCompensation(xHomeDiff);
-
     prevPosEE.set(convPosEE.clone());
 
     // send required data back
@@ -834,10 +832,7 @@ function moveToPos(vector: Vector,
   // find the distance between our current position and target
   const targetPos = new Vector(vector.x, vector.y);
   const xDiff = targetPos.subtract(convPosEE.clone());
-  const xHomeDiff = convPosEE.clone().subtract(xHome);
-
-  const forceCompensation = 1;//getForceCompensation(xHomeDiff);
-  const kx = xDiff.multiply(springConst).multiply(springConstMultiplier).multiply(forceCompensation);
+  const kx = xDiff.multiply(springConst).multiply(springConstMultiplier);
 
   // allow for higher tolerance when moving from the home position
   // apparently needs more force to move from there
@@ -866,24 +861,6 @@ function moveToPos(vector: Vector,
 
   //console.log(force);
   fEE.set(graphics_to_device(force));
-}
-
-function getForceCompensation(xHomeDiff: { x: number; y: number }): number {
-  const v = new Vector(xHomeDiff.x, xHomeDiff.y);
-
-  if (v.mag() > 0.1)
-    return 1;
-
-  // ignore case where we are starting from the origin
-  if (atHomePos())
-    return 1;
-
-  // return normalized vector
-  let p = transformWorkspaceToPt(v);
-
-  const multiplier = 1 / (v.mag() + 0.5);
-  const coeff = Math.max(1, 1 - (p.x * p.y) * multiplier);
-  return coeff;
 }
 
 /**
@@ -942,14 +919,14 @@ function upsample(pointArray: Vector[], k = 2000) {
 
       // case where the x values are the same
       if (x1 == x2) {
-        xLocation = x1;// + distX;
-        yLocation = y2;// > y1 ? y1 + distY : y1 - distY;
+        xLocation = x1;
+        yLocation = y2;
       }
 
       // case where y values are the same
       else if (y1 == y2) {
-        xLocation = x2;// > x1 ? x1 + distX : x1 - distX;
-        yLocation = y1;// + distY;
+        xLocation = x2;
+        yLocation = y1;
       }
 
       // standard case
@@ -973,18 +950,7 @@ function upsample(pointArray: Vector[], k = 2000) {
  */
 export function transformPtToWorkspace(coords: [number, number]): Vector {
   const x = (coords[0] * 0.1333) - 0.064;
-  //const y = (coords[1] * 0.0833) + 0.0368;
-  //const y = 0.0875x + 0.0394
   const y = (coords[1] * 0.0547) + 0.0589;
-  return new Vector(x, y);
-}
-
-/**
- * @param coords 2D array containing normalized x/y positions
- * @returns Vector of {x,y} corresponding to position on Haply 2DIY workspace.
- */
-export function transformWorkspaceToPt(v: Vector): Vector {
-  const x = (v.x + 0.05) / 0.1333;
-  const y = (v.y - 0.0278) / 0.0833;
+  //const y = (coords[1] * 0.0833) + 0.0368;
   return new Vector(x, y);
 }
