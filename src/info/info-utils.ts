@@ -25,18 +25,18 @@ import browser from "webextension-polyfill";
  * @param contentDiv container for rendering.
  * @param link added to explain the rendering.
  */
-export function addRenderingExplanation(contentDiv : HTMLElement, explanationLink : string ){
+export function addRenderingExplanation(contentDiv: HTMLElement, explanationLink: string) {
     const explainDivContainer = document.createElement("p");
     const textContainer = document.createElement("a");
-    let link = document.createTextNode(browser.i18n.getMessage("explainRendering"));                
-    textContainer.href = explanationLink; 
+    let link = document.createTextNode(browser.i18n.getMessage("explainRendering"));
+    textContainer.href = explanationLink;
     textContainer.target = "_blank";
-    textContainer.appendChild(link); 
+    textContainer.appendChild(link);
     explainDivContainer.append(textContainer)
     contentDiv.append(explainDivContainer)
 }
 
-export function createButton(contentDiv: HTMLElement, id: string, text: string ){
+export function createButton(contentDiv: HTMLElement, id: string, text: string) {
     let btn = document.createElement("button");
     btn.id = id;
     btn.textContent = text;
@@ -49,7 +49,7 @@ export function createButton(contentDiv: HTMLElement, id: string, text: string )
  * @param contentDiv container for canvas.
  * @returns Canvas with context.
  */
-export function createCanvas(contentDiv: HTMLElement, width:number, height:number){
+export function createCanvas(contentDiv: HTMLElement, width: number, height: number) {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "main";
     canvas.width = width;
@@ -77,21 +77,21 @@ const pixelsPerMeter = 6000;
  * @param objects List of objects to draw.
  * @param ctx Canvas context.
  */
-export function updateAnimation(posEE: Vector, 
-    endEffector: canvasCircle, 
-    deviceOrigin: Vector, 
-    border: canvasRectangle, 
-    drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number},
-    segments: worker.SubSegment[][],objects:worker.SubSegment[][], 
+export function updateAnimation(posEE: Vector,
+    endEffector: canvasCircle,
+    deviceOrigin: Vector,
+    border: canvasRectangle,
+    drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
+    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
     ctx: CanvasRenderingContext2D) {
 
     // drawing bounding boxes and centroids
-    drawBoundaries(drawingInfo, segments,objects, ctx);
+    drawBoundaries(drawingInfo, segments, objects, ctx);
     border.draw();
 
     //scaling end effector position to canvas
     let xE = pixelsPerMeter * (-posEE.x + 0.014);
-    let yE = pixelsPerMeter * (posEE.y - 0.009);
+    let yE = pixelsPerMeter * ((posEE.y / 0.805) - 0.0311);
 
 
     // set position of virtual avatar in canvas
@@ -107,25 +107,42 @@ export function updateAnimation(posEE: Vector,
  * @param objects List of objects to draw.
  * @param ctx 
  */
- export function drawBoundaries(drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number}, segments:worker.SubSegment[][],objects:worker.SubSegment[][], ctx:CanvasRenderingContext2D){
+export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
+    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
+    ctx: CanvasRenderingContext2D) {
     if (drawingInfo != undefined) {
-        const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];//currentHaplyIndex;
-        
+
+        // subsegment and segment index
+        const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];
+        ctx.lineWidth = 4;
+
+        // segments
         if (drawingInfo['haplyType'] == 0) {
-            segments[i][j].coordinates.forEach(coord => {
-                const pX = coord.x;
-                const pY = coord.y;
-                let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                ctx.strokeRect(pointX, pointY, 1, 1);
-            })
+            ctx.strokeStyle = "blue";
+            if (segments[i][j] != undefined) {
+                segments[i][j].coordinates.forEach(coord => {
+                    const pX = coord.x;
+                    const pY = coord.y;
+                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
+                    ctx.strokeRect(pointX, pointY, 1, 1);
+                })
+            }
         }
-        else {
-            objects[i][j].coordinates.forEach(coord => {
-                const pX = coord.x;
-                const pY = coord.y;
-                let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                ctx.strokeRect(pointX, pointY, 1, 1);
-            })
+
+        // objects
+        else if (drawingInfo['haplyType'] == 1) {
+            ctx.strokeStyle = "orange";
+            if (objects[i][j] != undefined) {
+                objects[i][j].coordinates.forEach(coord => {
+                    const pX = coord.x;
+                    const pY = coord.y;
+                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
+
+                    // bigger size for single point objects
+                    const size = objects[i][j].coordinates.length == 1 ? 20 : 1
+                    ctx.strokeRect(pointX, pointY, size, size);
+                })
+            }
         }
     }
 

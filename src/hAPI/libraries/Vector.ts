@@ -1,40 +1,39 @@
 class Vector {
-  x:number=0;
-  y:number=0;
- 
+  x: number = 0;
+  y: number = 0;
 
   constructor(x: number, y: number) {
-    this.x = x ;
+    this.x = x;
     this.y = y;
-  
+
   }
-  negative(){
+  negative() {
     return new Vector(-this.x, -this.y);
   }
-  add(v:any){
+  add(v: any) {
     if (v instanceof Vector) return new Vector(this.x + v.x, this.y + v.y);
     else return new Vector(this.x + v, this.y + v);
   }
 
-  subtract(v:any){
+  subtract(v: any) {
     if (v instanceof Vector) return new Vector(this.x - v.x, this.y - v.y);
     else return new Vector(this.x - v, this.y - v);
   }
 
-  multiply(v:any) {
+  multiply(v: any) {
     if (v instanceof Vector) return new Vector(this.x * v.x, this.y * v.y);
     else return new Vector(this.x * v, this.y * v);
   }
-  
-  divide(v:any) {
+
+  divide(v: any) {
     if (v instanceof Vector) return new Vector(this.x / v.x, this.y / v.y);
     else return new Vector(this.x / v, this.y / v);
   }
-  equals(v:Vector) {
-    return this.x == v.x && this.y == v.y ;
+  equals(v: Vector) {
+    return this.x == v.x && this.y == v.y;
   }
-  dot(v:Vector) {
-    return this.x * v.x + this.y * v.y ;
+  dot(v: Vector) {
+    return this.x * v.x + this.y * v.y;
   }
 
   // cross(v:Vector) {
@@ -45,28 +44,28 @@ class Vector {
   //   );
   // }
 
-  // length() {
-  //   return Math.sqrt(this.dot(this));
-  // }
-  // unit() {
-  //   return this.divide(this.length());
-  // }
+  length() {
+    return Math.sqrt(this.dot(this));
+  }
+  unit() {
+    return this.divide(this.length());
+  }
   min() {
     return Math.min(this.x, this.y);
   }
   max() {
     return Math.max(this.x, this.y);
   }
-  dist(v:Vector) {
+  dist(v: Vector) {
     return Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
   }
-  normalize(){
+  normalize() {
     let len = this.mag();
 
     if (len !== 0) {
       this.x = this.x / len;
       this.y = this.y / len;
-     
+
     }
 
     return this;
@@ -80,16 +79,16 @@ class Vector {
   // angleTo(a:number) {
   //   return Math.acos(this.dot(a) / (this.length() * a.length()));
   // }
-  toArray(n?:number){
+  toArray(n?: number) {
     return [this.x, this.y].slice(0, n || 3);
   }
   clone() {
     return new Vector(this.x, this.y);
   }
   mag() {
-      return Math.sqrt(this.x * this.x + this.y * this.y );
+    return Math.sqrt(this.x * this.x + this.y * this.y);
   }
-  set(x:any, y?:number){
+  set(x: any, y?: number) {
     if (x instanceof Vector) {
       this.x = x.x || 0;
       this.y = x.y || 0;
@@ -97,20 +96,19 @@ class Vector {
     }
     if (x instanceof Array) {
       this.x = x[0] || 0;
-      this.y = x[1] || 0;   
+      this.y = x[1] || 0;
       return this;
     }
     this.x = x || 0;
     this.y = y || 0;
     return this;
   }
-  init(x:number, y:number) {
-    this.x = x; this.y = y; 
+  init(x: number, y: number) {
+    this.x = x; this.y = y;
     return this;
   }
 
 }
 
 export { Vector }
-
 

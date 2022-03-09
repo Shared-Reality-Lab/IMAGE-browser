@@ -89,7 +89,7 @@ port.onMessage.addListener(async (message) => {
             const p = document.createElement("p");
             p.textContent = text;
             contentDiv.append(p);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
@@ -111,7 +111,7 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
@@ -161,7 +161,7 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
             // Set up audio controls
@@ -212,7 +212,7 @@ port.onMessage.addListener(async (message) => {
             let deviceOrigin: Vector;
 
             // virtual end effector avatar offset
-            let firstCall:boolean = true;
+            let firstCall: boolean = true;
 
             const data = rendering["data"]["info"] as any;
 
@@ -244,9 +244,9 @@ port.onMessage.addListener(async (message) => {
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
             // creating canvas
-            const canvas= utils.createCanvas(contentDiv,canvasWidth,canvasHeight);
+            const canvas = utils.createCanvas(contentDiv, canvasWidth, canvasHeight);
 
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
             const res = canvas.getContext('2d');
@@ -305,7 +305,7 @@ port.onMessage.addListener(async (message) => {
             // define segments and objects
             let segments: worker.SubSegment[][];
             let objects: worker.SubSegment[][];
-            let drawingInfo: {haplyType: worker.Type, segIndex: number, subSegIndex: number};
+            let drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number };
             // when haply needs to move to a next segment
             let waitForInput: boolean = false;
             // when user presses a key to break out of the current haply segment
@@ -351,6 +351,11 @@ port.onMessage.addListener(async (message) => {
             btnEscape.addEventListener("click", _ => {
                 sourceNode.stop();
                 breakKey = BreakKey.Escape;
+                worker.postMessage({
+                    waitForInput: waitForInput,
+                    breakKey: breakKey,
+                    tKeyPressTime: Date.now()
+                });
             })
 
             // Next
@@ -389,7 +394,13 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                let hapticPort = await navigator.serial.requestPort();
+                
+                // only show the Arduino Zero
+                const filters = [
+                    { usbVendorId: 0x2341, usbProductId: 0x804D }
+                ];
+
+                let hapticPort = await navigator.serial.requestPort({filters});
 
                 // send all the rendering info
                 worker.postMessage({
@@ -400,7 +411,6 @@ port.onMessage.addListener(async (message) => {
                 worker.addEventListener("message", function (msg) {
                     // we've selected the COM port
                     btn.style.visibility = 'hidden';
-
 
                     const msgdata = msg.data;
 
@@ -433,7 +443,7 @@ port.onMessage.addListener(async (message) => {
                     }
 
                     // see if the worker wants us to play any audio
-                    if (msgdata.audioInfo != undefined &&msgdata.audioInfo.sendAudioSignal ) {
+                    if (msgdata.audioInfo != undefined && msgdata.audioInfo.sendAudioSignal) {
                         audioData.entityIndex = msgdata.audioInfo.entityIndex;
                         audioData.mode = AudioMode.Play;
                         worker.postMessage({
