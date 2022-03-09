@@ -400,7 +400,7 @@ port.onMessage.addListener(async (message) => {
                     { usbVendorId: 0x2341, usbProductId: 0x804D }
                 ];
 
-                let hapticPort = await navigator.serial.requestPort();
+                let hapticPort = await navigator.serial.requestPort({filters});
 
                 // send all the rendering info
                 worker.postMessage({

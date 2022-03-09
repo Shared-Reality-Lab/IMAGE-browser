@@ -65,6 +65,22 @@ let guidance: boolean = false;
 // Home position of end-effector
 let xHome = new Vector(-0.00001291268703669304, 0.022095726821870526);
 
+enum Transition {
+  GetPoints,
+  Move,
+  Rest
+}
+
+// for transition between segments
+let transition: Transition = Transition.GetPoints;
+let idx: number = 0;
+let upSampled: Vector[] = [];
+const tWaitTime:number = 8;
+let tHoldTimeSegToSeg: number;
+
+// distance threshold for stopping segment to segment guidance
+const threshold:number = 0.008;
+
 /**
  * Defines a subsegment.
  * Contains an array of vectors
@@ -339,7 +355,6 @@ self.addEventListener("message", async function (event) {
           break;
       }
     }
-    const xHomeDiff = convPosEE.clone().subtract(xHome);
     prevPosEE.set(convPosEE.clone());
 
     // send required data back
@@ -704,21 +719,7 @@ function activeGuidance(segments: SubSegment[][], tSegmentDuration: number,
   }
 }
 
-enum Transition {
-  GetPoints,
-  Move,
-  Rest
-}
 
-// for transition between segments
-let transition: Transition = Transition.GetPoints;
-let idx: number = 0;
-let upSampled: Vector[] = [];
-const tWaitTime = 8;
-let tHoldTimeSegToSeg: number;
-
-// distance threshold for stopping segment to segment guidance
-const threshold = 0.008;
 
 function atHomePos() {
     if (haplyType == Type.SEGMENT &&
