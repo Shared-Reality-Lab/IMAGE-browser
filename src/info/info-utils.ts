@@ -25,20 +25,16 @@ import browser from "webextension-polyfill";
  * @param contentDiv container for rendering.
  * @param link added to explain the rendering.
  */
-export function addRenderingExplanation(contentDiv : HTMLElement, explanationLink : string ){
+export function addRenderingExplanation(contentDiv: HTMLElement, explanationLink: string) {
     const explainDivContainer = document.createElement("p");
     const textContainer = document.createElement("a");
-    let link = document.createTextNode(browser.i18n.getMessage("explainRendering"));                
-    textContainer.href = explanationLink; 
+    let link = document.createTextNode(browser.i18n.getMessage("explainRendering"));
+    textContainer.href = explanationLink;
     textContainer.target = "_blank";
-    textContainer.appendChild(link); 
+    textContainer.appendChild(link);
     explainDivContainer.append(textContainer)
     contentDiv.append(explainDivContainer)
 }
-
-const pixelsPerMeter = 6000;
-const canvasWidth = 800;
-const canvasHeight = 500;
 
 export function createButton(contentDiv: HTMLElement, id: string, text: string) {
     let btn = document.createElement("button");
@@ -53,11 +49,11 @@ export function createButton(contentDiv: HTMLElement, id: string, text: string) 
  * @param contentDiv container for canvas.
  * @returns Canvas with context.
  */
-export function createCanvas(contentDiv: HTMLElement) {
+export function createCanvas(contentDiv: HTMLElement, width: number, height: number) {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "main";
-    canvas.width = 800;
-    canvas.height = 500;
+    canvas.width = width;
+    canvas.height = height;
     canvas.style.zIndex = "8";
     canvas.style.position = "relative";
     canvas.style.border = "1px solid";
@@ -66,6 +62,9 @@ export function createCanvas(contentDiv: HTMLElement) {
 
     return canvas;
 }
+
+
+const pixelsPerMeter = 6000;
 
 /**
  * Updates the canvas at each timeframe.
@@ -92,7 +91,8 @@ export function updateAnimation(posEE: Vector,
 
     //scaling end effector position to canvas
     let xE = pixelsPerMeter * (-posEE.x + 0.014);
-    let yE = pixelsPerMeter * ((posEE.y / 0.805) - 0.0311);
+    let yE = pixelsPerMeter * (posEE.y - 0.009);
+
 
     // set position of virtual avatar in canvas
     endEffector.x = deviceOrigin.x + xE - 100;
@@ -126,7 +126,7 @@ export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: 
                     let [pointX, pointY] = imgToWorldFrame(pX, pY);
                     ctx.strokeRect(pointX, pointY, 1, 1);
                 })
-            }      
+            }
         }
 
         // objects
@@ -148,6 +148,8 @@ export function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: 
 
 }
 
+const canvasWidth = 800;
+const canvasHeight = 500;
 /**
  * Converts 2DIY coordinates to Canvas frame of reference coords.
  * @param x1 x position in the normalized 0 -> 1 coordinate system
