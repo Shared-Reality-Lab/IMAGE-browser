@@ -30,7 +30,6 @@ import * as worker from './worker';
 import { BreakKey } from './worker';
 import * as utils from "./info-utils";
 
-// let request_uuid = window.location.search.substring(1);
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
@@ -52,8 +51,6 @@ port.onMessage.addListener(async (message) => {
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
     }
-
-    console.log(renderings);
 
     // Update renderings label
     let title = document.getElementById("renderingTitle");
@@ -92,7 +89,7 @@ port.onMessage.addListener(async (message) => {
             const p = document.createElement("p");
             p.textContent = text;
             contentDiv.append(p);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
@@ -114,7 +111,7 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
@@ -164,7 +161,7 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.textContent = "Download Audio File";
             contentDiv.append(download);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
             // Set up audio controls
@@ -215,13 +212,14 @@ port.onMessage.addListener(async (message) => {
             let deviceOrigin: Vector;
 
             // virtual end effector avatar offset
-            const offset = 150;
-            let firstCall = true;
+            let firstCall: boolean = true;
 
             const data = rendering["data"]["info"] as any;
 
             const audioCtx = new window.AudioContext();
+
             const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
+
                 return resp.arrayBuffer();
             }).then(buffer => {
                 return audioCtx.decodeAudioData(buffer);
@@ -245,12 +243,12 @@ port.onMessage.addListener(async (message) => {
             let btnNext = utils.createButton(contentDiv, "btnNext", "Next");
             let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
 
-            // creating canvas   
-            const canvas= utils.createCanvas(contentDiv);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]){
+            // creating canvas
+            const canvas = utils.createCanvas(contentDiv, canvasWidth, canvasHeight);
+
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
-
             const res = canvas.getContext('2d');
             if (!res || !(res instanceof CanvasRenderingContext2D)) {
                 throw new Error('Failed to get 2D context');
@@ -262,7 +260,6 @@ port.onMessage.addListener(async (message) => {
 
             // world resolution properties
             const worldPixelWidth = 800;
-            const pixelsPerMeter = 6000;
 
             posEE = {
                 x: 0,
@@ -397,11 +394,13 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+                
+                // only show the Arduino Zero
                 const filters = [
                     { usbVendorId: 0x2341, usbProductId: 0x804D }
-                  ];
+                ];
 
-                let hapticPort = await navigator.serial.requestPort({filters});
+                let hapticPort = await navigator.serial.requestPort();
 
                 // send all the rendering info
                 worker.postMessage({
@@ -416,8 +415,10 @@ port.onMessage.addListener(async (message) => {
                     const msgdata = msg.data;
 
                     // return end-effector x/y positions and objectData for updating the canvas
+
                     posEE.x = msgdata.positions.x;
                     posEE.y = msgdata.positions.y;
+
                     waitForInput = msgdata.waitForInput;
 
                     // grab segment data if available
@@ -442,14 +443,12 @@ port.onMessage.addListener(async (message) => {
                     }
 
                     // see if the worker wants us to play any audio
-                    if (msgdata.audioInfo != undefined) {
-                        if (msgdata.audioInfo.sendAudioSignal) {
-                            audioData.entityIndex = msgdata.audioInfo.entityIndex;
-                            audioData.mode = AudioMode.Play;
-                            worker.postMessage({
-                                receivedAudioSignal: true
-                            })
-                        }
+                    if (msgdata.audioInfo != undefined && msgdata.audioInfo.sendAudioSignal) {
+                        audioData.entityIndex = msgdata.audioInfo.entityIndex;
+                        audioData.mode = AudioMode.Play;
+                        worker.postMessage({
+                            receivedAudioSignal: true
+                        })
                     }
 
                     switch (audioData.mode) {
