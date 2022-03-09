@@ -39,7 +39,7 @@ export function addRenderingExplanation(contentDiv : HTMLElement, explanationLin
 export function createButton(contentDiv: HTMLElement, id: string, text: string ){
     let btn = document.createElement("button");
     btn.id = id;
-    btn.innerHTML = text;
+    btn.textContent = text;
     contentDiv.append(btn);
     return btn;
 }
