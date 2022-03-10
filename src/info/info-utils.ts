@@ -93,7 +93,6 @@ export function updateAnimation(posEE: Vector,
     let xE = pixelsPerMeter * (-posEE.x + 0.014);
     let yE = pixelsPerMeter * ((posEE.y / 0.805) - 0.0311);
 
-
     // set position of virtual avatar in canvas
     endEffector.x = deviceOrigin.x + xE - 100;
     endEffector.y = deviceOrigin.y + yE - 167;
