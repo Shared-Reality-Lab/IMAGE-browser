@@ -77,11 +77,11 @@ enum Transition {
 
 // for transition between segments
 let transition: Transition = Transition.GetPoints;
-let idx = 0;
-let prevIdx = 0;
-let finishTransition = false;
+let idx: number = 0;
+let prevIdx: number = 0;
+let finishTransition: boolean = false;
 let upSampled: Vector[] = [];
-const tWaitTime = 8;
+const tWaitTime: number = 8;
 let tHoldTimeSegToSeg: number;
 
 // distance threshold for stopping segment to segment guidance
