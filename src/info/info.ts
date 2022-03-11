@@ -394,7 +394,7 @@ port.onMessage.addListener(async (message) => {
             // event listener for serial comm button
             btn.addEventListener("click", async _ => {
                 // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-                
+
                 // only show the Arduino Zero
                 const filters = [
                     { usbVendorId: 0x2341, usbProductId: 0x804D }
@@ -494,16 +494,12 @@ port.onMessage.addListener(async (message) => {
     }
     Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
-    const footer = document.getElementById("footer") as HTMLElement;
-    if (footer !== undefined && serverUrl !== undefined && request !== undefined) {
-        const feedbackAnchor = document.createElement("a");
-        feedbackAnchor.textContent = browser.i18n.getMessage("feedbackLinkText");
+    const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
+    if (feedbackAnchor) {
         feedbackAnchor.href = "./feedback.html?uuid=" +
-            encodeURIComponent(request_uuid) + "&hash=" +
-            encodeURIComponent(hash(request)) + "&serverURL=" +
-            encodeURIComponent(serverUrl);
-        feedbackAnchor.target = "_blank";
-        footer.appendChild(feedbackAnchor);
+                encodeURIComponent(request_uuid) + "&hash=" +
+                encodeURIComponent(hash(request)) + "&serverURL=" +
+                encodeURIComponent(serverUrl);
     }
 });
 
