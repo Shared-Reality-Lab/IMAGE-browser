@@ -245,7 +245,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                         })
                         let completionAudio = new Audio(browser.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
                         completionAudio.play();
-                        return window
+                        return window;
                       }
                       if(renderingsPanel !== undefined){
                         browser.windows.remove(renderingsPanel.id!)
