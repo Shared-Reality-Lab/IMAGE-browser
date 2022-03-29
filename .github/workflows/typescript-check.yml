@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Pack extension for Firefox
-        run: npm run pack
+        run: npm run pack:ff
       - name: Pack extension for Chrome
         run: npm run pack:chromium  
       - name: Save as artifact
