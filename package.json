@@ -25,10 +25,10 @@
     "build:chromium": "npm run pack:chromium && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.4.0",
-    "@parcel/transformer-sass": "^2.4.0",
-    "@parcel/transformer-typescript-tsc": "^2.4.0",
-    "@parcel/validator-typescript": "^2.4.0",
+    "@parcel/config-webextension": "^2.2.1",
+    "@parcel/transformer-sass": "^2.2.1",
+    "@parcel/transformer-typescript-tsc": "^2.2.1",
+    "@parcel/validator-typescript": "^2.2.1",
     "@types/object-hash": "^2.2.1",
     "@types/progressbar.js": "^1.1.2",
     "@types/uuid": "^8.3.3",
@@ -36,7 +36,7 @@
     "@types/webextension-polyfill": "^0.8.2",
     "image-resize-compress": "^1.0.8",
     "json-schema-to-typescript": "^10.1.4",
-    "parcel": "^2.4.0"
+    "parcel": "^2.2.1"
   },
   "dependencies": {
     "@types/chrome": "^0.0.164",
