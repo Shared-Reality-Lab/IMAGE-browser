@@ -220,8 +220,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
             }).then(async (resp) => {
               browser.windows.remove(progressWindow.id!)
               if (resp.ok) {
-                let completionAudio = new Audio(browser.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
-                completionAudio.play();
                 return resp.json();
               } else {
                   browser.windows.create({
@@ -241,11 +239,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
                       );
 
                       function createPanel(){
-                        return browser.windows.create({
+                        let window = browser.windows.create({
                           type: "panel",
                           url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl="+ graphicUrl
-
                         })
+                        let completionAudio = new Audio(browser.runtime.getURL("progressBar/earcon_server_communication_IMAGE_results-arrived.mp3"));
+                        completionAudio.play();
+                        return window;
                       }
                       if(renderingsPanel !== undefined){
                         browser.windows.remove(renderingsPanel.id!)
