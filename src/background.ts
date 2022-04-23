@@ -317,13 +317,13 @@ function updateDebugContextMenu(){
           browser.contextMenus.create({
             id: "preprocess-only",
             title: browser.i18n.getMessage("preprocessItem"),
-            contexts: ["image", "link"]
+            contexts: ["image"]
           },
         onCreated);
         browser.contextMenus.create({
           id: "request-only",
           title: browser.i18n.getMessage("requestItem"),
-          contexts: ["image", "link"]
+          contexts: ["image"]
         },
         onCreated);
       }
@@ -410,7 +410,7 @@ function onCreated(): void {
 browser.contextMenus.create({
     id: "mwe-item",
     title: browser.i18n.getMessage("menuItem"),
-    contexts: ["image", "link"]
+    contexts: ["image"]
 },
 onCreated);
 browser.storage.sync.set({
@@ -428,13 +428,13 @@ getAllStorageSyncData().then((items) => {
       browser.contextMenus.create({
         id: "preprocess-only",
         title: browser.i18n.getMessage("preprocessItem"),
-        contexts: ["image", "link"]
+        contexts: ["image"]
       },
       onCreated);
       browser.contextMenus.create({
         id: "request-only",
         title: browser.i18n.getMessage("requestItem"),
-        contexts: ["image", "link"]
+        contexts: ["image"]
       },
     onCreated);
     }
