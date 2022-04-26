@@ -99,7 +99,7 @@ port.onMessage.addListener(message => {
                         "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
                         "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                         "image": image,
-                        "toRender": (message["type"] === "resourceRequest")
+                        "toRender": toRender
                     });
                 });
             }
