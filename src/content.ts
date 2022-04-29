@@ -69,7 +69,7 @@ port.onMessage.addListener(message => {
             } else if (message["type"] === "onlyRequest") {
                 toRender = "none";
             }
-            if (scheme === "http" || scheme === "https") {
+            if (scheme === "http" || scheme === "https" || scheme==="data") {
                 port.postMessage({
                     "type": "resource",
                     "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
