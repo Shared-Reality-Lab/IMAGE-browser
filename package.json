@@ -41,6 +41,7 @@
     "@types/chrome": "^0.0.164",
     "@types/w3c-web-serial": "1.0.2",
     "bootstrap": "^5.0.1",
+    "browser-image-compression": "^2.0.0",
     "object-hash": "^3.0.0",
     "plyr": "^3.6.8",
     "progressbar.js": "^1.1.0",

@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import { fromBlob } from 'image-resize-compress';
+import imageCompression from 'browser-image-compression';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo , response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -73,19 +74,35 @@ async function generateQuery(message: { context: string, url: string, dims: [num
         } else {
           throw resp;
         }
-    }).then(async(blobFile) => {
+    }).then(async(blob: Blob) => {
+      const blobFile = new File([blob], "buffer.jpg", {type: blob.type});
+      console.log(blob)
+      console.log(blobFile)
+      console.log('originalFile instanceof Blob', blobFile instanceof Blob); // true
+      console.log(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
+      const options = {
+        maxSizeMB: 1024,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+        alwaysKeepResolution: false,
+      }
+      const compressedFile = await imageCompression(blobFile, options);
+      console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+      console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+      return new Blob([compressedFile], {type: blob.type});
+
       graphicWidth = message.dims[0];
       graphicHeight = message.dims[1];
       if(graphicWidth> 1200 && graphicWidth > graphicHeight){
         message.dims[0] = 1200;
         message.dims[1] = Math.round(graphicHeight*1200/graphicWidth);
-        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
+        return fromBlob(blob, message.dims[0], 'auto', 'webp');
       } else if(graphicHeight > 1200){
         message.dims[0] = Math.round(graphicWidth*1200/graphicHeight);
         message.dims[1] = 1200;
-        return fromBlob(blobFile, message.dims[0], 'auto', 'webp');
+        return fromBlob(blob, message.dims[0], 'auto', 'webp');
       } else {
-        return blobFile;
+        return blob;
       }
     }).then(blob => {
         return new Promise<string>((resolve, reject) => {
@@ -95,6 +112,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
+        console.debug(image);
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
