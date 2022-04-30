@@ -76,8 +76,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
         }
     }).then(async(blob: Blob) => {
       const blobFile = new File([blob], "buffer.jpg", {type: blob.type});
-      console.log(blob)
-      console.log(blobFile)
       console.log('originalFile instanceof Blob', blobFile instanceof Blob); // true
       console.log(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
       const options = {
@@ -90,20 +88,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
       console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
       return new Blob([compressedFile], {type: blob.type});
-
-      // graphicWidth = message.dims[0];
-      // graphicHeight = message.dims[1];
-      // if(graphicWidth> 1200 && graphicWidth > graphicHeight){
-      //   message.dims[0] = 1200;
-      //   message.dims[1] = Math.round(graphicHeight*1200/graphicWidth);
-      //   return fromBlob(blob, message.dims[0], 'auto', 'webp');
-      // } else if(graphicHeight > 1200){
-      //   message.dims[0] = Math.round(graphicWidth*1200/graphicHeight);
-      //   message.dims[1] = 1200;
-      //   return fromBlob(blob, message.dims[0], 'auto', 'webp');
-      // } else {
-      //   return blob;
-      // }
     }).then(blob => {
         return new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -112,7 +96,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
-        console.debug(image);
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
