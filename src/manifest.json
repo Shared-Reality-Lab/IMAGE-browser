@@ -56,5 +56,5 @@
         "./progressBar/earcon_server_communication_IMAGE_processing-data.mp3"
     ],
 
-    "content_security_policy": "script-src 'self'; object-src 'self'; script-src-elem 'self'"
+    "content_security_policy": "script-src 'self'; object-src 'self'"
 }

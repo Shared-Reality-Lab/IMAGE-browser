@@ -79,7 +79,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       console.log('originalFile instanceof Blob', blobFile instanceof Blob); // true
       console.log(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
       const options = {
-        maxSizeMB: 5,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1200,
         useWebWorker: true,
         alwaysKeepResolution: false,
@@ -96,6 +96,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
             reader.readAsDataURL(blob);
         });
     }).then(image => {
+        console.log(image)
         return {
             "request_uuid": uuidv4(),
             "timestamp": Math.round(Date.now() / 1000),
