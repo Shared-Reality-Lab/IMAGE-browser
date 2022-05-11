@@ -18,7 +18,6 @@ import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse} from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
-import { fromBlob } from 'image-resize-compress';
 import imageCompression from 'browser-image-compression';
 
 let ports: Runtime.Port[] = [];
@@ -68,47 +67,53 @@ async function generateQuery(message: { context: string, url: string, dims: [num
   graphicUrl = message.sourceURL
   var graphicWidth:number;
   var graphicHeight:number;
-    return fetch(message.sourceURL).then(resp => {
-        if (resp.ok) {
-          return resp.blob();
-        } else {
-          throw resp;
-        }
-    }).then(async(blob: Blob) => {
-      const blobFile = new File([blob], "buffer.jpg", {type: blob.type});
-      console.log('originalFile instanceof Blob', blobFile instanceof Blob); // true
-      console.log(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
-      const options = {
-        maxSizeMB: 2,
-        maxWidthOrHeight: 1200,
-        useWebWorker: true,
-        alwaysKeepResolution: false,
+  return fetch(message.sourceURL).then(resp => {
+      if (resp.ok) {
+        return resp.blob();
+      } else {
+        throw resp;
       }
-      const compressedFile = await imageCompression(blobFile, options);
-      console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-      console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-      return new Blob([compressedFile], {type: blob.type});
-    }).then(blob => {
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(blob);
-        });
-    }).then(image => {
-        console.log(image)
-        return {
-            "request_uuid": uuidv4(),
-            "timestamp": Math.round(Date.now() / 1000),
-            "URL": message.url,
-            "graphic": image,
-            "dimensions": message.dims,
-            "context": message.context,
-            "language": "en",
-            "capabilities": [],
-            "renderers": renderers
-        } as IMAGERequest;
-    });
+  }).then(async(blob: Blob) => {
+    graphicWidth = message.dims[0];
+    graphicHeight = message.dims[1];
+    if(graphicWidth> 1200 && graphicWidth > graphicHeight){
+      message.dims[0] = 1200;
+      message.dims[1] = Math.round(graphicHeight*1200/graphicWidth);
+    } else if(graphicHeight > 1200){
+      message.dims[0] = Math.round(graphicWidth*1200/graphicHeight);
+      message.dims[1] = 1200;
+    }
+    const blobFile = new File([blob], "buffer.jpg", {type: blob.type});
+    console.debug(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
+    const options = {
+      maxSizeMB: 2,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+      alwaysKeepResolution: false,
+    }
+    const compressedFile = await imageCompression(blobFile, options);
+    console.debug(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+    return new Blob([compressedFile], {type: blob.type});
+  }).then(blob => {
+      return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+      });
+  }).then(image => {
+      return {
+          "request_uuid": uuidv4(),
+          "timestamp": Math.round(Date.now() / 1000),
+          "URL": message.url,
+          "graphic": image,
+          "dimensions": message.dims,
+          "context": message.context,
+          "language": "en",
+          "capabilities": [],
+          "renderers": renderers
+      } as IMAGERequest;
+  });
 }
 
 async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {

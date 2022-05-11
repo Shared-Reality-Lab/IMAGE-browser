@@ -33,7 +33,6 @@
     "@types/uuid": "^8.3.3",
     "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
-    "image-resize-compress": "^1.0.8",
     "json-schema-to-typescript": "^10.1.4",
     "parcel": "^2.2.1"
   },
