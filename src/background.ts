@@ -86,7 +86,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     const blobFile = new File([blob], "buffer.jpg", {type: blob.type});
     console.debug(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
     const options = {
-      maxSizeMB: 2,
+      maxSizeMB: 4,
       maxWidthOrHeight: 1200,
       useWebWorker: true,
       alwaysKeepResolution: false,
