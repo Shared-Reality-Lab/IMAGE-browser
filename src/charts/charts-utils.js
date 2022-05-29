@@ -54,14 +54,24 @@ function getSeriesData(series) {
         if (point.accessibility && point.accessibility.description){
             pointInfo.altText = point.accessibility.description;
         }
-        pointKeys = ['x', 'y', 'z', 'open', 'high', 'low', 'close', 'value', 'percentage','name'];
+        pointKeys = ['x', 'y', 'z', 'open', 'high', 'low', 'close', 'value', 'percentage','name', "text"];
         pointKeys.forEach(key => {
             if (point[key] !== undefined) {
-                pointInfo[key] = point[key];
+                pointInfo[key] = (key == "text")?sanitizeHTMLString(point[key]):point[key];
             }
         });
         return pointInfo;
     });
+}
+
+/** function to sanitize HTML String */
+function sanitizeHTMLString(text){
+    if(/<\/?[a-z][\s\S]*>/i.test(text)){
+        let element = document.createElement("div");
+        element.innerHTML = text;
+        return element.innerText;
+    }
+    return text;
 }
 
 /** function to get series Information from chart */
@@ -81,8 +91,7 @@ function getSeriesInformation(series) {
 export function getChartData(chart) {
     return {
         containerID: getChartContainer(chart),
-        // todo: sanitize/strip HTML tags from some of these.
-        title: getTitle(chart),
+        title: sanitizeHTMLString(getTitle(chart)),
         subtitle: getSubTitle(chart),
         altText: getAltText(chart),
         axes: chart.axes.map(getAxisInformation),
