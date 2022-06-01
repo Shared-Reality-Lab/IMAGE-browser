@@ -48,6 +48,7 @@
         "info/feedback.html",
         "info/feedback.ts",
         "charts/highcharts.js",
+        "charts/charts-utils.js",
         "errors/no_renderings.html",
         "errors/http_error.html",
         "progressBar/progressBar.html",
