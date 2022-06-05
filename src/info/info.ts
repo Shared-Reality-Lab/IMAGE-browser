@@ -23,12 +23,9 @@ import hash from "object-hash";
 import { v4 as uuidv4 } from 'uuid';
 import { IMAGEResponse } from "../types/response.schema";
 import { IMAGERequest } from "../types/request.schema";
-import { Vector } from '../types/vector';
-import { canvasCircle } from '../types/canvas-circle';
-import { canvasRectangle } from '../types/canvas-rectangle';
-import * as worker from './worker';
-import { BreakKey } from './worker';
+
 import * as utils from "./info-utils";
+import * as hapiUtils from '../hAPI/hapi-utils';
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -39,9 +36,7 @@ let request: IMAGERequest;
 let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
-// canvas dimensions for haptic rendering
-const canvasWidth = 800;
-const canvasHeight = 500;
+
 
 port.onMessage.addListener(async (message) => {
     if (message) {
@@ -77,14 +72,7 @@ port.onMessage.addListener(async (message) => {
         container.append(labelButton);
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.Text") {
-            let div = document.createElement("div");
-            div.classList.add("row");
-            container.append(div);
-            let contentDiv = document.createElement("div");
-            contentDiv.classList.add("collapse");
-            contentDiv.classList.add("rendering-content");
-            contentDiv.id = contentId;
-            div.append(contentDiv);
+            let contentDiv = utils.addRenderingContent(container, contentId);
             const text = rendering["data"]["text"] as string;
             const p = document.createElement("p");
             p.textContent = text;
@@ -94,14 +82,7 @@ port.onMessage.addListener(async (message) => {
             }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
-            let div = document.createElement("div");
-            div.classList.add("row");
-            container.append(div);
-            let contentDiv = document.createElement("div");
-            contentDiv.classList.add("collapse");
-            contentDiv.classList.add("rendering-content");
-            contentDiv.id = contentId;
-            div.append(contentDiv);
+            let contentDiv = utils.addRenderingContent(container, contentId);
             const audio = document.createElement("audio");
             audio.setAttribute("controls", "");
             audio.setAttribute("src", rendering["data"]["audio"] as string);
@@ -116,14 +97,7 @@ port.onMessage.addListener(async (message) => {
             }
         }
         else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
-            let div = document.createElement("div");
-            div.classList.add("row");
-            container.append(div);
-            let contentDiv = document.createElement("div");
-            contentDiv.classList.add("collapse");
-            contentDiv.classList.add("rendering-content");
-            contentDiv.id = contentId;
-            div.append(contentDiv);
+            let contentDiv = utils.addRenderingContent(container, contentId);
             const selectDiv = document.createElement("div");
             selectDiv.classList.add("form-floating");
             contentDiv.append(selectDiv);
@@ -203,290 +177,7 @@ port.onMessage.addListener(async (message) => {
         }
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
-
-            let endEffector: canvasCircle;
-            let border: canvasRectangle;
-
-            // end effector x/y coordinates
-            let posEE: Vector;
-            let deviceOrigin: Vector;
-
-            // virtual end effector avatar offset
-            let firstCall: boolean = true;
-
-            const data = rendering["data"]["info"] as any;
-
-            const audioCtx = new window.AudioContext();
-
-            const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
-
-                return resp.arrayBuffer();
-            }).then(buffer => {
-                return audioCtx.decodeAudioData(buffer);
-            }).catch(e => { console.error(e); throw e; });
-
-
-            let div = document.createElement("div");
-            div.classList.add("row");
-            container.append(div);
-            let contentDiv = document.createElement("div");
-            contentDiv.classList.add("collapse");
-            contentDiv.classList.add("rendering-content");
-
-            contentDiv.id = contentId;
-            div.append(contentDiv);
-
-            // adding buttons
-            let btn = utils.createButton(contentDiv, "btn", "Connect to Haply");
-            let btnStart = utils.createButton(contentDiv, "btnStart", "Start");
-            let btnEscape = utils.createButton(contentDiv, "btnEscape", "Stop");
-            let btnNext = utils.createButton(contentDiv, "btnNext", "Next");
-            let btnPrev = utils.createButton(contentDiv, "btnPrev", "Previous");
-
-            // creating canvas
-            const canvas = utils.createCanvas(contentDiv, canvasWidth, canvasHeight);
-
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
-                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
-            }
-            const res = canvas.getContext('2d');
-            if (!res || !(res instanceof CanvasRenderingContext2D)) {
-                throw new Error('Failed to get 2D context');
-            }
-            const ctx: CanvasRenderingContext2D = res;
-
-            const img = new Image();
-            img.src = graphic_url;
-
-            // world resolution properties
-            const worldPixelWidth = 800;
-
-            posEE = {
-                x: 0,
-                y: 0
-            };
-
-            // initial position of end effector avatar
-            deviceOrigin = {
-                x: worldPixelWidth / 2,
-                y: 0
-            };
-
-            border = {
-                draw: function () {
-                    ctx.strokeRect(0, 0, canvas.width, canvas.height);
-                }
-            };
-
-            // draw end effector
-            endEffector = {
-                x: canvas.width / 2,
-                y: 0,
-                vx: 5,
-                vy: 2,
-                radius: 8,
-                color: 'brown',
-                draw: function () {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-                    ctx.closePath();
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                }
-            };
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                utils.updateAnimation(posEE, endEffector, deviceOrigin, border, drawingInfo, segments, objects, ctx);
-                window.requestAnimationFrame(draw);
-            }
-
-            // define segments and objects
-            let segments: worker.SubSegment[][];
-            let objects: worker.SubSegment[][];
-            let drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number };
-            // when haply needs to move to a next segment
-            let waitForInput: boolean = false;
-            // when user presses a key to break out of the current haply segment
-            let breakKey: null | BreakKey;
-
-            // Audio Modes
-            const enum AudioMode {
-                Play,
-                Finished,
-                Idle,
-            }
-
-            // Keep track of the mode and entity index so we know which file to play
-            let audioData: { entityIndex: number, mode: null | AudioMode } = {
-                entityIndex: 0,
-                mode: null
-            };
-
-            // time to wait before audio segment is considered finished
-            let tAudioBegin: number;
-            // true when playing an audio segment
-            let playingAudio = false;
-
-            const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-
-            // Play an audio segment with a given offset and duration.
-            let sourceNode: AudioBufferSourceNode;
-            function playAudioSeg(audioBuffer: any, offset: number, duration: number) {
-                sourceNode = audioCtx.createBufferSource();
-                sourceNode.buffer = audioBuffer;
-                sourceNode.connect(audioCtx.destination);
-                sourceNode.start(0, offset, duration);
-            }
-
-            // Start
-            btnStart.addEventListener("click", _ => {
-                worker.postMessage({
-                    start: true
-                });
-            })
-
-            // Stop
-            btnEscape.addEventListener("click", _ => {
-                sourceNode.stop();
-                breakKey = BreakKey.Escape;
-                worker.postMessage({
-                    waitForInput: waitForInput,
-                    breakKey: breakKey,
-                    tKeyPressTime: Date.now()
-                });
-            })
-
-            // Next
-            btnNext.addEventListener("click", _ => {
-                if (audioData.mode == AudioMode.Play) {
-                    stopAudioNode();
-                    breakKey = BreakKey.NextFromAudio;
-                }
-                else {
-                    breakKey = BreakKey.NextHaptic;
-                }
-                worker.postMessage({
-                    waitForInput: waitForInput,
-                    breakKey: breakKey,
-                    tKeyPressTime: Date.now()
-                });
-
-            });
-
-            // Prev
-            btnPrev.addEventListener("click", _ => {
-                if (audioData.mode == AudioMode.Play) {
-                    stopAudioNode();
-                    breakKey = BreakKey.PreviousFromAudio;
-                }
-                else {
-                    breakKey = BreakKey.PreviousHaptic;
-                }
-                worker.postMessage({
-                    waitForInput: waitForInput,
-                    breakKey: breakKey,
-                    tKeyPressTime: Date.now()
-                });
-            });
-
-            // event listener for serial comm button
-            btn.addEventListener("click", async _ => {
-                // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-
-                // only show the Arduino Zero
-                const filters = [
-                    { usbVendorId: 0x2341, usbProductId: 0x804D }
-                ];
-
-                let hapticPort = await navigator.serial.requestPort({filters});
-
-                // send all the rendering info
-                worker.postMessage({
-                    renderingData: data
-                });
-
-
-                worker.addEventListener("message", function (msg) {
-                    // we've selected the COM port
-                    btn.style.visibility = 'hidden';
-
-                    const msgdata = msg.data;
-
-                    // return end-effector x/y positions and objectData for updating the canvas
-
-                    posEE.x = msgdata.positions.x;
-                    posEE.y = msgdata.positions.y;
-
-                    waitForInput = msgdata.waitForInput;
-
-                    // grab segment data if available
-                    if (msgdata.segmentData != undefined)
-                        segments = msgdata.segmentData;
-
-                    // grab object data if available
-                    if (msgdata.objectData != undefined)
-                        objects = msgdata.objectData;
-
-                    // grab drawing info if available
-                    if (msgdata.drawingInfo != undefined)
-                        drawingInfo = msgdata.drawingInfo;
-
-                    // only request to run draw() once
-                    if (firstCall) {
-                        if (msgdata.segmentData != undefined ||
-                            msgdata.objectData != undefined) {
-                            window.requestAnimationFrame(draw);
-                            firstCall = false;
-                        }
-                    }
-
-                    // see if the worker wants us to play any audio
-                    if (msgdata.audioInfo != undefined && msgdata.audioInfo.sendAudioSignal) {
-                        audioData.entityIndex = msgdata.audioInfo.entityIndex;
-                        audioData.mode = AudioMode.Play;
-                        worker.postMessage({
-                            receivedAudioSignal: true
-                        })
-                    }
-
-                    switch (audioData.mode) {
-                        case AudioMode.Play: {
-                            // prevent audio from playing multiple times
-                            if (!playingAudio) {
-                                playingAudio = true;
-                                playAudioSeg(audioBuffer,
-                                    data["entities"][audioData.entityIndex]["offset"],
-                                    data["entities"][audioData.entityIndex]["duration"]);
-                                tAudioBegin = Date.now();
-                            }
-
-                            // wait for the audio segment to finish
-                            if (Date.now() - tAudioBegin > 1000 * (0.5 + data["entities"][audioData.entityIndex]["duration"])) {
-                                audioData.mode = AudioMode.Finished;
-                            }
-                            break;
-                        }
-                        // we've finished playing the audio segment
-                        case AudioMode.Finished: {
-                            playingAudio = false;
-                            worker.postMessage({
-                                doneWithAudio: true
-                            });
-                            audioData.mode = AudioMode.Idle;
-                        }
-                        case AudioMode.Idle:
-                            break;
-                    }
-                });
-            });
-
-            // Stop the current audio segment from progressing.
-            function stopAudioNode() {
-                sourceNode.stop();
-                audioData.mode = AudioMode.Finished;
-            }
+            hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
         document.getElementById("renderings-container")!.appendChild(container)
@@ -496,7 +187,7 @@ port.onMessage.addListener(async (message) => {
 
     const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
     if (feedbackAnchor) {
-        feedbackAnchor.href = "./feedback.html?uuid=" +
+        feedbackAnchor.href = "../feedback/feedback.html?uuid=" +
                 encodeURIComponent(request_uuid) + "&hash=" +
                 encodeURIComponent(hash(request)) + "&serverURL=" +
                 encodeURIComponent(serverUrl);
