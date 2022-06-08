@@ -93,5 +93,9 @@
     "explainRendering":{
         "message": "Explain this rendering to me.",
         "description": "Link with Explanation of Renderings"
+    },
+    "getMapRendering": {
+        "message": "Get IMAGE Map Rendering",
+        "description": "Label for button to get map renderings"
     }
 }

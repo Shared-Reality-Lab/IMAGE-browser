@@ -9,7 +9,7 @@ export function processIMAGEMaps(document: Document, port: browser.Runtime.Port)
             if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
                 map.setAttribute("tabindex", "0");
                 let map_button = document.createElement("button");
-                map_button.innerText = "Get IMAGE Map Rendering";
+                map_button.innerText = browser.i18n.getMessage("getMapRendering");
                 // Get all the information about our found map and store the info. Then create a button to render the map
                 map_button.addEventListener("click", () => {
                     const serializer = new XMLSerializer();

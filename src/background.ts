@@ -21,6 +21,7 @@ import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
 import { getAllStorageSyncData, getRenderers } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
+import { SERVER_URL } from './config';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -143,7 +144,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
         audio.play();
         let items = await getAllStorageSyncData();
         if (items["mcgillServer"] === true) {
-          serverUrl = "https://image.a11y.mcgill.ca/";
+          serverUrl = SERVER_URL;
         } else {
           if (items["inputUrl"] !== "" && items["customServer"] === true) {
             serverUrl = items["inputUrl"];
@@ -203,7 +204,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
       else if (message["toRender"] === "preprocess") {
         let items = await getAllStorageSyncData();
         if (items["mcgillServer"] === true) {
-          serverUrl = "https://image.a11y.mcgill.ca/";
+          serverUrl = SERVER_URL;
         } else {
           if (items["inputUrl"] !== "" && items["customServer"] === true) {
             serverUrl = items["inputUrl"];
