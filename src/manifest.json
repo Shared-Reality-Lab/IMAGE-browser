@@ -42,19 +42,16 @@
         "js": ["content.ts"]
     }],
     "web_accessible_resources": [
-        "info/worker.ts",
+        "info/*.ts",
         "info/info.html",
-        "info/info.ts",
-        "info/feedback.html",
-        "info/feedback.ts",
-        "charts/highcharts.js",
-        "charts/charts-utils.js",
-        "errors/no_renderings.html",
-        "errors/http_error.html",
+        "feedback/*",
+        "charts/*",
+        "maps/maps-utils.ts",
+        "hAPI/hapi-utils.ts",
+        "hAPI/worker.ts",
+        "errors/*.html",
         "progressBar/progressBar.html",
-        "./progressBar/image_request_sent.mp3",
-        "./progressBar/earcon_server_communication_IMAGE_results-arrived.mp3",
-        "./progressBar/earcon_server_communication_IMAGE_processing-data.mp3"
+        "progressBar/audio-files/*"
     ],
 
     "content_security_policy": "script-src 'self'; object-src 'self'"

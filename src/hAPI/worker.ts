@@ -14,10 +14,10 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
-import { Vector } from "../hAPI/libraries/Vector";
-import { Board } from "../hAPI/libraries/Board";
-import { Device } from "../hAPI/libraries/Device";
-import { Pantograph } from "../hAPI/libraries/Pantograph";
+import { Vector } from "./libraries/Vector";
+import { Board } from "./libraries/Board";
+import { Device } from "./libraries/Device";
+import { Pantograph } from "./libraries/Pantograph";
 import { convexhull } from './convex-hull';
 
 // TODO: set object types

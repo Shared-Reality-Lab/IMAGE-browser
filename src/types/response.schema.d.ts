@@ -20,7 +20,12 @@ export interface IMAGEResponse {
   /**
    * The renderings returned by the server along with additional information.
    */
-  renderings: {
+  renderings: ImageRendering[];
+  
+  [k: string]: unknown;
+}
+
+export interface ImageRendering {
     /**
      * A reverse domain name identifier indicating a rendering data format sent from the server to the client
      */
@@ -62,6 +67,4 @@ export interface IMAGEResponse {
       [k: string]: unknown;
     };
     [k: string]: unknown;
-  }[];
-  [k: string]: unknown;
 }

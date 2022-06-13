@@ -1,4 +1,4 @@
-import * as helpers from './charts-utils';
+import * as utils from './charts-utils';
 
 document.onreadystatechange = function () {
   setTimeout(function(){
@@ -16,7 +16,7 @@ document.onreadystatechange = function () {
         chartButton.addEventListener("click", function (event){
           targetId = event.target.parentElement.id;
           chartObj = divChartMap[targetId];
-          let chartData = helpers.getChartData(chart);
+          let chartData = utils.getChartData(chart);
           console.debug(chartData);
           messageObj = {"messageFrom": "imageCharts", "charts": chartData};
           window.postMessage(messageObj, "*");
