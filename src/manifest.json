@@ -47,8 +47,8 @@
         "feedback/*",
         "charts/*",
         "maps/maps-utils.ts",
-        "hapi/hapi-utils.ts",
-        "hapi/worker.ts",
+        "hAPI/hapi-utils.ts",
+        "hAPI/worker.ts",
         "errors/*.html",
         "progressBar/progressBar.html",
         "progressBar/audio-files/*"

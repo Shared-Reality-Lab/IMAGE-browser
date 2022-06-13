@@ -254,7 +254,7 @@ export async function processHapticsRendering(rendering: ImageRendering, graphic
     // true when playing an audio segment
     let playingAudio = false;
 
-    const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+    const worker = new Worker(browser.runtime.getURL("./hAPI/worker.js"), { type: "module" });
 
     // Play an audio segment with a given offset and duration.
     let sourceNode: AudioBufferSourceNode;
