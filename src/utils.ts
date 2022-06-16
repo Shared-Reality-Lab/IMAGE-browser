@@ -34,3 +34,20 @@ export async function getRenderers(): Promise<string[]>{
     }
     return renderers;
   }
+
+/**Get the context for the HTML element */
+export function getContext(selectedElement: HTMLElement) : string {
+  const serializer = new XMLSerializer();
+    let parentElement = <HTMLElement> selectedElement.parentElement;
+    let result = document.createElement("div");
+    if (parentElement && parentElement.innerText){
+      result.appendChild(parentElement.cloneNode(true));
+    } else if (parentElement) {
+      let parentPrevSibling = parentElement.previousElementSibling
+      let parentNextSibling = parentElement.nextElementSibling
+      if (parentPrevSibling) result.appendChild(parentPrevSibling.cloneNode(true));
+      if (parentElement) result.appendChild(parentElement.cloneNode(true))
+      if (parentNextSibling) result.appendChild(parentNextSibling.cloneNode(true));
+    }
+    return serializer.serializeToString(result);
+} 

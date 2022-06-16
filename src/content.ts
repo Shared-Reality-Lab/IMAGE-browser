@@ -16,6 +16,7 @@
  */
 import browser from "webextension-polyfill";
 import {processIMAGEMaps} from './maps/maps-utils';
+import { getContext } from "./utils";
 
 var selectedElement: HTMLElement | null = null;
 
@@ -73,7 +74,7 @@ port.onMessage.addListener(message => {
             if (scheme === "http" || scheme === "https" || scheme==="data") {
                 port.postMessage({
                     "type": "resource",
-                    "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
+                    "context": selectedElement ? getContext(selectedElement) : null,
                     "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
                     "url": window.location.href,
                     "sourceURL": imageElement.currentSrc,
