@@ -127,9 +127,10 @@ port.onMessage.addListener(async (message) => {
             let sourceNode: AudioBufferSourceNode | undefined;
 
             function playPauseAudio(audioInfo?: any){
-                if (sourceNode !== undefined) {
+                if (sourceNode!== undefined) {
                     sourceNode.stop();
-                } else {
+                }
+                setTimeout(function(){
                     const data = audioInfo;
                     currentOffset = data ? data["offset"] as number:undefined;
                     currentDuration = data ? data["duration"] as number: undefined;
@@ -138,7 +139,7 @@ port.onMessage.addListener(async (message) => {
                     sourceNode.buffer = audioBuffer;
                     sourceNode.connect(audioCtx.destination);
                     sourceNode.start(0, currentOffset, currentDuration);
-                }
+                },100);
             }
 
             for (let idx = 0; idx < audioInfo.length; idx++) {
@@ -164,6 +165,7 @@ port.onMessage.addListener(async (message) => {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
+
 
         if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
             hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
