@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 export function processIMAGEMaps(document: Document, port: browser.Runtime.Port){
     Array.from(document.getElementsByTagName("iframe")).forEach(map => {
         if (!map.hasAttribute("tabindex") && !map.closest("a")) {
-            if (map.hasAttribute("src") && map.src.includes("google.com/maps")) {
+            if (map.hasAttribute("src") && (map.src.includes("google.com/maps") || map.src.includes("maps.google.ca/maps"))) {
                 map.setAttribute("tabindex", "0");
                 let map_button = document.createElement("button");
                 map_button.innerText = browser.i18n.getMessage("getMapRendering");
