@@ -45,7 +45,8 @@ async function generateQuery(message: { context: string, url: string, dims: [num
     graphicWidth = message.dims[0];
     graphicHeight = message.dims[1];
     const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
-    if (graphicWidth <= 1200 && graphicHeight <= 1200) {
+    const sizeMb = blobFile.size / 1024 / 1024;
+    if (graphicWidth <= 1200 && graphicHeight <= 1200 && sizeMb <= 4) {
       return blobFile;
     }
     else if (graphicWidth > 1200 && graphicWidth > graphicHeight) {
@@ -55,7 +56,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       message.dims[0] = Math.round(graphicWidth * 1200 / graphicHeight);
       message.dims[1] = 1200;
     }
-    console.debug(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
+    console.debug(`originalFile size ${sizeMb} MB`);
     const options = {
       maxSizeMB: 4,
       maxWidthOrHeight: 1200,
