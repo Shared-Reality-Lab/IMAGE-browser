@@ -44,14 +44,17 @@ async function generateQuery(message: { context: string, url: string, dims: [num
   }).then(async (blob: Blob) => {
     graphicWidth = message.dims[0];
     graphicHeight = message.dims[1];
-    if (graphicWidth > 1200 && graphicWidth > graphicHeight) {
+    const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
+    if (graphicWidth <= 1200 && graphicHeight <= 1200) {
+      return blobFile;
+    }
+    else if (graphicWidth > 1200 && graphicWidth > graphicHeight) {
       message.dims[0] = 1200;
       message.dims[1] = Math.round(graphicHeight * 1200 / graphicWidth);
     } else if (graphicHeight > 1200) {
       message.dims[0] = Math.round(graphicWidth * 1200 / graphicHeight);
       message.dims[1] = 1200;
     }
-    const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
     console.debug(`originalFile size ${blobFile.size / 1024 / 1024} MB`);
     const options = {
       maxSizeMB: 4,
