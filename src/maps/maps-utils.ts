@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import { IMAGERequest } from "../types/request.schema";
-import { getRenderers } from "../utils";
+import { getAllStorageSyncData, getRenderers } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
 export function processIMAGEMaps(document: Document, port: browser.Runtime.Port){
@@ -9,54 +9,24 @@ export function processIMAGEMaps(document: Document, port: browser.Runtime.Port)
             // domains list at www.google.com/supported_domains, but this is too long to manually put
             if (map.hasAttribute("src") && (/google.[\w\.]+\/maps/.test(map.src))) {
                 map.setAttribute("tabindex", "0");
-                let map_button = document.createElement("button");
-                map_button.innerText = browser.i18n.getMessage("getMapRendering");
+                let mapButton = document.createElement("button");
+
+                mapButton.innerText = browser.i18n.getMessage("getMapRendering");
+                let preprocessorMapButton = document.createElement("button");
+                preprocessorMapButton.innerText = browser.i18n.getMessage("getMapPreprocessorResponse");
                 // Get all the information about our found map and store the info. Then create a button to render the map
-                map_button.addEventListener("click", () => {
-                    const serializer = new XMLSerializer();
-                    let src = map.getAttribute("src");
-                    let q, lat, lon, zoom;
-                    let maptype = "roadmap";
-                    if(src?.includes("&q=")){ // assume src is not null and then look for a query string
-                       let i1 = src.indexOf("&q=") + 3;
-                       let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
-                       q = src.substring(i1, i2);
-                    }
-                    if(src?.includes("&center=")){ // try to find center of map
-                        let i1 = src.indexOf("&center=") + 8;
-                        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-                        let center = src.substring(i1, i2);
-                        lat = center.split(",")[0];
-                        lon = center.split(",")[1];
-                    }
-                    if(src?.includes("&zoom=")){ // try to find zoom of map
-                        let i1 = src.indexOf("&zoom=") + 6;
-                        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-                        zoom = src.substring(i1, i2);
-                    }
-                    if(src?.includes("&maptype=satellite")){ // only important map type right now is satellite
-                        maptype = "satellite";
-                    }
-                    if(lat && lon){ // only send the resource request if we have a lat and lon
-                        console.debug("Sending map resource request");
-                        port.postMessage({
-                            "type": "mapResource",
-                            "context": map ? serializer.serializeToString(map) : null,
-                            "coordinates": [parseFloat(lat), parseFloat(lon)],
-                            "toRender": "full"
-                        });
-                    }else if(q){ // if we don't have a lat and lon, but we have a query, send a search request
-                        console.debug("Sending map search request");
-                        port.postMessage({
-                            "type": "mapSearch",
-                            "context": map ? serializer.serializeToString(map) : null,
-                            "placeID": q,
-                            "toRender": "full"
-                        });
-                    }
+                mapButton.addEventListener("click", () => {
+                    sendMapRequest(port, map, "full");
                 });
-                map_button.setAttribute("tabindex", "0");
-                map.insertAdjacentElement("afterend", map_button);
+
+                mapButton.setAttribute("tabindex", "0");
+                map.insertAdjacentElement("afterend", mapButton);
+
+                preprocessorMapButton.setAttribute("id", "preprocessor-map-button");
+                preprocessorMapButton.addEventListener("click",()=>{
+                    sendMapRequest(port, map, "preprocess");
+                });
+                mapButton.insertAdjacentElement("afterend", preprocessorMapButton);
             }
         }
     });
@@ -90,3 +60,48 @@ export async function generateMapSearchQuery(message: { context: string, placeID
       "renderers": renderers
   } as IMAGERequest;
 }
+
+function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRender: String){
+    const serializer = new XMLSerializer();
+    let src = map.getAttribute("src");
+    let q, lat, lon, zoom;
+    let maptype = "roadmap";
+    if(src?.includes("&q=")){ // assume src is not null and then look for a query string
+        let i1 = src.indexOf("&q=") + 3;
+        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
+        q = src.substring(i1, i2);
+    }
+    if(src?.includes("&center=")){ // try to find center of map
+        let i1 = src.indexOf("&center=") + 8;
+        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+        let center = src.substring(i1, i2);
+        lat = center.split(",")[0];
+        lon = center.split(",")[1];
+    }
+    if(src?.includes("&zoom=")){ // try to find zoom of map
+        let i1 = src.indexOf("&zoom=") + 6;
+        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+        zoom = src.substring(i1, i2);
+    }
+    if(src?.includes("&maptype=satellite")){ // only important map type right now is satellite
+        maptype = "satellite";
+    }
+    if(lat && lon){ // only send the resource request if we have a lat and lon
+        console.debug("Sending map resource request");
+        port.postMessage({
+            "type": "mapResource",
+            "context": map ? serializer.serializeToString(map) : null,
+            "coordinates": [parseFloat(lat), parseFloat(lon)],
+            "toRender": toRender
+        });
+    }else if(q){ // if we don't have a lat and lon, but we have a query, send a search request
+        console.debug("Sending map search request");
+        port.postMessage({
+            "type": "mapSearch",
+            "context": map ? serializer.serializeToString(map) : null,
+            "placeID": q,
+            "toRender": toRender
+        });
+    }
+}
+
