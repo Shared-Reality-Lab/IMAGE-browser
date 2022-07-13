@@ -39,7 +39,8 @@
     },
     "content_scripts": [{
         "matches": ["<all_urls>"],
-        "js": ["content.ts"]
+        "js": ["content.ts"],
+        "css": ["styles.css"]
     }],
     "web_accessible_resources": [
         "info/*.ts",

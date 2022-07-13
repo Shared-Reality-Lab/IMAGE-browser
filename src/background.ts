@@ -251,8 +251,18 @@ async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
+  let tabs = browser.tabs.query({})
 
   if (showDebugOptions) {
+    tabs.then(function (tabs) {
+      for (var i = 0; i < tabs.length; i++) {
+          browser.tabs.insertCSS(tabs[i].id, {
+            code: `button#preprocessor-map-button{
+              display: inline-block;
+            }`
+          });
+      }},function(){});
+
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
@@ -281,7 +291,16 @@ async function updateDebugContextMenu() {
     browser.storage.sync.set({
       processItem: "",
       requestItem: "",
-    })
+    });
+    tabs.then(function (tabs) {
+      for (var i = 0; i < tabs.length; i++) {
+        browser.tabs.insertCSS(tabs[i].id, {
+          code: `
+          button#preprocessor-map-button{
+            display: none;
+          }`
+        });
+      }},function(){});
   }
 }
 

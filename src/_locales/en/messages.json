@@ -97,5 +97,9 @@
     "getMapRendering": {
         "message": "Get IMAGE Map Rendering",
         "description": "Label for button to get map renderings"
+    },
+    "getMapPreprocessorResponse": {
+        "message": "Get IMAGE preprocessed data",
+        "description": "Label for button to get Map Preprocessor Response"
     }
 }
