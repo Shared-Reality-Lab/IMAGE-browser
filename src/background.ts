@@ -257,7 +257,7 @@ async function updateDebugContextMenu() {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
           browser.tabs.insertCSS(tabs[i].id, {
-            code: `#preprocessor-map-button{
+            code: `button#preprocessor-map-button{
               display: inline-block;
             }`
           });
@@ -296,7 +296,7 @@ async function updateDebugContextMenu() {
       for (var i = 0; i < tabs.length; i++) {
         browser.tabs.insertCSS(tabs[i].id, {
           code: `
-          #preprocessor-map-button{
+          button#preprocessor-map-button{
             display: none;
           }`
         });

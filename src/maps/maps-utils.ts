@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import { IMAGERequest } from "../types/request.schema";
-import { getAllStorageSyncData, getRenderers } from "../utils";
+import { getRenderers } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
 export function processIMAGEMaps(document: Document, port: browser.Runtime.Port){
@@ -20,13 +20,19 @@ export function processIMAGEMaps(document: Document, port: browser.Runtime.Port)
                 });
 
                 mapButton.setAttribute("tabindex", "0");
-                map.insertAdjacentElement("afterend", mapButton);
+                let buttonContainer = document.createElement("div");
+                buttonContainer.style.display = "flex";
+                buttonContainer.style.marginTop = "5px";
 
                 preprocessorMapButton.setAttribute("id", "preprocessor-map-button");
+
                 preprocessorMapButton.addEventListener("click",()=>{
                     sendMapRequest(port, map, "preprocess");
                 });
-                mapButton.insertAdjacentElement("afterend", preprocessorMapButton);
+                buttonContainer.appendChild(mapButton);
+                buttonContainer.appendChild(preprocessorMapButton);
+                map.insertAdjacentElement("afterend", buttonContainer);
+
             }
         }
     });

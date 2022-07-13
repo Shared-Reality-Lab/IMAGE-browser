@@ -99,7 +99,7 @@
         "description": "Label for button to get map renderings"
     },
     "getMapPreprocessorResponse": {
-        "message": "Get Map Preprocessor Response",
-        "description": "Label for button to get Preprocess Map Renderings"
+        "message": "Get IMAGE preprocessed data",
+        "description": "Label for button to get Map Preprocessor Response"
     }
 }
