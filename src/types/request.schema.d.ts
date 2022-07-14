@@ -18,6 +18,12 @@ export interface IMAGERequest1 {
    * UUID v4 identifying the request.
    */
   request_uuid?: string;
+
+  /**
+   * Flag indicating the status of Debug Mode
+   */
+  debugMode?: boolean; 
+
   /**
    * Time the preprocessor was run in Unix time.
    */

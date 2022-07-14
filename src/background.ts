@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getRenderers } from './utils';
+import { getAllStorageSyncData, getRenderers, isDebugModeEnabled } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { SERVER_URL } from './config';
 
@@ -73,10 +73,11 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(blob);
     });
-  }).then(image => {
+  }).then(async image => {
     return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
+      "debugMode": await isDebugModeEnabled(),
       "URL": message.url,
       "graphic": image,
       "dimensions": message.dims,
@@ -93,6 +94,7 @@ async function generateLocalQuery(message: { context: string, dims: [number, num
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
+    "debugMode": await isDebugModeEnabled(),
     "graphic": message.image,
     "dimensions": message.dims,
     "context": message.context,

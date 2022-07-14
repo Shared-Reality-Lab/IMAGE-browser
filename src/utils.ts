@@ -51,3 +51,9 @@ export function getContext(selectedElement: HTMLElement) : string {
     }
     return serializer.serializeToString(result);
 } 
+
+/** Return if the Debug Mode is enabled in extension settings */
+export async function isDebugModeEnabled(): Promise<boolean>{
+    const storageData = await getAllStorageSyncData();
+    return storageData["developerMode"];
+}
