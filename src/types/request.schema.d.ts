@@ -18,7 +18,6 @@ export interface IMAGERequest1 {
    * UUID v4 identifying the request.
    */
   request_uuid?: string;
-
   /**
    * Time the preprocessor was run in Unix time.
    */
