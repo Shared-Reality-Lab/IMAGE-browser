@@ -19,9 +19,9 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getRenderers, isDebugModeEnabled, isDebugModeEnabled } from './utils';
+import { getAllStorageSyncData, getRenderers, isDebugModeEnabled } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { CAPABILITIES, capabilities, SERVER_URL } from './config';
+import { CAPABILITIES, SERVER_URL } from './config';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
