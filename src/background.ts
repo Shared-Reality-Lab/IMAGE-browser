@@ -19,9 +19,9 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getRenderers, isDebugModeEnabled } from './utils';
+import { getAllStorageSyncData, getRenderers, isDebugModeEnabled, isDebugModeEnabled } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { SERVER_URL } from './config';
+import { CAPABILITIES, capabilities, SERVER_URL } from './config';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -74,16 +74,17 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       reader.readAsDataURL(blob);
     });
   }).then(async image => {
+    const debugMode = await isDebugModeEnabled();
+    const capabilities = debugMode ? [CAPABILITIES.debugMode] : [];
     return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
-      "debugMode": await isDebugModeEnabled(),
       "URL": message.url,
       "graphic": image,
       "dimensions": message.dims,
       "context": message.context,
       "language": "en",
-      "capabilities": [],
+      "capabilities": capabilities,
       "renderers": renderers
     } as IMAGERequest;
   });
@@ -91,15 +92,16 @@ async function generateQuery(message: { context: string, url: string, dims: [num
 
 async function generateLocalQuery(message: { context: string, dims: [number, number], image: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  const debugMode = await isDebugModeEnabled();
+  const capabilities = debugMode ? [CAPABILITIES.debugMode] : [];
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
-    "debugMode": await isDebugModeEnabled(),
     "graphic": message.image,
     "dimensions": message.dims,
     "context": message.context,
     "language": "en",
-    "capabilities": [],
+    "capabilities": capabilities,
     "renderers": renderers
   } as IMAGERequest;
 }
