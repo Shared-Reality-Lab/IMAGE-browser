@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import { IMAGERequest } from "../types/request.schema";
-import { getRenderers } from "../utils";
+import { getCapabilities, getRenderers } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
 export function processIMAGEMaps(document: Document, port: browser.Runtime.Port){
@@ -40,6 +40,7 @@ export function processIMAGEMaps(document: Document, port: browser.Runtime.Port)
 
 export async function generateMapQuery(message: { context: string, coordinates: [number, number] }): Promise<IMAGERequest> {
     let renderers = await getRenderers();
+    let capabilities = await getCapabilities();
     return {
         "request_uuid": uuidv4(),
         "timestamp": Math.round(Date.now() / 1000),
@@ -49,20 +50,21 @@ export async function generateMapQuery(message: { context: string, coordinates: 
                         },
         "context": message.context,
         "language": "en",
-        "capabilities": [],
+        "capabilities": capabilities,
         "renderers": renderers
     } as IMAGERequest;
 }
 
 export async function generateMapSearchQuery(message: { context: string, placeID: string,}): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
       "placeID": message.placeID,
       "context": message.context,
       "language": "en",
-      "capabilities": [],
+      "capabilities": capabilities,
       "renderers": renderers
   } as IMAGERequest;
 }

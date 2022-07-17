@@ -19,9 +19,9 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getRenderers, isDebugModeEnabled } from './utils';
+import { getAllStorageSyncData, getCapabilities, getRenderers } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { CAPABILITIES, SERVER_URL } from './config';
+import { SERVER_URL } from './config';
 
 let ports: Runtime.Port[] = [];
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -32,6 +32,7 @@ var graphicUrl: string = "";
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   graphicUrl = message.sourceURL
   var graphicWidth: number;
   var graphicHeight: number;
@@ -74,8 +75,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       reader.readAsDataURL(blob);
     });
   }).then(async image => {
-    const debugMode = await isDebugModeEnabled();
-    const capabilities = debugMode ? [CAPABILITIES.debugMode] : [];
     return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
@@ -92,8 +91,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
 
 async function generateLocalQuery(message: { context: string, dims: [number, number], image: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
-  const debugMode = await isDebugModeEnabled();
-  const capabilities = debugMode ? [CAPABILITIES.debugMode] : [];
+  let capabilities = await getCapabilities();
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
@@ -108,12 +106,13 @@ async function generateLocalQuery(message: { context: string, dims: [number, num
 
 async function generateChartQuery(message: { highChartsData: { [k: string]: unknown } }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
     "highChartsData": message.highChartsData,
     "language": "en",
-    "capabilities": [],
+    "capabilities": capabilities,
     "renderers": renderers
   } as IMAGERequest;
 }
