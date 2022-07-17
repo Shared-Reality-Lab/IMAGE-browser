@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getRenderers } from './utils';
+import { getAllStorageSyncData, getCapabilities, getRenderers } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { SERVER_URL } from './config';
 
@@ -32,6 +32,7 @@ var graphicUrl: string = "";
 
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   graphicUrl = message.sourceURL
   var graphicWidth: number;
   var graphicHeight: number;
@@ -82,7 +83,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       "dimensions": message.dims,
       "context": message.context,
       "language": "en",
-      "capabilities": [],
+      "capabilities": capabilities,
       "renderers": renderers
     } as IMAGERequest;
   });
@@ -90,6 +91,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
 
 async function generateLocalQuery(message: { context: string, dims: [number, number], image: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
@@ -97,19 +99,20 @@ async function generateLocalQuery(message: { context: string, dims: [number, num
     "dimensions": message.dims,
     "context": message.context,
     "language": "en",
-    "capabilities": [],
+    "capabilities": capabilities,
     "renderers": renderers
   } as IMAGERequest;
 }
 
 async function generateChartQuery(message: { highChartsData: { [k: string]: unknown } }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
+  let capabilities = await getCapabilities();
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
     "highChartsData": message.highChartsData,
     "language": "en",
-    "capabilities": [],
+    "capabilities": capabilities,
     "renderers": renderers
   } as IMAGERequest;
 }

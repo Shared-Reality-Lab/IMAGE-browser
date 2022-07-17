@@ -26,6 +26,7 @@ import { IMAGERequest } from "../types/request.schema";
 
 import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
+import { RENDERERS } from '../config';
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -71,7 +72,7 @@ port.onMessage.addListener(async (message) => {
         labelButton.textContent = label + " " + count + ": " + rendering["description"];
         container.append(labelButton);
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.Text") {
+        if (rendering["type_id"] === RENDERERS.text) {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const text = rendering["data"]["text"] as string;
             const p = document.createElement("p");
@@ -81,7 +82,7 @@ port.onMessage.addListener(async (message) => {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
-        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
+        else if (rendering["type_id"] === RENDERERS.simpleAudio) {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const audio = document.createElement("audio");
             audio.setAttribute("controls", "");
@@ -96,7 +97,7 @@ port.onMessage.addListener(async (message) => {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
-        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
+        else if (rendering["type_id"] === RENDERERS.segmentAudio) {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const selectDiv = document.createElement("div");
             selectDiv.classList.add("form-floating");
@@ -176,7 +177,7 @@ port.onMessage.addListener(async (message) => {
             });
         }
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
+        if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
             hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
