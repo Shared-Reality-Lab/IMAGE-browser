@@ -74,7 +74,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(blob);
     });
-  }).then(async image => {
+  }).then(image => {
     return {
       "request_uuid": uuidv4(),
       "timestamp": Math.round(Date.now() / 1000),
