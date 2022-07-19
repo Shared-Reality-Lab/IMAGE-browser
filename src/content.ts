@@ -15,7 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import browser from "webextension-polyfill";
-import {processIMAGEMaps} from './maps/maps-utils';
+import {processIMAGEMaps, processIMAGEMAPImages} from './maps/maps-utils';
 import { getContext } from "./utils";
 
 var selectedElement: HTMLElement | null = null;
@@ -113,6 +113,8 @@ port.onMessage.addListener(message => {
     return true;
 });
 
+
+
 // Process images on page
 Array.from(document.getElementsByTagName("img")).forEach(image => {
     if (!image.hasAttribute("tabindex") && !image.closest("a")) {
@@ -120,9 +122,10 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
     }
 });
 
-
+processIMAGEMAPImages(document, port);
 // Process maps on page
 processIMAGEMaps(document, port);
+
 
 
 
