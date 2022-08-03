@@ -34,8 +34,6 @@ async function generateQuery(message: { context: string, url: string, dims: [num
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
   graphicUrl = message.sourceURL
-  var graphicWidth: number;
-  var graphicHeight: number;
   return fetch(message.sourceURL).then(resp => {
     if (resp.ok) {
       return resp.blob();
@@ -43,24 +41,14 @@ async function generateQuery(message: { context: string, url: string, dims: [num
       throw resp;
     }
   }).then(async (blob: Blob) => {
-    graphicWidth = message.dims[0];
-    graphicHeight = message.dims[1];
     const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
     const sizeMb = blobFile.size / 1024 / 1024;
-    if (graphicWidth <= 1200 && graphicHeight <= 1200 && sizeMb <= 4) {
-      return blobFile;
-    }
-    else if (graphicWidth > 1200 && graphicWidth > graphicHeight) {
-      message.dims[0] = 1200;
-      message.dims[1] = Math.round(graphicHeight * 1200 / graphicWidth);
-    } else if (graphicHeight > 1200) {
-      message.dims[0] = Math.round(graphicWidth * 1200 / graphicHeight);
-      message.dims[1] = 1200;
+    if (sizeMb <= 4) {
+        return blobFile;
     }
     console.debug(`originalFile size ${sizeMb} MB`);
     const options = {
       maxSizeMB: 4,
-      maxWidthOrHeight: 1200,
       useWebWorker: true,
       alwaysKeepResolution: false,
     }
