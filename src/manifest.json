@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "__MSG_extensionName__",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "description": "__MSG_extensionDescription__",
     "homepage_url": "https://image.a11y.mcgill.ca",
     "default_locale": "en",
@@ -39,7 +39,8 @@
     },
     "content_scripts": [{
         "matches": ["<all_urls>"],
-        "js": ["content.ts"]
+        "js": ["content.ts"],
+        "css": ["styles.css"]
     }],
     "web_accessible_resources": [
         "info/*.ts",

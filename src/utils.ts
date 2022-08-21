@@ -1,4 +1,5 @@
 import browser from "webextension-polyfill";
+import { CAPABILITIES, RENDERERS } from "./config";
 
 export function getAllStorageSyncData() {
     return browser.storage.sync.get({
@@ -18,19 +19,20 @@ export function getAllStorageSyncData() {
     });
 };
 
+/** Return the Renderers supported by extension */
 export async function getRenderers(): Promise<string[]>{
     let renderers : string[] = [];
     let items = await getAllStorageSyncData();
     if(items["audio"]){
-    renderers.push("ca.mcgill.a11y.image.renderer.SegmentAudio");
-    renderers.push("ca.mcgill.a11y.image.renderer.SimpleAudio");
+      renderers.push(RENDERERS.segmentAudio);
+      renderers.push(RENDERERS.simpleAudio);
     }
     if(items["text"]){
-    renderers.push("ca.mcgill.a11y.image.renderer.Text");
+      renderers.push(RENDERERS.text);
     }
     if(items["haply2diy"]){
-    renderers.push("ca.mcgill.a11y.image.renderer.SimpleHaptics");
-    renderers.push("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
+      renderers.push(RENDERERS.simpleHaptics);
+      renderers.push(RENDERERS.photoAudioHaptics);
     }
     return renderers;
   }
@@ -51,3 +53,13 @@ export function getContext(selectedElement: HTMLElement) : string {
     }
     return serializer.serializeToString(result);
 } 
+
+/** Return the capabilities supported by extension */
+export async function getCapabilities(): Promise<string[]>{
+  let capabilities = [];
+  let items = await getAllStorageSyncData();
+  if(items["developerMode"]){
+    capabilities.push(CAPABILITIES.debugMode);
+  }
+  return capabilities;
+}
