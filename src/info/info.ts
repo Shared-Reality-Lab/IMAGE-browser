@@ -26,6 +26,7 @@ import { IMAGERequest } from "../types/request.schema";
 
 import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
+import { RENDERERS } from '../config';
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -73,7 +74,7 @@ port.onMessage.addListener(async (message) => {
         headerElement.append(labelButton);
         container.append(headerElement);
 
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.Text") {
+        if (rendering["type_id"] === RENDERERS.text) {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const text = rendering["data"]["text"] as string;
             const p = document.createElement("p");
@@ -83,7 +84,7 @@ port.onMessage.addListener(async (message) => {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
-        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SimpleAudio") {
+        else if (rendering["type_id"] === RENDERERS.simpleAudio) {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const audio = document.createElement("audio");
             audio.setAttribute("controls", "");
@@ -98,7 +99,8 @@ port.onMessage.addListener(async (message) => {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
             }
         }
-        else if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.SegmentAudio") {
+        else if (rendering["type_id"] === RENDERERS.segmentAudio) {
+            let currentAudioIndex : number = -2;
             let contentDiv = utils.addRenderingContent(container, contentId);
             const selectDiv = document.createElement("div");
             selectDiv.classList.add("form-floating");
@@ -108,7 +110,7 @@ port.onMessage.addListener(async (message) => {
             fullRenderingButton.classList.add("btn","btn-secondary");
             fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
             fullRenderingButton.addEventListener("click", function(){
-                playPauseAudio();
+                playPauseAudio(-1);
             });
             fullRenderingHeader.append(fullRenderingButton);
             selectDiv.append(fullRenderingHeader);
@@ -126,20 +128,28 @@ port.onMessage.addListener(async (message) => {
             let currentDuration: number | undefined;
             let sourceNode: AudioBufferSourceNode | undefined;
 
-            function playPauseAudio(audioInfo?: any){
-                if (sourceNode!== undefined) {
-                    sourceNode.stop();
+            function playPauseAudio(index: number, audioInfo?: any){
+                if (index == currentAudioIndex && sourceNode){
+                  /** Do not create a new audio context, just pause/play the current audio*/
+                  (sourceNode.playbackRate.value == 0)?(sourceNode.playbackRate.value = 1): (sourceNode.playbackRate.value = 0);
+                  currentAudioIndex = index;
                 }
-                setTimeout(function(){
-                    const data = audioInfo;
-                    currentOffset = data ? data["offset"] as number:undefined;
-                    currentDuration = data ? data["duration"] as number: undefined;
-                    sourceNode = audioCtx.createBufferSource();
-                    sourceNode.addEventListener("ended", () => { sourceNode = undefined; });
-                    sourceNode.buffer = audioBuffer;
-                    sourceNode.connect(audioCtx.destination);
-                    sourceNode.start(0, currentOffset, currentDuration);
-                },100);
+                else {
+                    if (sourceNode){
+                        sourceNode.stop();
+                    }
+                    setTimeout(function(){
+                        currentAudioIndex = index;
+                        const data = audioInfo;
+                        currentOffset = data ? data["offset"] as number:undefined;
+                        currentDuration = data ? data["duration"] as number: undefined;
+                        sourceNode = audioCtx.createBufferSource();
+                        sourceNode.addEventListener("ended", () => { sourceNode = undefined;});
+                        sourceNode.buffer = audioBuffer;
+                        sourceNode.connect(audioCtx.destination);
+                        sourceNode.start(0, currentOffset, currentDuration);
+                    },100);
+                }
             }
 
             for (let idx = 0; idx < audioInfo.length; idx++) {
@@ -150,7 +160,7 @@ port.onMessage.addListener(async (message) => {
                 buttonElement.textContent = val["name"]
                 headerElement.append(buttonElement);
                 buttonElement.addEventListener("click",function(){
-                    playPauseAudio(audioInfo[idx])
+                    playPauseAudio(idx,audioInfo[idx])
                 });
                 selectDiv.append(headerElement);
             }
@@ -166,8 +176,7 @@ port.onMessage.addListener(async (message) => {
             }
         }
 
-
-        if (rendering["type_id"] === "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics") {
+        if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
             hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
