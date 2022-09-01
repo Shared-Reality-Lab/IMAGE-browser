@@ -23,7 +23,7 @@ import { getAllStorageSyncData, getCapabilities, getRenderers } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { SERVER_URL } from './config';
 
-let ports: Runtime.Port[] = [];
+let ports : { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window;
@@ -301,9 +301,8 @@ function storeConnection(p: Runtime.Port) {
     ports[id] = p;
     ports[id].onMessage.addListener(handleMessage.bind(null, p));
     ports[id].onDisconnect.addListener((p: Runtime.Port) => {
-      const idx = ports.indexOf(p);
-      if (idx >= 0) {
-        ports.splice(idx, 1);
+      if(id){
+        delete ports[id];
       }
     });
   }
