@@ -15,13 +15,16 @@ This repository contains the necessary components to run the multimodal audio-ha
 * The audio-haptic experience is equivalent to that shown in [UX diagram] (TODO: link image), i.e., it plays a TTS narration for each segment, followed by a sonified experience of all subsegments within that segment, and then a haptically guided tour of each subsegment with the 2DIY. Once all segments are covered, the same process is repeated for objects, grouped and ungrouped. Subsegments are defined as isolated contours of a segment, as shown in the image below. [TODO: better explanation/writing].
 * The Previous, Next, and Stop buttons can be used to navigate back and forth in the interaction, which always follows the pattern:
 
+![a flowchart of the audio-haptic rendering](./images/multimodal_rendering_flowchart.png)
+
+![differentiating an object, segment, and subsegment](./images/object_segments.png)
  ```TTS narration <-> sonification <-> haptic guidance``` (TODO: make image from this)
 
  For example, the clicking the "Next Button" during the TTS narration of a segment will immediately skip the TTS and move to the sonified experience of that segment. Clicking the "Next" button again will move to the guided tour of that segment, starting with the first subsegment. Clicking "Previous" during a TTS narration of the second segment will run a guided tour of the last subsegment of the first segment.
 
 ## How does it work?  
 
-TODO: put image
+![the dataflow between the main browser script, the worker, and the 2DIY](./images/overallSystem.png)
 
 Data from the handler is sent to the ```hapi-utils.ts``` main script file.
 
