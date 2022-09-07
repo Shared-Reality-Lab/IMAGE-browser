@@ -12,7 +12,7 @@ This repository contains the necessary components to run the multimodal audio-ha
 * In the extension settings under the "Advanced Options", turn on Developer Mode and select the "Haply 2diy" option. Change the server URL if needed.
 * Obtain an IMAGE rendering of a photograph and check if the list of available renderers in the pop-up window contains a photo audio-haptic renderer. If one is not shown, recheck the first three steps, and/or try obtaining an IMAGE rendering for another photograph.
 * Click the "Connect To Haply" button and select the COM port for the Haply device. Steadily grasp the 2DIY's knob and click the "START" button to initiate the audio-haptic experience.
-* The audio-haptic experience is equivalent to that shown in [UX diagram] (TODO: link image), i.e., it plays a TTS narration for each segment, followed by a sonified experience of all subsegments within that segment, and then a haptically guided tour of each subsegment with the 2DIY. Once all segments are covered, the same process is repeated for objects, grouped and ungrouped [TODO: better explanation].
+* The audio-haptic experience is equivalent to that shown in [UX diagram] (TODO: link image), i.e., it plays a TTS narration for each segment, followed by a sonified experience of all subsegments within that segment, and then a haptically guided tour of each subsegment with the 2DIY. Once all segments are covered, the same process is repeated for objects, grouped and ungrouped. Subsegments are defined as isolated contours of a segment, as shown in the image below. [TODO: better explanation/writing].
 * The Previous, Next, and Stop buttons can be used to navigate back and forth in the interaction, which always follows the pattern:
 
  ```TTS narration <-> sonification <-> haptic guidance``` (TODO: make image from this)
@@ -20,6 +20,8 @@ This repository contains the necessary components to run the multimodal audio-ha
  For example, the clicking the "Next Button" during the TTS narration of a segment will immediately skip the TTS and move to the sonified experience of that segment. Clicking the "Next" button again will move to the guided tour of that segment, starting with the first subsegment. Clicking "Previous" during a TTS narration of the second segment will run a guided tour of the last subsegment of the first segment.
 
 ## How does it work?  
+
+TODO: put image
 
 Data from the handler is sent to the ```hapi-utils.ts``` main script file.
 
