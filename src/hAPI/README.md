@@ -1,6 +1,6 @@
 # What is this?
 
-This repository contains the necessary components to run a multimodal audio-haptic renderer in the IMAGE extension using the Haply 2DIY device.
+This repository contains the necessary components to run the multimodal audio-haptic photo renderer in the IMAGE extension using the Haply 2DIY device.
 
 ## Requirements
 
