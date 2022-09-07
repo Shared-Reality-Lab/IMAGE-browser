@@ -24,7 +24,7 @@ This repository contains the necessary components to run the multimodal audio-ha
 
 ## How does it work?  
 
-![the dataflow between the main browser script, the worker, and the 2DIY](./images/overallSystem.png)
+![the dataflow between the main browser script, the worker, and the 2DIY](./images/browser_arch.png)
 
 Data from the handler is sent to the ```hapi-utils.ts``` main script file.
 
