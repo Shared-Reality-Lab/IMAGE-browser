@@ -20,13 +20,13 @@ This repository contains the necessary components to run the multimodal audio-ha
  For example, the clicking the "Next Button" during the TTS narration of a segment will immediately skip the TTS and move to the sonified experience of that segment. Clicking the "Next" button again will move to the guided tour of that segment, starting with the first subsegment. Clicking "Previous" during a TTS narration of the second segment will run a guided tour of the last subsegment of the first segment.
 
 ## How does it work?  
---- 
+
 Data from the handler is sent to the ```hapi-utils.ts``` main script file.
 
 Code to play audio files is contained within the main script, while all haptic code runs inside a web worker. Since the audio and haptic experiences are intended to be run one after the other in a timed-fashion, there is back and forth communication between the main script and worker to keep track of state variables. For example, the ```doneWithAudio``` variable is set to true once an audio file has finished playing, sent to the worker, and  then acknowledged by the worker to ready the next haptic segment or object to be played. The code that handles the interactivity is also contained in the ```worker.ts``` file.
 
 ## Haptic Loop
----
+
 Code for the haptic calculations is contained in the ```worker.ts``` webworker file. A web worker allows scripts to be executed in background threads, allowing it to perform tasks without interfering with the main script. Since the force calculations required for the 2DIY can be intensive, the web worker ensures that the performance of the main script is not hindered.
  
 The worker is instantiated in the main script (```info.ts```) by sending a preliminary message containing the  data points for the segments and objects contained in the image. The normalized coordinates returned from the handler are mapped into the 2DIY's frame of reference and then grouped into specific data types (segments, or objects) which are then utilized in functions called from the haptic loop to trace contours when necessary.
@@ -36,11 +36,11 @@ The worker is currently set up to infinitely loop, refreshing at a rate of 1 ms.
 Within a single haptic loop, the worker is responsible for reading the current position of the end effector, communicating this position information along with state tracking variables to the main script, and finally calculating the required forces which are transmitted to the 2DIY.
 
 ## Visuals
----
+
 The visuals are generated in the ```hapi-utils.ts``` file. An HTML canvas is created under the dropdown for the haptic rendering through the ```createCanvas()``` function. This canvas displays the selected graphics along with the instantaneous end effector position and the outlines of any segments or objects being rendered. 
 
 The [requestAnimationFrame(draw)](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) function is responsible for drawing graphics on the canvas, including the photograph itself. The ```updateAnimation()``` called by the ```draw()``` callback function takes in the current position of the 2DIY's end-effector and information about the current segment and objection. Because the callback function is called 60 times a second, it is advisable to only draw immediately necessary information, such as the 2DIY avatar and outlines of the current subsegment or object being drawn only.
 
 ## hAPI TypeScript Library 
----
+
 The [hAPI library](https://github.com/Shared-Reality-Lab/IMAGE-browser/tree/main/src/hAPI/libraries) used in the project is a TypeScript port of the [Java hAPI library](https://gitlab.com/Haply/hAPI) originally authored by Oliver Anthony, [Haply Robotics](https://haply.co/). ```Vector.ts``` is an additional helper file for vector calculations.
