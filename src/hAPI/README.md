@@ -14,10 +14,10 @@ This repository contains the necessary components to run the multimodal audio-ha
 * Click the "Connect To Haply" button and select the COM port for the Haply device. Steadily grasp the 2DIY's knob and click the "START" button to initiate the audio-haptic experience.
 * The audio-haptic experience is equivalent to that shown in state diagram below, i.e., it plays a TTS narration for each segment, followed by a sonified experience of all subsegments within that segment, and then a haptically guided tour of each subsegment with the 2DIY. Once all segments are covered, the same process is repeated for objects, starting with grouped objects and then ungrouped objects. Subsegments are defined as isolated contours of a segment, as shown in the image below.
 * The Previous, Next, and Stop buttons can be used to navigate back and forth in the interaction, which always follows the pattern:
-![a state machine diagram explaining how the audio-haptic experience works](./images/haptics_state_machine.png)
+![a state machine diagram explaining how the audio-haptic experience works](./images/haptics_state_machine.png){:height="250px"}
 NOTE:  this diagram will be changed slighly to indicate a starting state
 
-![differentiating an object, segment, and subsegment](./images/object_segments.png)
+![differentiating an object, segment, and subsegment](./images/object_segments.png){:height="250px"}
 
  For example, the clicking the "Next Button" during the TTS narration of a segment will immediately skip the TTS and move to the sonified experience of that segment. Clicking the "Next" button again will move to the guided tour of that segment, starting with the first subsegment. Clicking "Previous" during a TTS narration of the second segment will run a guided tour of the last subsegment of the first segment.
 
