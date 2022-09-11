@@ -22,7 +22,9 @@ const request_uuid = urlParams.get("uuid") || "";
 const objectHash = urlParams.get("hash") || "";
 const serverURL = urlParams.get("serverURL") || "";
 
-if (request_uuid === "" || objectHash === "" || serverURL === "") { console.error("UUID or hash or server empty. This shouldn't happen. Verify GET parameters."); }
+if (request_uuid === "" || objectHash === "" || serverURL === "") { 
+    console.error("UUID or hash or server empty. This shouldn't happen. Verify GET parameters."); 
+}
 
 const formButton = document.getElementById("submit-button");
 formButton?.addEventListener("click", () => {

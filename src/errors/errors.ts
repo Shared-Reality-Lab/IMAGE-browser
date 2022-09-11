@@ -16,3 +16,8 @@
  */
 const closeButton : Element | null = document.getElementById('closing-button');
 closeButton?.addEventListener("click", () => window.close());
+
+const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
+if (feedbackAnchor) {
+    feedbackAnchor.href += window.location.search;
+}
