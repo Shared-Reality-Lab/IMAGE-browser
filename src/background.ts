@@ -16,6 +16,7 @@
  */
 import browser, { Runtime } from "webextension-polyfill";
 import { v4 as uuidv4 } from "uuid";
+import hash from "object-hash";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
@@ -151,26 +152,36 @@ async function handleMessage(p: Runtime.Port, message: any) {
           height: 100,
           width: 400,
         })
-        let resp = await fetch(serverUrl + "render", {
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": JSON.stringify(query)
-        });
-        browser.windows.remove(progressWindow.id!)
-        let json: IMAGEResponse;
-        if (resp.ok) {
-          json = await resp.json();
-        } else {
+        let resp: Response;
+        let json: IMAGEResponse = { "request_uuid": "", "timestamp": 0, "renderings": [] };
+        try{
+          resp = await fetch(serverUrl + "render", {
+            "method": "POST",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": JSON.stringify(query)
+          });
+          browser.windows.remove(progressWindow.id!)
+          if (resp.ok) {
+            json = await resp.json();
+          } else {
+            browser.windows.create({
+              type: "panel",
+              url: "errors/http_error.html"
+            });
+            console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+            const textContent = await resp.text();
+            console.error(textContent);
+            throw new Error(textContent);
+          }
+        } catch {
+          browser.windows.remove(progressWindow.id!);
           browser.windows.create({
             type: "panel",
             url: "errors/http_error.html"
           });
-          console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
-          const textContent = await resp.text();
-          console.error(textContent);
-          throw new Error(textContent);
+          return;
         }
         if (json["renderings"].length > 0) {
           if (query["request_uuid"] !== undefined) {
@@ -192,7 +203,10 @@ async function handleMessage(p: Runtime.Port, message: any) {
         } else {
           await browser.windows.create({
             type: "panel",
-            url: "errors/no_renderings.html"
+            url: 'errors/no_renderings.html?uuid=' +
+            encodeURIComponent((query['request_uuid']||'')) + "&hash=" +
+            encodeURIComponent(hash(query)) + "&serverURL=" +
+            encodeURIComponent(serverUrl.toString())
           });
         }
       }
