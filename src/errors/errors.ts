@@ -19,9 +19,5 @@ closeButton?.addEventListener("click", () => window.close());
 
 const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
 if (feedbackAnchor) {
-    // const urlParams = new URLSearchParams(window.location.search);
-    // let request_uuid =  urlParams.get("uuid") || "";
-    // let request = urlParams.get("hash") || "";
-    // let serverUrl = urlParams.get("serverURL") || "";
     feedbackAnchor.href += window.location.search;
 }
