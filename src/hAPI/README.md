@@ -7,7 +7,7 @@ This repository contains the necessary components to run the multimodal audio-ha
 * A [Haply 2DIY](https://2diy.haply.co/) with its firmware installed.
 ## How To Use
 
-* Ensure the Docker container hosting the appropriate haptic handler is running on the development / main server.
+* Ensure the Docker container hosting the [photo audio haptics handler](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/handlers/photo-audio-haptics-handler) is running on the development / main server.
 * Connect the Haply 2DIY device through a [serial USB connection](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API).
 * In the extension settings under the "Advanced Options", turn on Developer Mode and select the "Haply 2diy" option. Change the server URL if needed.
 * Get an IMAGE rendering of a photograph, wait for a response and then and check if the list of available renderers in the pop-up window contains a photo audio-haptic renderer. If not, recheck the first three steps, and/or try obtaining an IMAGE rendering for another photograph.
