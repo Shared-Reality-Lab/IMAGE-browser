@@ -50,4 +50,4 @@ The [requestAnimationFrame(draw)](https://developer.mozilla.org/en-US/docs/Web/A
 
 ## hAPI TypeScript Library 
 
-The [hAPI library](https://github.com/Shared-Reality-Lab/IMAGE-browser/tree/main/src/hAPI/libraries) used in the project is a TypeScript port of the [Java hAPI library](https://gitlab.com/Haply/hAPI) originally authored by Oliver Anthony, [Haply Robotics](https://haply.co/). ```Vector.ts``` is an additional helper file for vector calculations.
+The [hAPI library](https://github.com/Shared-Reality-Lab/IMAGE-browser/tree/main/src/hAPI/libraries) used in the project is a TypeScript port of the [Java hAPI library](https://gitlab.com/Haply/hAPI) originally authored by Oliver Anthony, [Haply Robotics](https://haply.co/). ```Vector.ts``` is an additional helper file for vector calculations, modified slightly from [evanw's vector.js](https://evanw.github.io/lightgl.js/docs/vector.html).
