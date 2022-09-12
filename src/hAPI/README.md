@@ -38,7 +38,7 @@ The worker is currently set up to infinitely loop, refreshing at a rate of 1 ms.
 
 Within a single haptic loop, the worker is responsible for reading the current position of the end effector, communicating this position information along with state tracking variables to the main script, and finally calculating the required forces which are transmitted to the 2DIY.
 
-The ```moveToPos()``` function is responsible for setting the forces based on the next position, calculated using the difference between the current end-effector position and next in the index of the current subsegment or object. It utilizes a PID filter and 5-way moving average filter.
+The ```moveToPos()``` function is responsible for setting the forces based on the next position, calculated using the difference between the current end-effector position and next in the index of the current subsegment or object. The output force calculation utilizes a PID filter, and a moving average filter that uses a weighted average of the previous six force vectors.
 
 For grouped objects, a convex hull is used to generate an array 'connecting' the centroid of each object within the group. Interpolation is then used to generate a much larger array of points using the ```upsample()``` function, which allows for the 2DIY to smoothly trace a path connecting the object centroids as if they formed a segment.
 
