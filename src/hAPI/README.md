@@ -4,7 +4,7 @@ This repository contains the necessary components to run the multimodal audio-ha
 
 ## Requirements
 
-* A Haply 2DIY with its firmware installed.
+* A [Haply 2DIY](https://2diy.haply.co/) with its firmware installed.
 ## How To Use
 
 * Ensure the Docker container hosting the appropriate haptic handler is running on the development / main server.
