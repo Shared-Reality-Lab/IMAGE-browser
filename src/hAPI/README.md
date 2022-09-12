@@ -35,7 +35,7 @@ Code for the haptic calculations is contained in the ```worker.ts``` webworker f
  
 The worker is instantiated in the ```hapi-utils.ts``` script by sending a preliminary message containing the data points for the segments and objects contained in the image. The normalized coordinates returned from the handler are mapped into the 2DIY's frame of reference and then grouped into specific data types (segments or objects) which are then utilized in functions called from the haptic loop to trace contours or move to certain positions when necessary.
 
-The worker is currently set up to infinitely loop, refreshing at a rate of 1 ms. However, stability issues occur when ensuring that this is maintained at all times. 
+The worker is currently set up to infinitely loop, refreshing at a rate of 1 ms. However, [stability issues occur](https://github.com/Shared-Reality-Lab/IMAGE-browser/issues/223) when ensuring that this is maintained at all times. 
 
 Within a single haptic loop, the worker is responsible for reading the current position of the end effector, communicating this position information along with state tracking variables to the main script, and finally calculating the required forces which are transmitted to the 2DIY.
 
