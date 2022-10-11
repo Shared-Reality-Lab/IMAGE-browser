@@ -61,6 +61,7 @@ port.onMessage.addListener(async (message) => {
         let container = document.createElement("section");
         container.classList.add("container");
         container.classList.add("rendering");
+        let headerElement = document.createElement("h1");
         let labelButton = document.createElement("button");
         let contentId = "m-" + uuidv4();
         labelButton.classList.add("btn", "btn-primary");
@@ -70,7 +71,8 @@ port.onMessage.addListener(async (message) => {
         labelButton.setAttribute("aria-expanded", "false");
         labelButton.setAttribute("aria-controls", contentId);
         labelButton.textContent = label + " " + count + ": " + rendering["description"];
-        container.append(labelButton);
+        headerElement.append(labelButton);
+        container.append(headerElement);
 
         if (rendering["type_id"] === RENDERERS.text) {
             let contentDiv = utils.addRenderingContent(container, contentId);
@@ -98,47 +100,22 @@ port.onMessage.addListener(async (message) => {
             }
         }
         else if (rendering["type_id"] === RENDERERS.segmentAudio) {
+            let currentAudioIndex : number = -2;
             let contentDiv = utils.addRenderingContent(container, contentId);
             const selectDiv = document.createElement("div");
             selectDiv.classList.add("form-floating");
             contentDiv.append(selectDiv);
-            const label = document.createElement("label");
-            label.textContent = browser.i18n.getMessage("segmentAudioSelLabel");
-            label.classList.add("form-label");
-            const select = document.createElement("select");
-            select.classList.add("form-select");
-            select.setAttribute("id", "m-" + uuidv4());
-            label.setAttribute("for", select.id);
-            const fullOption = document.createElement("option");
-            fullOption.setAttribute("value", "full");
-            fullOption.setAttribute("selected", "true");
-            fullOption.textContent = browser.i18n.getMessage("segmentAudioFullRendering");
-            select.append(fullOption);
+            const fullRenderingHeader = document.createElement("h2");
+            const fullRenderingButton = document.createElement("button");
+            fullRenderingButton.classList.add("btn","btn-secondary");
+            fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
+            fullRenderingButton.addEventListener("click", function(){
+                playPauseAudio(-1);
+            });
+            fullRenderingHeader.append(fullRenderingButton);
+            selectDiv.append(fullRenderingHeader);
+
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
-            // Construct dropdown menu from returned audio segments
-            for (let idx = 0; idx < audioInfo.length; idx++) {
-                const opt = document.createElement("option");
-                opt.setAttribute("value", idx.toString());
-                const val = audioInfo[idx];
-                opt.textContent = val["name"];
-                select.append(opt);
-            }
-            selectDiv.append(select);
-            selectDiv.append(label);
-
-            const button = document.createElement("button");
-            button.textContent = browser.i18n.getMessage("segmentAudioButton");
-            button.classList.add("btn", "btn-secondary");
-            selectDiv.append(button);
-
-            const download = document.createElement("a");
-            download.setAttribute("href", rendering["data"]["audioFile"] as string);
-            download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = "Download Audio File";
-            contentDiv.append(download);
-            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
-                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
-            }
             // Set up audio controls
             const audioCtx = new window.AudioContext();
             const audioBuffer = await fetch(rendering["data"]["audioFile"] as string).then(resp => {
@@ -151,30 +128,52 @@ port.onMessage.addListener(async (message) => {
             let currentDuration: number | undefined;
             let sourceNode: AudioBufferSourceNode | undefined;
 
-            select.addEventListener("input", (e) => {
-                const evt = e as InputEvent;
-                const target = evt.target as HTMLSelectElement;
-                if (target.value === "full") {
-                    currentOffset = undefined;
-                    currentDuration = undefined;
-                } else {
-                    const idx = parseInt(target.value);
-                    const data = audioInfo[idx];
-                    currentOffset = data["offset"] as number;
-                    currentDuration = data["duration"] as number;
+            function playPauseAudio(index: number, audioInfo?: any){
+                if (index == currentAudioIndex && sourceNode){
+                  /** Do not create a new audio context, just pause/play the current audio*/
+                  (sourceNode.playbackRate.value == 0)?(sourceNode.playbackRate.value = 1): (sourceNode.playbackRate.value = 0);
+                  currentAudioIndex = index;
                 }
-            });
-            button.addEventListener("click", _ => {
-                if (sourceNode !== undefined) {
-                    sourceNode.stop();
-                } else {
-                    sourceNode = audioCtx.createBufferSource();
-                    sourceNode.addEventListener("ended", () => { sourceNode = undefined; });
-                    sourceNode.buffer = audioBuffer;
-                    sourceNode.connect(audioCtx.destination);
-                    sourceNode.start(0, currentOffset, currentDuration);
+                else {
+                    if (sourceNode){
+                        sourceNode.stop();
+                    }
+                    setTimeout(function(){
+                        currentAudioIndex = index;
+                        const data = audioInfo;
+                        currentOffset = data ? data["offset"] as number:undefined;
+                        currentDuration = data ? data["duration"] as number: undefined;
+                        sourceNode = audioCtx.createBufferSource();
+                        sourceNode.addEventListener("ended", () => { sourceNode = undefined;});
+                        sourceNode.buffer = audioBuffer;
+                        sourceNode.connect(audioCtx.destination);
+                        sourceNode.start(0, currentOffset, currentDuration);
+                    },100);
                 }
-            });
+            }
+
+            for (let idx = 0; idx < audioInfo.length; idx++) {
+                const val = audioInfo[idx];
+                const headerElement = document.createElement("h2");
+                const buttonElement = document.createElement("button");
+                buttonElement.classList.add("btn","btn-secondary");
+                buttonElement.textContent = val["name"]
+                headerElement.append(buttonElement);
+                buttonElement.addEventListener("click",function(){
+                    playPauseAudio(idx,audioInfo[idx])
+                });
+                selectDiv.append(headerElement);
+            }
+
+
+            const download = document.createElement("a");
+            download.setAttribute("href", rendering["data"]["audioFile"] as string);
+            download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
+            download.textContent = "Download Audio File";
+            contentDiv.append(download);
+            if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
+                utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
+            }
         }
 
         if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
