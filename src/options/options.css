@@ -42,7 +42,7 @@
 }
 
 #developer-mode{
-  float: left;
+  display: flex;
 }
 
 #developer-mode-text{
