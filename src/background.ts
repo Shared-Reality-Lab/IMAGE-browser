@@ -229,13 +229,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
           console.error(err);
         }
       } else if (message["toRender"] === "none") {
-        const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
-        const blobURL = URL.createObjectURL(blob);
         try {
           await browser.downloads.download({
-            url: blobURL,
-            saveAs: true
-          })
+            url: `data:application/json;base64,${btoa(JSON.stringify(query))}`, 
+            saveAs: true, 
+            filename: `${query['request_uuid']}.json`
+          });
         } catch (err) {
           console.error(err);
         }
