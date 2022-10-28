@@ -17,6 +17,11 @@ var bar = new ProgressBar.Line('#progress', {
 
 bar.animate(1);
 
+window.onload = ()=>{
+    let audio = new Audio('./audio-files/image_request_sent.mp3');
+    audio.play();
+}
+
 var audio = new Audio('./audio-files/earcon_server_communication_IMAGE_processing-data.mp3');
 setInterval(function(){
 	audio.play();

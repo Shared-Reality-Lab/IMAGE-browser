@@ -16,7 +16,7 @@
  */
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
-import Plyr from "plyr";
+//import Plyr from "plyr";
 import "./info.scss";
 import browser from "webextension-polyfill";
 import hash from "object-hash";
@@ -37,7 +37,10 @@ let request: IMAGERequest;
 let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
-
+window.onload = ()=>{
+    let audio = new Audio('../progressBar/audio-files/earcon_server_communication_IMAGE_results-arrived.mp3');
+    audio.play();
+}
 
 port.onMessage.addListener(async (message) => {
     if (message) {
@@ -183,7 +186,7 @@ port.onMessage.addListener(async (message) => {
         document.getElementById("renderings-container")!.appendChild(container)
         count++;
     }
-    Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
+    //Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
     const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
     if (feedbackAnchor) {

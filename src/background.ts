@@ -136,8 +136,6 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = await generateLocalQuery(message);
       }
       if (message["toRender"] === "full") {
-        let audio = new Audio(browser.runtime.getURL("progressBar/audio-files/image_request_sent.mp3"));
-        audio.play();
         let items = await getAllStorageSyncData();
         if (items["mcgillServer"] === true) {
           serverUrl = SERVER_URL;
@@ -231,13 +229,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
           console.error(err);
         }
       } else if (message["toRender"] === "none") {
-        const blob = new Blob([JSON.stringify(query)], { "type": "application/json" });
-        const blobURL = URL.createObjectURL(blob);
         try {
           await browser.downloads.download({
-            url: blobURL,
-            saveAs: true
-          })
+            url: `data:application/json;base64,${btoa(JSON.stringify(query))}`, 
+            saveAs: true, 
+            filename: `${query['request_uuid']}.json`
+          });
         } catch (err) {
           console.error(err);
         }
@@ -261,11 +258,13 @@ async function updateDebugContextMenu() {
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-          browser.tabs.insertCSS(tabs[i].id, {
-            code: `button#preprocessor-map-button{
+          browser.scripting.insertCSS({
+            target: {tabId: tabs[i].id || 0},
+            css: `
+            button#preprocessor-map-button{
               display: inline-block;
-            }`
-          });
+            }`,
+        });
       }},function(){});
 
     if (items["processItem"] === "" && items["requestItem"] === "") {
@@ -299,12 +298,15 @@ async function updateDebugContextMenu() {
     });
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        browser.tabs.insertCSS(tabs[i].id, {
-          code: `
-          button#preprocessor-map-button{
-            display: none;
-          }`
+        if(tabs[i].id){
+          browser.scripting.insertCSS({
+            target: {tabId: tabs[i].id || 0},
+            css: `
+            button#preprocessor-map-button{
+              display: none;
+            }`,
         });
+        }
       }},function(){});
   }
 }
@@ -375,9 +377,9 @@ browser.contextMenus.create({
   contexts: ["image"]
 },
   onCreated);
-browser.storage.sync.set({
-  mweItem: "mwe-item"
-})
+// browser.storage.sync.set({
+//   mweItem: "mwe-item"
+// })
 
 var showDebugOptions: Boolean;
 var previousToggleState: Boolean;
@@ -431,8 +433,6 @@ function createPanel(query: IMAGERequest) {
   let window = browser.windows.create({
     type: "panel",
     url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl
-  })
-  let completionAudio = new Audio(browser.runtime.getURL("progressBar/audio-files/earcon_server_communication_IMAGE_results-arrived.mp3"));
-  completionAudio.play();
+  });
   return window;
 }

@@ -39,7 +39,7 @@ window.addEventListener("message", function(event) {
             "highChartsData": event.data.charts || null,
             "toRender": "full"
         });
-    }
+    }   
 });
 
 document.addEventListener("contextmenu", (evt: Event) => {

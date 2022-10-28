@@ -1,5 +1,5 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "__MSG_extensionName__",
     "version": "0.3.0",
     "description": "__MSG_extensionDescription__",
@@ -10,16 +10,15 @@
         "128": "image-icon-128.png"
     },
 
-    "browser_action": {
+    "action": {
         "default_icon": "image-icon-128.png",
-        "popup": "options/options.html"
+        "default_popup": "options/options.html"
     },
 
     "options_ui": {
         "page": "options/options.html",
         "open_in_tab": true,
-        "browser_style": true,
-        "chrome_style": true
+        "browser_style": true
     },
 
     "browser_specific_settings": {
@@ -31,29 +30,39 @@
     "permissions": [
         "contextMenus",
         "downloads",
-        "<all_urls>",
-        "storage"
+        "storage",
+        "scripting"
     ],
+    "host_permissions" : ["<all_urls>"],
+
     "background": {
-        "scripts": ["background.ts"]
+        "service_worker": "background.ts",
+        "type": "module"
     },
+
     "content_scripts": [{
         "matches": ["<all_urls>"],
         "js": ["content.ts"],
         "css": ["styles.css"]
     }],
-    "web_accessible_resources": [
-        "info/*.ts",
-        "info/info.html",
-        "feedback/*",
-        "charts/*",
-        "maps/maps-utils.ts",
-        "hAPI/hapi-utils.ts",
-        "hAPI/worker.ts",
-        "errors/*.html",
-        "progressBar/progressBar.html",
-        "progressBar/audio-files/*"
-    ],
 
-    "content_security_policy": "script-src 'self'; object-src 'self'"
+    "web_accessible_resources": [{
+        "resources": [ 
+            "info/*.ts",
+            "info/info.html",
+            "feedback/*",
+            "charts/*",
+            "maps/maps-utils.ts",
+            "hAPI/hapi-utils.ts",
+            "hAPI/worker.ts",
+            "errors/*.html",
+            "progressBar/progressBar.html",
+            "progressBar/audio-files/*"
+        ],
+        "matches": ["<all_urls>"]
+    }],
+
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
 }
