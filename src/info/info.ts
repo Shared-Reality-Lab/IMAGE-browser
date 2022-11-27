@@ -183,6 +183,54 @@ port.onMessage.addListener(async (message) => {
             hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
+        if(rendering["type_id"] === RENDERERS.svgSemanticSegmentation ||
+           rendering["type_id"] === RENDERERS.svgObjectDetection){
+            let contentDiv = utils.addRenderingContent(container, contentId);
+            const imgContainer = document.createElement("div");
+            imgContainer.classList.add("info-img-container");
+            // renderImg
+            const renderImg = document.createElement("img");
+            renderImg.classList.add("render-img")
+            renderImg.src = graphic_url;
+            renderImg.width = 600;
+            renderImg.height = 600;
+            imgContainer.append(renderImg);
+
+            //svgImg
+            const svgImg = document.createElement("img");
+            svgImg.classList.add("svg-img");
+            svgImg.width=600;
+            svgImg.height=600;
+            imgContainer.append(svgImg);
+
+            const selectContainer = document.createElement("div");
+            selectContainer.style.display = "flex";
+            selectContainer.style.width = "50%";
+            const selectDesc = document.createElement("p");
+            selectDesc.innerText = "Please choose a SVG Layer";
+            const select = document.createElement("select");
+            select.classList.add("layer-select");
+            select.setAttribute("id", "svg-layer");
+            select.style.margin = "0 1rem 1rem 1rem";
+            let layers: any = rendering['data']['layers'];
+            for (let layer of layers){
+                console.log(layer);
+                let option = document.createElement("option");
+                option.setAttribute("value",layer["svg"]);
+                option.textContent = layer["label"];
+                select.append(option);
+            }
+            svgImg.src=layers[0]["svg"];
+            select.addEventListener("change", (event)=>{
+                const target = event.target as HTMLInputElement;
+                svgImg.src=target.value;
+            });
+            selectContainer.append(selectDesc);
+            selectContainer.append(select)
+            contentDiv.append(selectContainer);
+            contentDiv.append(imgContainer);
+        }
+
         document.getElementById("renderings-container")!.appendChild(container)
         count++;
     }
