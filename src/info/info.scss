@@ -22,3 +22,13 @@ audio{
 footer{
     margin: 1em;
 }
+
+.info-img-container, .render-img{
+    position: relative;
+}
+
+.svg-img{
+    position: absolute;
+    top:0;
+    left:0;
+}
