@@ -4,6 +4,8 @@ document.onreadystatechange = function () {
   setTimeout(function(){
       if (document.readyState === 'complete' && window.Highcharts) {
       var divChartMap = {};
+      var extVersion = document.getElementById("version-div").getAttribute("ext-version");
+      //console.log("From HighCharts", extVersion);
       for (let chart of window.Highcharts.charts){
         divId = chart.renderTo.id;
         containerDivId = chart.container.id;
@@ -11,7 +13,11 @@ document.onreadystatechange = function () {
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
         let chartButton = document.createElement("button");
-        chartButton.innerText = "Get IMAGE Chart Rendering";
+        let chartButtonText = "Get IMAGE Chart Rendering";
+        if(extVersion==="test"){
+          chartButtonText += " (test)"
+        }
+        chartButton.innerText = chartButtonText;
         chartButton.setAttribute("data-chart-id", divId);
         chartButton.addEventListener("click", function (event){
           targetId = event.target.parentElement.id;

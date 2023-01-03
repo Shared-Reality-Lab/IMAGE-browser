@@ -21,6 +21,13 @@ import { getContext } from "./utils";
 var selectedElement: HTMLElement | null = null;
 
 let port = browser.runtime.connect();
+var extVersion = process.env.NODE_ENV || "";
+//console.log("Extension Version", extVersion);
+
+var versionDiv = document.createElement("div");
+versionDiv.id="version-div";
+versionDiv.setAttribute("ext-version", extVersion);
+(document.head||document.documentElement).appendChild(versionDiv);
 
 var script = document.createElement('script');
 script.src = browser.runtime.getURL('charts/highcharts.js');
@@ -120,9 +127,9 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
     }
 });
 
-
+console.log("ext version from content", extVersion);
 // Process maps on page
-processIMAGEMaps(document, port);
+processIMAGEMaps(document, port, extVersion);
 
 
 

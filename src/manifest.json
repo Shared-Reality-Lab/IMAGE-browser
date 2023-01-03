@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "__MSG_extensionName__",
+    "name": "__MSG_extensionNameTest__",
     "version": "0.4.0",
     "description": "__MSG_extensionDescription__",
     "homepage_url": "https://image.a11y.mcgill.ca",
@@ -20,12 +20,6 @@
         "open_in_tab": true,
         "browser_style": true
     },
-
-    "browser_specific_settings": {
-        "gecko": {
-          "id": "image@image.extension.ca"
-        }
-      },
 
     "permissions": [
         "contextMenus",

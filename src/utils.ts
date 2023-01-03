@@ -2,6 +2,7 @@ import browser from "webextension-polyfill";
 import { CAPABILITIES, RENDERERS } from "./config";
 
 export function getAllStorageSyncData() {
+    //let defaultDebugValue = (process.env.NODE_ENV === "test")?true:false;
     return browser.storage.sync.get({
       //Default values
       inputUrl: "",

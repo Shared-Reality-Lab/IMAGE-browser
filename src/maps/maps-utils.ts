@@ -3,7 +3,7 @@ import { IMAGERequest } from "../types/request.schema";
 import { getCapabilities, getRenderers } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
-export function processIMAGEMaps(document: Document, port: browser.Runtime.Port){
+export function processIMAGEMaps(document: Document, port: browser.Runtime.Port, extVersion?: string){
     Array.from(document.getElementsByTagName("iframe")).forEach(map => {
         if (!map.hasAttribute("tabindex") && !map.closest("a")) {
             // domains list at www.google.com/supported_domains, but this is too long to manually put
@@ -12,6 +12,10 @@ export function processIMAGEMaps(document: Document, port: browser.Runtime.Port)
                 let mapButton = document.createElement("button");
 
                 mapButton.innerText = browser.i18n.getMessage("getMapRendering");
+                //console.log("ext version from map", extVersion);
+                if (extVersion === "test"){
+                    mapButton.innerText += process.env.SUFFIX_TEXT;
+                }
                 let preprocessorMapButton = document.createElement("button");
                 preprocessorMapButton.innerText = browser.i18n.getMessage("getMapPreprocessorResponse");
                 // Get all the information about our found map and store the info. Then create a button to render the map

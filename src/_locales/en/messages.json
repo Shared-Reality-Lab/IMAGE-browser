@@ -3,6 +3,10 @@
         "message": "IMAGE Extension",
         "description": "Extension name"
     },
+    "extensionNameTest": {
+        "message": "IMAGE Extension (Test)",
+        "description": "Test Extension name"
+    },
     "extensionDescription": {
         "message": "Extension for the McGill IMAGE project. This is a beta release.",
         "description": "Brief description of the extension. Will be expanded eventually."
