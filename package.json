@@ -18,10 +18,10 @@
   "scripts": {
     "start": "parcel serve src/manifest.json --target webext-dev --dist-dir build",
     "clean": "rm -rf build && rm -rf build-firefox && rm -rf build-chrome",
-    "pack": "npm run clean && parcel build src/manifest.json --target webext-prod-firefox",
-    "pack:chromium": "mv src/manifest.json src/manifest.json.bak && jq -r 'del( .browser_specific_settings )' src/manifest.json.bak > src/manifest.json && npm run clean && parcel build src/manifest.json --target webext-prod-chrome && rm src/manifest.json && mv src/manifest.json.bak src/manifest.json",
+    "pack:test": "npm run clean && cross-env NODE_ENV=test parcel build src/manifest.json --target webext-prod-chrome",
+    "pack:prod": "mv src/manifest.json src/manifest.json.bak && jq '.name = \"__MSG_extensionName__\"' src/manifest.json.bak > src/manifest.json && npm run clean && cross-env NODE_ENV=prod parcel build src/manifest.json --target webext-prod-chrome",
     "prestart": "(cd schemas && json2ts -i '*.json' -o ../src/types)",
-    "build:chromium": "npm run pack:chromium && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
+    "build:chromium": "npm run pack:prod && chromium --pack-extension=build --pack-extension-key=$PATH_TO_CHROME_KEY && mkdir -p dist && mv build.crx dist/IMAGE-chrome.crx"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.7.0",
@@ -34,7 +34,8 @@
     "@types/w3c-web-serial": "1.0.2",
     "@types/webextension-polyfill": "^0.8.2",
     "json-schema-to-typescript": "^10.1.4",
-    "parcel": "^2.7.0"
+    "parcel": "^2.7.0",
+    "cross-env": "^7.0.2"
   },
   "dependencies": {
     "@types/chrome": "^0.0.164",

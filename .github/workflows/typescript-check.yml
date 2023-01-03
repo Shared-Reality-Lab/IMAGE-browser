@@ -42,14 +42,13 @@ jobs:
           node-version: '16'
       - name: Install dependencies
         run: npm ci
-      - name: Pack extension for Firefox
-        run: npm run pack
+      # - name: Pack extension for Firefox
+      #   run: npm run pack
       - name: Pack extension for Chrome
-        run: npm run pack:chromium  
+        run: npm run pack:test  
       - name: Save as artifact
         uses: actions/upload-artifact@v2
         with:
           name: extension
           path: |
             build-chrome
-            build-firefox

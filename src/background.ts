@@ -29,8 +29,9 @@ const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, r
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window;
 var graphicUrl: string = "";
-
-
+var extVersion = process.env.NODE_ENV;
+//console.log("Extension Version background page", extVersion);
+//console.log("Suffix Text", process.env.SUFFIX_TEXT);
 async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
@@ -270,13 +271,13 @@ async function updateDebugContextMenu() {
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: browser.i18n.getMessage("preprocessItem"),
+        title: extVersion == 'test' ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       },
         onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: browser.i18n.getMessage("requestItem"),
+        title: extVersion == 'test' ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       },
         onCreated);
@@ -373,7 +374,7 @@ function onCreated(): void {
 }
 browser.contextMenus.create({
   id: "mwe-item",
-  title: browser.i18n.getMessage("menuItem"),
+  title: extVersion == 'test' ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
   contexts: ["image"]
 },
   onCreated);
@@ -382,22 +383,23 @@ browser.contextMenus.create({
 // })
 
 var showDebugOptions: Boolean;
+
 var previousToggleState: Boolean;
 
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
-
+  console.log("debug value inside storage sync data", showDebugOptions);
   if (showDebugOptions) {
     browser.contextMenus.create({
       id: "preprocess-only",
-      title: browser.i18n.getMessage("preprocessItem"),
+      title: extVersion == 'test' ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     },
       onCreated);
     browser.contextMenus.create({
       id: "request-only",
-      title: browser.i18n.getMessage("requestItem"),
+      title: extVersion == 'test' ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     },
       onCreated);

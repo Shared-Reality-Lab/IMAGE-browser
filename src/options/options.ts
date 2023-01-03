@@ -19,6 +19,9 @@ import  browser  from "webextension-polyfill";
 let port = browser.runtime.connect();
 let navigatorSerial = navigator.serial;
 
+var extVersion = process.env.NODE_ENV || "";
+//console.log("Extension Version options page", extVersion);
+
 // Set up localized names
 const labels = Array.from(document.querySelectorAll("label"));
 for (let label of labels) {
@@ -94,6 +97,7 @@ function saveOptions() {
 }
 
 function restore_options() {
+  let defaultDebugValue = (extVersion === "test")?true:false;
   browser.storage.sync
     .get({
       //Default values
@@ -121,7 +125,12 @@ function restore_options() {
         if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }
-    }); 
+    });
+    if(extVersion === "test"){
+      document.getElementById("renderings-header")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("advanced-options")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("developer-mode-text")!.innerText += process.env.SUFFIX_TEXT;
+    } 
 }
 
 document.addEventListener("DOMContentLoaded", restore_options);

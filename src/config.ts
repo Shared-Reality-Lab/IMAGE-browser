@@ -1,6 +1,10 @@
 /** Target Server URL */
 export const SERVER_URL: string = "https://image.a11y.mcgill.ca/";
 
+/** Unicorn Server URL */
+export const UNICORN_SERVER_URL: string = "https://unicorn.cim.mcgill.ca/image/";
+
+
 /** Renderers Supported by Extension */
 export const RENDERERS = Object.freeze({
     text: "ca.mcgill.a11y.image.renderer.Text",

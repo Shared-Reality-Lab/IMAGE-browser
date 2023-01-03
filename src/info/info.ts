@@ -54,7 +54,12 @@ port.onMessage.addListener(async (message) => {
     // Update renderings label
     let title = document.getElementById("renderingTitle");
     if (title) {
+        //console.log(process.env);
         title.textContent = browser.i18n.getMessage("renderingTitle");
+        //console.log("extVersion from info", process.env.NODE_ENV);
+        if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
+            title.textContent += process.env.SUFFIX_TEXT
+        }
     }
 
     let label = browser.i18n.getMessage("renderingLabel");
