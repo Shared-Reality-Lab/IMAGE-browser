@@ -89,7 +89,7 @@ port.onMessage.addListener(message => {
                 });
             } else if (scheme === "file") {
                 console.debug("File!");
-                fetch(imageElement.currentSrc).then(resp => {
+                fetch(imageElement.currentSrc, {mode: "same-origin"}).then(resp => {
                     if (resp.ok) {
                         return resp.blob();
                     } else {
