@@ -15,7 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import browser from "webextension-polyfill";
-import {processIMAGEMaps} from './maps/maps-utils';
+import {processMAPImages, processMaps} from './maps/maps-utils';
 import { getContext } from "./utils";
 
 var selectedElement: HTMLElement | null = null;
@@ -128,8 +128,16 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
 });
 
 console.log("ext version from content", extVersion);
-// Process maps on page
-processIMAGEMaps(document, port, extVersion);
+document.onreadystatechange = function () {
+    setTimeout(function () {
+        if (document.readyState === 'complete') {
+            // Process maps on page
+            processMaps(document, port, extVersion);
+            processMAPImages(document, port, extVersion);
+        }
+    }, 1500)
+}
+
 
 
 
