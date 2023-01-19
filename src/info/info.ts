@@ -188,8 +188,7 @@ port.onMessage.addListener(async (message) => {
             hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
-        if(rendering["type_id"] === RENDERERS.svgSemanticSegmentation ||
-           rendering["type_id"] === RENDERERS.svgObjectDetection){
+        if(rendering["type_id"] === RENDERERS.svgLayers){
             let contentDiv = utils.addRenderingContent(container, contentId);
             const imgContainer = document.createElement("div");
             imgContainer.classList.add("info-img-container");

@@ -36,8 +36,7 @@ export async function getRenderers(): Promise<string[]>{
       renderers.push(RENDERERS.photoAudioHaptics);
     }
     if(items['developerMode']){
-      renderers.push(RENDERERS.svgObjectDetection);
-      renderers.push(RENDERERS.svgSemanticSegmentation);
+      renderers.push(RENDERERS.svgLayers);
     }
     return renderers;
   }
