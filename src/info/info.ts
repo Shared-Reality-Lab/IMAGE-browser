@@ -196,15 +196,15 @@ port.onMessage.addListener(async (message) => {
             const renderImg = document.createElement("img");
             renderImg.classList.add("render-img")
             renderImg.src = graphic_url;
-            renderImg.width = 600;
-            renderImg.height = 600;
+            // renderImg.width = 600;
+            // renderImg.height = 600;
             imgContainer.append(renderImg);
 
             //svgImg
             const svgImg = document.createElement("img");
             svgImg.classList.add("svg-img");
-            svgImg.width=600;
-            svgImg.height=600;
+            // svgImg.width=600;
+            // svgImg.height=600;
             imgContainer.append(svgImg);
 
             const selectContainer = document.createElement("div");
