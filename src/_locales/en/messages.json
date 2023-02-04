@@ -12,7 +12,7 @@
         "description": "Brief description of the extension. Will be expanded eventually."
     },
     "menuItem": {
-        "message": "Get IMAGE Rendering",
+        "message": "Interpret this graphic with IMAGE",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
     "preprocessItem": {
@@ -99,7 +99,7 @@
         "description": "Link with Explanation of Renderings"
     },
     "getMapRendering": {
-        "message": "Get IMAGE Map Rendering",
+        "message": "Interpret this map with IMAGE",
         "description": "Label for button to get map renderings"
     },
     "getMapPreprocessorResponse": {

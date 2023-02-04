@@ -35,7 +35,7 @@ function processCharts() {
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
         let chartButton = document.createElement("button");
-        let chartButtonText = "Get IMAGE Chart Rendering";
+        let chartButtonText = "Interpret this chart with IMAGE";
         if (extVersion === "test") {
           chartButtonText += " (test)"
         }
