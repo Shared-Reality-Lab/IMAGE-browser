@@ -194,17 +194,22 @@ port.onMessage.addListener(async (message) => {
             imgContainer.classList.add("info-img-container");
             // renderImg
             const renderImg = document.createElement("img");
-            renderImg.classList.add("render-img")
-            renderImg.src = graphic_url;
-            // renderImg.width = 600;
-            // renderImg.height = 600;
-            imgContainer.append(renderImg);
+            renderImg.classList.add("render-img");
+            renderImg.src = request.graphic || "";
 
             //svgImg
             const svgImg = document.createElement("img");
             svgImg.classList.add("svg-img");
-            // svgImg.width=600;
-            // svgImg.height=600;
+  
+            if(!request.graphic){
+                renderImg.width = 500;
+                renderImg.height = 500;
+                svgImg.width = 500;
+                svgImg.height = 500;
+            }
+
+            // append renderImg and svgImg to imgContainer
+            imgContainer.append(renderImg);
             imgContainer.append(svgImg);
 
             const selectContainer = document.createElement("div");
