@@ -195,7 +195,9 @@ port.onMessage.addListener(async (message) => {
             // renderImg
             const renderImg = document.createElement("img");
             renderImg.classList.add("render-img");
-            renderImg.src = request.graphic || "";
+            if(request.graphic){
+                renderImg.src = request.graphic;
+            }
 
             //svgImg
             const svgImg = document.createElement("img");
@@ -223,7 +225,6 @@ port.onMessage.addListener(async (message) => {
             select.style.margin = "0 1rem 1rem 1rem";
             let layers: any = rendering['data']['layers'];
             for (let layer of layers){
-                console.log(layer);
                 let option = document.createElement("option");
                 option.setAttribute("value",layer["svg"]);
                 option.textContent = layer["label"];
