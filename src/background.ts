@@ -271,13 +271,13 @@ async function updateDebugContextMenu() {
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: extVersion == 'test' ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       },
         onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: extVersion == 'test' ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       },
         onCreated);
@@ -374,7 +374,7 @@ function onCreated(): void {
 }
 browser.contextMenus.create({
   id: "mwe-item",
-  title: extVersion == 'test' ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
+  title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
   contexts: ["image"]
 },
   onCreated);
@@ -393,13 +393,13 @@ getAllStorageSyncData().then((items) => {
   if (showDebugOptions) {
     browser.contextMenus.create({
       id: "preprocess-only",
-      title: extVersion == 'test' ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     },
       onCreated);
     browser.contextMenus.create({
       id: "request-only",
-      title: extVersion == 'test' ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     },
       onCreated);
