@@ -32,51 +32,20 @@ var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
 //console.log("Extension Version background page", extVersion);
 //console.log("Suffix Text", process.env.SUFFIX_TEXT);
-async function generateQuery(message: { context: string, url: string, dims: [number, number], sourceURL: string }): Promise<IMAGERequest> {
+async function generateQuery(message: { context: string, url: string, dims: [number, number], graphicBlob: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
-  graphicUrl = message.sourceURL
-  return fetch(message.sourceURL).then(resp => {
-    if (resp.ok) {
-      return resp.blob();
-    } else {
-      throw resp;
-    }
-  }).then(async (blob: Blob) => {
-    const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
-    const sizeMb = blobFile.size / 1024 / 1024;
-    if (sizeMb <= 4) {
-        return blobFile;
-    }
-    console.debug(`originalFile size ${sizeMb} MB`);
-    const options = {
-      maxSizeMB: 4,
-      useWebWorker: true,
-      alwaysKeepResolution: false,
-    }
-    const compressedFile = await imageCompression(blobFile, options);
-    console.debug(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-    return new Blob([compressedFile], { type: blob.type });
-  }).then(blob => {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-  }).then(image => {
-    return {
-      "request_uuid": uuidv4(),
-      "timestamp": Math.round(Date.now() / 1000),
-      "URL": message.url,
-      "graphic": image,
-      "dimensions": message.dims,
-      "context": message.context,
-      "language": "en",
-      "capabilities": capabilities,
-      "renderers": renderers
-    } as IMAGERequest;
-  });
+  return {
+    "request_uuid": uuidv4(),
+    "timestamp": Math.round(Date.now() / 1000),
+    "URL": message.url,
+    "graphic": message.graphicBlob,
+    "dimensions": message.dims,
+    "context": message.context,
+    "language": "en",
+    "capabilities": capabilities,
+    "renderers": renderers
+  } as IMAGERequest;
 }
 
 async function generateLocalQuery(message: { context: string, dims: [number, number], image: string }): Promise<IMAGERequest> {
@@ -366,6 +335,8 @@ function getCurrentTabInfo() {
 browser.runtime.onConnect.addListener(storeConnection);
 browser.tabs.onUpdated.addListener(handleUpdated);
 browser.tabs.onActivated.addListener(getCurrentTabInfo);
+
+
 
 function onCreated(): void {
   if (browser.runtime.lastError) {

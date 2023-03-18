@@ -14,6 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
+import imageCompression from "browser-image-compression";
 import browser from "webextension-polyfill";
 import {processMAPImages, processMaps} from './maps/maps-utils';
 import { getContext } from "./utils";
@@ -53,7 +54,7 @@ document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
     console.debug(selectedElement.id);
 });
-port.onMessage.addListener(message => {
+port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
     switch (message["type"]) {
         case "resourceRequest":
@@ -78,14 +79,40 @@ port.onMessage.addListener(message => {
             } else if (message["type"] === "onlyRequest") {
                 toRender = "none";
             }
-            if (scheme === "http" || scheme === "https" || scheme==="data") {
+            if (scheme === "http" || scheme === "https" || scheme === "data") {
+                let blob = await fetch(imageElement.currentSrc).then(r => r.blob());
+                const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
+                const sizeMb = blobFile.size / 1024 / 1024;
+                let graphicBlob = blob;
+                if (sizeMb > 4) {
+                    console.debug(`originalFile size ${sizeMb} MB`);
+                    const options = {
+                        maxSizeMB: 4,
+                        useWebWorker: true,
+                        alwaysKeepResolution: true,
+                    }
+                    const compressedFile = await imageCompression(blobFile, options);
+                    console.debug(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+                    let compressedBlob = new Blob([compressedFile], { type: blob.type });
+                    graphicBlob = compressedBlob;
+                };
+                function blobToBase64(blob: Blob) {
+                    return new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(reader.result as string);
+                      reader.onerror = () => reject(reader.error);
+                      reader.readAsDataURL(blob);
+                    });
+                  };
+                const graphicBlobStr = await blobToBase64(graphicBlob);
                 port.postMessage({
                     "type": "resource",
                     "context": selectedElement ? getContext(selectedElement) : null,
-                    "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
+                    "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
                     "url": window.location.href,
                     "sourceURL": imageElement.currentSrc,
-                    "toRender": toRender
+                    "toRender": toRender,
+                    "graphicBlob": graphicBlobStr
                 });
             } else if (scheme === "file") {
                 console.debug("File!");
