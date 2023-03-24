@@ -21,5 +21,5 @@ jobs:
     
     - name: Override manifest with new version
       run: |
-          echo 'New version ${{ steps.bump-version.outputs.new_tag }}'
-          jq '.version = ${{ steps.bump-version.outputs.new_tag }}' src/manifest.json
+          echo 'New version ${{ steps.bump-version.outputs.part }}'
+          jq '.version = \"${{ steps.bump-version.outputs.part }}\"' src/manifest.json
