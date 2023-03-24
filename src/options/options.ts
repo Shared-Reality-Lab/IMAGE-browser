@@ -49,7 +49,15 @@ if (toggleButton) {
 }
 
 function showDeveloperSettings() {
-if (toggleButton.checked && navigatorSerial !== undefined) {
+  if(toggleButton.checked){
+    let haplyLabel = document.querySelector("#Haply2diy");
+    if(navigatorSerial){
+      haplyLabel!.textContent = browser.i18n.getMessage("Haply2diy");
+      (document.getElementById("haply-option") as HTMLInputElement)!.disabled = false;
+    } else {
+      haplyLabel!.textContent = browser.i18n.getMessage("Haply2diyNotSupported");
+      (document.getElementById("haply-option") as HTMLInputElement)!.disabled = true;
+    }
     developerSettings.style.display = "block";
   } else {
     developerSettings.style.display = "none";
