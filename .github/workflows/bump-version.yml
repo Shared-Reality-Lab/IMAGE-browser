@@ -13,7 +13,13 @@ jobs:
 
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.36.0
+      id: bump-version
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch
         WITH_V: true
+    
+    - name: Override manifest with new version
+      run: |
+          echo 'New version ${{ steps.bump-version.outputs.new_tag }}'
+          jq '.version = ${{ steps.bump-version.outputs.new_tag }}' src/manifest.json
