@@ -20,8 +20,9 @@ jobs:
         WITH_V: true
     
     - name: Override manifest with new version
+      env:
+        NEW_VERSION: ${{ steps.bump-version.outputs.new_tag }}
       run: |
-        NEW_VERSION="$(echo ${{ steps.bump-version.outputs.new_tag }})"
         NEW_VERSION="${NEW_VERSION:1}"
         echo 'New version ${{ NEW_VERSION }}'
         jq '.version = \"${{ NEW_VERSION }}\"' src/manifest.json
