@@ -23,5 +23,5 @@ jobs:
       env:
         NEW_VERSION: "${{ steps.bump-version.outputs.new_tag }}"
       run: |
-        echo "VERSION_NUMBER=${NEW_VERSION:1}" >> $GITHUB_ENV
-        jq '.version = \"${VERSION_NUMBER}\"' src/manifest.json > src/temp.json && mv src/temp.json src/manifest.json 
+        echo "NEW_VERSION=${NEW_VERSION:1}" >> $GITHUB_ENV
+        jq '.version = \"${NEW_VERSION}\"' src/manifest.json > src/temp.json && mv src/temp.json src/manifest.json 
