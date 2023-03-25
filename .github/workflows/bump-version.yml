@@ -24,4 +24,4 @@ jobs:
         NEW_VERSION: ${{ steps.bump-version.outputs.new_tag }}
       run: |
         echo "New version ${NEW_VERSION:1}"
-        jq '.version = \"$${NEW_VERSION:1}\"' src/manifest.json
+        jq ".version = \"$${NEW_VERSION:1}\"" src/manifest.json
