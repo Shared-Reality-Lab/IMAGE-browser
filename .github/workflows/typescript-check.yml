@@ -5,8 +5,7 @@ name: CI
 # Controls when the action will run.
 on:
   workflow_run:
-    workflows:
-      - Bump version
+    workflows: ["Bump version"]
     types:
       - completed
   # Allows you to run this workflow manually from the Actions tab
