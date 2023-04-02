@@ -25,4 +25,4 @@ jobs:
     - name: Override manifest with new version
       run: |
           echo 'New version ${{ env.NEW_VERSION }}'
-          jq '.version = ${{ env.NEW_VERSION }}' src/manifest.json
+          jq '.version = \"${{ env.NEW_VERSION }}\"' src/manifest.json
