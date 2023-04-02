@@ -20,7 +20,7 @@ jobs:
         WITH_V: true
     
     - name: set up env new_version
-      run: echo "NEW_VERSION=$(echo ${{ steps.bump-version.outputs.new_tag }} | cut -c2-11)" >> $GITHUB_ENV
+      run: echo "NEW_VERSION=$(echo ${{ steps.bump-version.outputs.new_tag }} | cut -c2-7)" >> $GITHUB_ENV
     
     - name: Override manifest with new version
       run: |
