@@ -405,7 +405,9 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 function createPanel(query: IMAGERequest) {
   let window = browser.windows.create({
     type: "panel",
-    url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl
+    url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
+    height: 1080,
+    width: 1920
   });
   return window;
 }
