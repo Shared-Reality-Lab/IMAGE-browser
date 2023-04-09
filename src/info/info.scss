@@ -23,12 +23,17 @@ footer{
     margin: 1em;
 }
 
-.info-img-container, .render-img{
+.info-img-container, #render-img{
     position: relative;
 }
 
-.svg-img{
+#svg-container{
     position: absolute;
     top:0;
     left:0;
+}
+
+#render-img, #svg-container{
+    width: 600px;
+    height: 600px;
 }

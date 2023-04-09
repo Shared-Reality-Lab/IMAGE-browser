@@ -228,6 +228,7 @@ async function updateDebugContextMenu() {
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
+        if(!tabs[i].url?.startsWith("chrome://")){
           browser.scripting.insertCSS({
             target: {tabId: tabs[i].id || 0},
             css: `
@@ -235,6 +236,7 @@ async function updateDebugContextMenu() {
               display: inline-block;
             }`,
         });
+        }
       }},function(){});
 
     if (items["processItem"] === "" && items["requestItem"] === "") {
@@ -268,7 +270,7 @@ async function updateDebugContextMenu() {
     });
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        if(tabs[i].id){
+        if(tabs[i].id && !tabs[i].url?.startsWith("chrome://")){
           browser.scripting.insertCSS({
             target: {tabId: tabs[i].id || 0},
             css: `
