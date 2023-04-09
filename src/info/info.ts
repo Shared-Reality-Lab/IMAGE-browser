@@ -27,6 +27,7 @@ import { IMAGERequest } from "../types/request.schema";
 import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
+import { createSVG } from './info-utils';
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -194,26 +195,17 @@ port.onMessage.addListener(async (message) => {
             imgContainer.classList.add("info-img-container");
             // renderImg
             const renderImg = document.createElement("img");
-            renderImg.classList.add("render-img");
+            renderImg.id = "render-img";
             if(request.graphic){
                 renderImg.src = request.graphic;
             }
 
-            //svgImg
-            const svgImg = document.createElement("img");
-            svgImg.classList.add("svg-img");
-  
-            if(!request.graphic){
-                renderImg.width = 500;
-                renderImg.height = 500;
-                svgImg.width = 500;
-                svgImg.height = 500;
-            }
+            const svgContainer = document.createElement("div");
+            svgContainer.id = "svg-container";
 
             // append renderImg and svgImg to imgContainer
             imgContainer.append(renderImg);
-            imgContainer.append(svgImg);
-
+            
             const selectContainer = document.createElement("div");
             selectContainer.style.display = "flex";
             selectContainer.style.width = "50%";
@@ -230,10 +222,19 @@ port.onMessage.addListener(async (message) => {
                 option.textContent = layer["label"];
                 select.append(option);
             }
-            svgImg.src=layers[0]["svg"];
+            let svgData = layers[0]["svg"];
+            svgContainer.append(createSVG(svgData));
+
+            // append container to image container
+            imgContainer.append(svgContainer);
+
+
             select.addEventListener("change", (event)=>{
                 const target = event.target as HTMLInputElement;
-                svgImg.src=target.value;
+                if(svgContainer.lastChild){
+                    svgContainer.removeChild(svgContainer.lastChild);
+                }
+                svgContainer.appendChild(createSVG(target.value));
             });
             selectContainer.append(selectDesc);
             selectContainer.append(select)

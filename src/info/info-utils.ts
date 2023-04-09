@@ -63,3 +63,15 @@ export function createButton(contentDiv: HTMLElement, id: string, text: string) 
     contentDiv.append(btn);
     return btn;
 }
+
+export function createSVG(encodedString: string): SVGSVGElement{
+    let svgString = encodedString && encodedString.split("data:image/svg+xml;base64,")[1];
+    let domParser = new DOMParser();
+    let svgDom = domParser.parseFromString(atob(svgString), "text/xml");
+    let svgElement = svgDom.getElementsByTagName("svg")[0];
+    svgElement.classList.add("render-svg");
+    svgElement.setAttribute("preserveAspectRatio","none");
+    svgElement.setAttribute("width","600");
+    svgElement.setAttribute("height","600");
+    return svgElement 
+}
