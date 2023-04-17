@@ -40,6 +40,8 @@ function processCharts() {
           chartButtonText += " (test)"
         }
         chartButton.innerText = chartButtonText;
+        chartButton.style.position = "relative";
+        chartButton.style.marginTop = "1rem";
         chartButton.setAttribute("data-chart-id", divId);
         chartButton.addEventListener("click", function (event) {
           targetId = event.target.parentElement.id;
