@@ -196,13 +196,14 @@ port.onMessage.addListener(async (message) => {
             // renderImg
             const renderImg = document.createElement("img");
             renderImg.id = "render-img";
+            renderImg.classList.add("render-img");
             if(request.graphic){
                 renderImg.src = request.graphic;
             }
 
             const svgContainer = document.createElement("div");
-            svgContainer.id = "svg-container";
-
+            svgContainer.classList.add("svg-container");
+            
             // append renderImg and svgImg to imgContainer
             imgContainer.append(renderImg);
             
