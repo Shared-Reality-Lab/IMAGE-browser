@@ -70,8 +70,12 @@ export function createSVG(encodedString: string): SVGSVGElement{
     let svgDom = domParser.parseFromString(atob(svgString), "text/xml");
     let svgElement = svgDom.getElementsByTagName("svg")[0];
     svgElement.classList.add("render-svg");
-    svgElement.setAttribute("preserveAspectRatio","none");
-    svgElement.setAttribute("width","600");
-    svgElement.setAttribute("height","600");
+    let imageChildElements = svgElement.getElementsByTagName("image");
+    if(imageChildElements?.length > 0){
+        let imageChildElement = imageChildElements[0];
+        const width = imageChildElement.getAttribute("width");
+        const height = imageChildElement.getAttribute("height");
+        svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    }
     return svgElement 
 }

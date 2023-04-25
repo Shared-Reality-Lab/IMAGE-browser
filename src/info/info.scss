@@ -27,13 +27,22 @@ footer{
     position: relative;
 }
 
-#svg-container{
+.info-img-container, .svg-container{
+    width: auto;
+    height: auto;
+}
+
+.svg-container{
     position: absolute;
     top:0;
     left:0;
 }
 
-#render-img, #svg-container{
-    width: 600px;
-    height: 600px;
+
+.render-img, .render-svg{
+    display: block;
+    max-width: 600px;
+    max-height: 600px;
+    width: auto;
+    height: auto;
 }
