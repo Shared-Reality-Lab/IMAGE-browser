@@ -109,5 +109,21 @@
     "getMapPreprocessorResponse": {
         "message": "Get IMAGE preprocessed data",
         "description": "Label for button to get Map Preprocessor Response"
+    },
+    "tutorialLaunchPad": {
+        "message": "Help! How do I use IMAGE?",
+        "description": "Label for button to launch IMAGE tutorial"
+    },
+    "localFileLaunchPad": {
+        "message": "Use IMAGE on a graphic on my computer",
+        "description": "Label for button to load local File"
+    },
+    "optionsLaunchPad": {
+        "message": "IMAGE options",
+        "description": "Label for button to launch IMAGE options"
+    },
+    "popUpTitle": {
+        "message": "IMAGE Extension",
+        "description": "Header of popup window"
     }
 }

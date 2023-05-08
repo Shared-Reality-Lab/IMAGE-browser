@@ -33,7 +33,14 @@
         "service_worker": "background.ts",
         "type": "module"
     },
-
+    "commands": {
+        "run-launchpad": {
+            "suggested_key": {
+                "default": "Alt+I"
+            },
+            "description": "Trigger IMAGE Launchpad"
+        }
+    },
     "content_scripts": [{
         "matches": ["<all_urls>"],
         "js": ["content.ts"],
@@ -46,6 +53,8 @@
             "info/info.html",
             "feedback/*",
             "charts/*",
+            "launchpad/*",
+            "firstLaunch/*",
             "maps/maps-utils.ts",
             "hAPI/hapi-utils.ts",
             "hAPI/worker.ts",

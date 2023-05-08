@@ -19,3 +19,5 @@ export const RENDERERS = Object.freeze({
 export const CAPABILITIES = Object.freeze({
     debugMode : "ca.mcgill.a11y.image.capability.DebugMode"
 });
+
+export const TUTORIAL_PAGE: string = "https://image.a11y.mcgill.ca/pages/tutorial.html";

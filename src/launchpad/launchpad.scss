@@ -1,0 +1,40 @@
+@import '../../node_modules/bootstrap/scss/bootstrap.scss';
+
+#launchpad-container{
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+#launchpad-title{
+    margin-bottom: 2rem;
+}
+
+#selected-file{
+    display: none !important;
+}
+
+#selected-file-container{
+    display: none;
+    margin: 5px 0;
+    flex-direction: column;
+}
+
+#local-file-container{
+    display: flex;
+    flex-direction: column;
+}
+
+#uploaded-image{
+    width: 500px;
+    height:500px; 
+}
+
+#get-rendering-local-file{
+    margin-top: 5px;
+}

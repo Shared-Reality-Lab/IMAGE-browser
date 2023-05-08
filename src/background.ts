@@ -48,13 +48,14 @@ async function generateQuery(message: { context: string, url: string, dims: [num
   } as IMAGERequest;
 }
 
-async function generateLocalQuery(message: { context: string, dims: [number, number], image: string }): Promise<IMAGERequest> {
+async function generateLocalQuery(message: { context: string, dims: [number, number], image: string , graphicBlob: string}): Promise<IMAGERequest> {
+
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
-    "graphic": message.image,
+    "graphic": message.graphicBlob,
     "dimensions": message.dims,
     "context": message.context,
     "language": "en",
@@ -377,6 +378,29 @@ getAllStorageSyncData().then((items) => {
     },
       onCreated);
   }
+});
+
+browser.runtime.onInstalled.addListener(function (object) {
+  let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
+
+  if ((object.reason === "install")) {
+    browser.windows.create({
+      type: "panel",
+      url: internalUrl,
+      width: 700,
+      height: 700,
+    });
+  }
+});
+
+browser.commands.onCommand.addListener((command) => {
+  console.log(`Command: ${command}`);
+  browser.windows.create({
+    type: "panel",
+    url: "launchpad/launchpad.html",
+    width: 700,
+    height: 700,
+  });
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
