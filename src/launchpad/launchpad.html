@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <div id="launchpad-container">
+            <h1 class="title" id="launchpad-title"></h1>
+            <button class="btn btn-primary" type="button" id="tutorial-btn"></button>
+            <div id="local-file-container">
+                <input type="file" id="selected-file" name="select-file"></button>
+                <button class="btn btn-primary" type="button" id="local-file-btn"></button>
+                <div id="selected-file-container">
+                    <!-- <b>Selected file name is: </b>
+                    <span id="file-name"></span> -->
+                    <img id="uploaded-image">
+                    <button id="get-rendering-local-file">Get IMAGE Rendering</button>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="button" id="options-btn"></button>
+        </div>
+        <script type="module" src="./launchpad.ts"></script>
+    </body>
+</html>
