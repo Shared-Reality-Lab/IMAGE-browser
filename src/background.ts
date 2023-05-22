@@ -229,7 +229,7 @@ async function updateDebugContextMenu() {
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        if(!tabs[i].url?.startsWith("chrome://")){
+        if(tabs[i].url && !tabs[i].url?.startsWith("chrome://")){
           browser.scripting.insertCSS({
             target: {tabId: tabs[i].id || 0},
             css: `
@@ -271,7 +271,7 @@ async function updateDebugContextMenu() {
     });
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        if(tabs[i].id && !tabs[i].url?.startsWith("chrome://")){
+        if(tabs[i].url && !tabs[i].url?.startsWith("chrome://")){
           browser.scripting.insertCSS({
             target: {tabId: tabs[i].id || 0},
             css: `
