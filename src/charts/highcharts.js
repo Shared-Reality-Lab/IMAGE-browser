@@ -29,6 +29,7 @@ function processCharts() {
     //console.log("From HighCharts", extVersion);
     for (let chart of window.Highcharts.charts) {
       if (chart) {
+        chart.reflow = false;
         divId = chart.renderTo.id;
         containerDivId = chart.container.id;
         document.getElementById(containerDivId).style.height = "max-content";
@@ -51,6 +52,8 @@ function processCharts() {
           messageObj = { "messageFrom": "imageCharts", "charts": chartData };
           window.postMessage(messageObj, "*");
         });
+        document.getElementById(divId).style.overflow = "visible";
+        document.getElementById(containerDivId).style.overflow = "visible";
         document.getElementById(divId).appendChild(chartButton);
       }
     }
