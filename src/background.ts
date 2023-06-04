@@ -245,14 +245,12 @@ async function updateDebugContextMenu() {
         id: "preprocess-only",
         title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
-      },
-        onCreated);
+      },onCreated);
       browser.contextMenus.create({
         id: "request-only",
         title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
-      },
-        onCreated);
+      },onCreated);
     }
 
     browser.storage.sync.set({
@@ -339,19 +337,12 @@ browser.runtime.onConnect.addListener(storeConnection);
 browser.tabs.onUpdated.addListener(handleUpdated);
 browser.tabs.onActivated.addListener(getCurrentTabInfo);
 
-
-
 function onCreated(): void {
   if (browser.runtime.lastError) {
     console.error(browser.runtime.lastError);
   }
 }
-browser.contextMenus.create({
-  id: "mwe-item",
-  title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
-  contexts: ["image"]
-},
-  onCreated);
+
 // browser.storage.sync.set({
 //   mweItem: "mwe-item"
 // })
@@ -369,14 +360,12 @@ getAllStorageSyncData().then((items) => {
       id: "preprocess-only",
       title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
-    },
-      onCreated);
+    }, onCreated);
     browser.contextMenus.create({
       id: "request-only",
       title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
-    },
-      onCreated);
+    },onCreated);
   }
 });
 
@@ -391,6 +380,13 @@ browser.runtime.onInstalled.addListener(function (object) {
       height: 700,
     });
   }
+  
+browser.contextMenus.create({
+  id: "mwe-item",
+  title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
+  contexts: ["image"]
+}, onCreated);
+
 });
 
 browser.commands.onCommand.addListener((command) => {
