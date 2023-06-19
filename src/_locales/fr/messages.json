@@ -1,7 +1,7 @@
 {
     "extensionName": {
-        "message": "IMAGE Extension",
-        "description": "Extension name"
+        "message": "Extension IMAGE",
+        "description": "Nom d'extension"
     },
     "extensionNameTest": {
         "message": "IMAGE Extension (Test)",
@@ -12,7 +12,7 @@
         "description": "Brief description of the extension. Will be expanded eventually."
     },
     "menuItem": {
-        "message": "Interpret this graphic with IMAGE",
+        "message": "Intérprêt cette photo avec IMAGE",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
     "preprocessItem": {
@@ -28,7 +28,7 @@
         "description": "Header of popup window"
     },
     "renderingLabel": {
-        "message": "Interpretation",
+        "message": "Interprétation",
         "description": "Label for each rendering returned from the server"
     },
     "segmentAudioSelLabel": {
@@ -36,7 +36,7 @@
         "description": "Label for the SegmentAudio selection menu."
     },
     "segmentAudioFullRendering": {
-        "message": "Full Rendering",
+        "message": "Rendering en français",
         "description": "Selection option to play through the entire rendering."
     },
     "segmentAudioButton": {
@@ -48,15 +48,15 @@
         "description": "Audio Renderings"
     },
     "textRenderingsLabel": {
-        "message": "Text (for screenreaders)",
+        "message": "Text (pour screenreaders)",
         "description": "Text Renderings"
     },
     "languageSelectionLabel": {
-        "message": "Language",
+        "message": "Langue",
         "description": "Label for language selection menu."
     },
     "saveChanges": {
-        "message": "Save Changes",
+        "message": "S'appliquer",
         "description": "Label for saving user preferences."
     },
     "monoSoundLabel": {
@@ -64,7 +64,7 @@
         "description": "Label for mono audio option in extension preferences."
     },
     "mcgillServerLabel": {
-        "message": "McGill Server",
+        "message": "Serveur de McGill",
         "description": "Label for mcgill server."
     },
     "customServerLabel": {
@@ -72,7 +72,7 @@
         "description": "Label for custom server."
     },
     "noHaptics": {
-        "message": "None",
+        "message": "Rien",
         "description": "Label for no haptics option."
     },
     "Haply2diy": {

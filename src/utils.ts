@@ -16,7 +16,8 @@ export function getAllStorageSyncData() {
       text: true,
       processItem: "",
       requestItem: "",
-      mweItem: ""
+      mweItem: "",
+      language: ""
     });
 };
 
@@ -66,4 +67,9 @@ export async function getCapabilities(): Promise<string[]>{
     capabilities.push(CAPABILITIES.debugMode);
   }
   return capabilities;
+}
+
+export async function getLanguage() {
+  let lang = await getAllStorageSyncData();
+  return lang["language"];
 }

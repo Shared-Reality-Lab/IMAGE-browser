@@ -41,6 +41,7 @@ const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option
 const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
 const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
+const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
 
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
@@ -94,7 +95,8 @@ function saveOptions() {
     noHaptics: noHapticsSetting.checked,
     haply2diy: haply2diySetting.checked,
     audio:audioRenderingsSetting.checked,
-    text:textRenderingsSetting.checked
+    text:textRenderingsSetting.checked,
+    language:languageSetting.value
   }),
     (function () {
       optionsCheck();
@@ -117,7 +119,8 @@ function restore_options() {
       noHaptics:true,
       haply2diy:false,
       audio:true,
-       text:true
+      text:true,
+      language: ""
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -129,6 +132,7 @@ function restore_options() {
         haply2diySetting.checked= items["haply2diy"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
+        languageSetting.value = items["language"];
 
         if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 

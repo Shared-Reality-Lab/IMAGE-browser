@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import { IMAGERequest } from "../types/request.schema";
-import { getCapabilities, getRenderers } from "../utils";
+import { getCapabilities, getRenderers, getLanguage } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
 export function processMap(port: browser.Runtime.Port, map: any, origin: string, extVersion?: string, ) {
@@ -57,7 +57,7 @@ export async function generateMapQuery(message: { context: string, coordinates: 
             "longitude": message.coordinates[1]
         },
         "context": message.context,
-        "language": "en",
+        "language": await getLanguage(),
         "capabilities": capabilities,
         "renderers": renderers
     } as IMAGERequest;
@@ -71,7 +71,7 @@ export async function generateMapSearchQuery(message: { context: string, placeID
         "timestamp": Math.round(Date.now() / 1000),
         "placeID": message.placeID,
         "context": message.context,
-        "language": "en",
+        "language": await getLanguage(),
         "capabilities": capabilities,
         "renderers": renderers
     } as IMAGERequest;
