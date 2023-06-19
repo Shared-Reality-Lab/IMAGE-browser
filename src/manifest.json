@@ -25,7 +25,8 @@
         "contextMenus",
         "downloads",
         "storage",
-        "scripting"
+        "scripting",
+        "offscreen"
     ],
     "host_permissions" : ["<all_urls>"],
 
@@ -60,7 +61,9 @@
             "hAPI/worker.ts",
             "errors/*.html",
             "progressBar/progressBar.html",
-            "progressBar/audio-files/*"
+            "progressBar/audio-files/*",
+            "offscreen.html",
+            "offscreen.js"
         ],
         "matches": ["<all_urls>"]
     }],
