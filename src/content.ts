@@ -16,28 +16,28 @@
  */
 import imageCompression from "browser-image-compression";
 import browser from "webextension-polyfill";
-import {processMAPImages, processMaps} from './maps/maps-utils';
+import { processMAPImages, processMaps } from './maps/maps-utils';
 import { getContext } from "./utils";
 
 var selectedElement: HTMLElement | null = null;
 
 let port = browser.runtime.connect();
 var extVersion = process.env.NODE_ENV || "";
-//console.log("Extension Version", extVersion);
+//console.debug("Extension Version", extVersion);
 
 var versionDiv = document.createElement("div");
-versionDiv.id="version-div";
+versionDiv.id = "version-div";
 versionDiv.setAttribute("ext-version", extVersion);
-(document.head||document.documentElement).appendChild(versionDiv);
+(document.head || document.documentElement).appendChild(versionDiv);
 
 var script = document.createElement('script');
 script.src = browser.runtime.getURL('charts/highcharts.js');
-(document.head||document.documentElement).appendChild(script);
-script.onload = function() {
+(document.head || document.documentElement).appendChild(script);
+script.onload = function () {
     script.remove();
 };
 
-window.addEventListener("message", function(event) {
+window.addEventListener("message", function (event) {
     // We only accept messages from our script in highcharts.js
     if (event.source != window)
         return;
@@ -47,7 +47,7 @@ window.addEventListener("message", function(event) {
             "highChartsData": event.data.charts || null,
             "toRender": "full"
         });
-    }   
+    }
 });
 
 document.addEventListener("contextmenu", (evt: Event) => {
@@ -56,97 +56,108 @@ document.addEventListener("contextmenu", (evt: Event) => {
 });
 port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
-    switch (message["type"]) {
-        case "resourceRequest":
-        case "preprocessRequest":
-        case "onlyRequest":
-            const serializer = new XMLSerializer();
-            let imageElement: HTMLImageElement;
-            if (selectedElement instanceof HTMLImageElement ) {
-                imageElement = selectedElement;
-            } else {
-                imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
-            }
-            console.debug(imageElement.currentSrc);
-            console.debug(port);
-            const scheme = imageElement.currentSrc.split(":")[0];
-            // Determine amount of rendering to request.
-            let toRender = "";
-            if (message["type"] === "resourceRequest") {
-                toRender = "full";
-            } else if (message["type"] === "preprocessRequest") {
-                toRender = "preprocess";
-            } else if (message["type"] === "onlyRequest") {
-                toRender = "none";
-            }
-            if (scheme === "http" || scheme === "https" || scheme === "data") {
-                let blob = await fetch(imageElement.currentSrc).then(r => r.blob());
-                const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
-                const sizeMb = blobFile.size / 1024 / 1024;
-                let graphicBlob = blob;
-                if (sizeMb > 4) {
-                    console.debug(`originalFile size ${sizeMb} MB`);
-                    const options = {
-                        maxSizeMB: 4,
-                        useWebWorker: true,
-                        alwaysKeepResolution: true,
-                    }
-                    const compressedFile = await imageCompression(blobFile, options);
-                    console.debug(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-                    let compressedBlob = new Blob([compressedFile], { type: blob.type });
-                    graphicBlob = compressedBlob;
-                };
-                function blobToBase64(blob: Blob) {
-                    return new Promise((resolve, reject) => {
-                      const reader = new FileReader();
-                      reader.onload = () => resolve(reader.result as string);
-                      reader.onerror = () => reject(reader.error);
-                      reader.readAsDataURL(blob);
-                    });
-                  };
-                const graphicBlobStr = await blobToBase64(graphicBlob);
-                port.postMessage({
-                    "type": "resource",
-                    "context": selectedElement ? getContext(selectedElement) : null,
-                    "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
-                    "url": window.location.href,
-                    "sourceURL": imageElement.currentSrc,
-                    "toRender": toRender,
-                    "graphicBlob": graphicBlobStr
-                });
-            } else if (scheme === "file") {
-                console.debug("File!");
-                fetch(imageElement.currentSrc, {mode: "same-origin"}).then(resp => {
-                    if (resp.ok) {
-                        return resp.blob();
-                    } else {
-                        throw resp;
-                    }
-                }).then(blob => {
-                    return new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result as string);
-                        reader.onerror = () => reject(reader.error);
-                        reader.readAsDataURL(blob);
-                    });
-                }).then(image => {
-                    port.postMessage({
-                        "type": "localResource",
-                        "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
-                        "dims": [ imageElement.naturalWidth, imageElement.naturalHeight ],
-                        "image": image,
-                        "toRender": toRender
-                    });
-                });
-            }
-            break;
-        default:
-            console.debug(message["type"]);
-            break;
+    let imageElement: HTMLImageElement;
+    if (selectedElement instanceof HTMLImageElement) {
+        imageElement = selectedElement;
+    } else {
+        imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
     }
-    return true;
+    console.debug(imageElement.currentSrc);
+    console.debug(port);
+    console.debug(message);
+    const scheme = imageElement.currentSrc.split(":")[0];
+    console.debug("message received", message);
+    let toRender = "";
+    if (message["type"] === "resourceRequest") {
+        toRender = "full";
+    }
+    if (message["type"] === "preprocessRequest") {
+        toRender = "preprocess";
+    }
+    if (message["type"] === "onlyRequest") {
+        toRender = "none"
+    }
+    if (message["type"] === "compressImage") {
+        console.debug("compressing inside content script");
+        //let blobFile = new File([new Blob(message["graphicBlobStr"])], "buffer.jpg", {type: message["blobType"]});
+        let blob = base64toBlob(message["graphicBlobStr"], message["blobType"]);
+        const blobFile = new File([blob], "buffer.jpg", { type: message["blobType"] });
+        const options = {
+            maxSizeMB: 4,
+            useWebWorker: true,
+            alwaysKeepResolution: true,
+        }
+        const compressedFile = await imageCompression(blobFile, options);
+        let compressedBlob = new Blob([compressedFile], { type: message["blobType"] });
+        let graphicBlob = compressedBlob;
+        const graphicBlobStr = await blobToBase64(graphicBlob);
+        port.postMessage({
+            "type": "resource",
+            "context": selectedElement ? getContext(selectedElement) : null,
+            "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+            "url": window.location.href,
+            "sourceURL": imageElement.currentSrc,
+            "toRender": toRender || "full",
+            "graphicBlob": graphicBlobStr
+        });
+        return;
+    }
+    if (scheme === "http" || scheme === "https" || scheme === "data") {
+        port.postMessage({
+            "type": "checkImageSize",
+            "context": selectedElement ? getContext(selectedElement) : null,
+            "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+            "url": window.location.href,
+            "sourceURL": imageElement.currentSrc,
+            "toRender": toRender
+        });
+    } else if (scheme === "file") {
+        console.debug("File!");
+        fetch(imageElement.currentSrc, { mode: "same-origin" }).then(resp => {
+            if (resp.ok) {
+                return resp.blob();
+            } else {
+                throw resp;
+            }
+        }).then(blob => {
+            return new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(blob);
+            });
+        }).then(image => {
+            port.postMessage({
+                "type": "localResource",
+                "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
+                "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+                "image": image,
+                "toRender": toRender
+            });
+        });
+    }
+
 });
 
+function blobToBase64(blob: Blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+    });
+};
+
+function base64toBlob(dataURI: string, type: string) {
+    var byteString = atob(dataURI.split(',')[1]);
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/jpeg' });
+}
 // Process images on page
 Array.from(document.getElementsByTagName("img")).forEach(image => {
     if (!image.hasAttribute("tabindex") && !image.closest("a")) {
@@ -154,7 +165,7 @@ Array.from(document.getElementsByTagName("img")).forEach(image => {
     }
 });
 
-console.log("ext version from content", extVersion);
+console.debug("ext version from content", extVersion);
 document.onreadystatechange = function () {
     setTimeout(function () {
         if (document.readyState === 'complete') {
@@ -164,7 +175,3 @@ document.onreadystatechange = function () {
         }
     }, 1500)
 }
-
-
-
-
