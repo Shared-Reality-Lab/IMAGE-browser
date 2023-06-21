@@ -1,133 +1,133 @@
 {
     "extensionName": {
         "message": "Extension IMAGE",
-        "description": "Nom d'extension"
+        "description": "Nom de l'extension"
     },
     "extensionNameTest": {
-        "message": "IMAGE Extension (Test)",
-        "description": "Test Extension name"
+        "message": "Extension IMAGE (Test)",
+        "description": "Nom de l'extension de test"
     },
     "extensionDescription": {
-        "message": "Extension for the McGill IMAGE project. This is a beta release.",
-        "description": "Brief description of the extension. Will be expanded eventually."
+        "message": "Extension pour le projet IMAGE McGill. Il s'agit d'une version bêta.",
+        "description": "Brève description de l'extension."
     },
     "menuItem": {
-        "message": "Intérprêt cette photo avec IMAGE",
-        "description": "Fetches IMAGE audio and haptic renderings for an image."
+        "message": "Interpréter ce graphique avec IMAGE",
+        "description": "Récupérer IMAGE rendus audio et haptiques pour une image."
     },
     "preprocessItem": {
-        "message": "DEBUG: Get Preprocessed Data",
-        "description": "Fetch preprocessed JSON data for an image without renderings."
+        "message": "DEBUG : Obtenir les données prétraitées",
+        "description": "Récupérer les données JSON prétraitées d'une image sans rendu."
     },
     "requestItem": {
-        "message": "DEBUG: Get Request Data",
-        "description": "Download request to be sent to server."
+        "message": "DEBUG : Obtenir les données de la requête",
+        "description": "Demande de téléchargement à envoyer au serveur."
     },
     "renderingTitle": {
-        "message": "Renderings",
-        "description": "Header of popup window"
+        "message": "Rendus",
+        "description": "En-tête de la fenêtre popup"
     },
     "renderingLabel": {
         "message": "Interprétation",
-        "description": "Label for each rendering returned from the server"
+        "description": "Étiquette pour chaque rendu renvoyé par le serveur"
     },
     "segmentAudioSelLabel": {
-        "message": "Part of Rendering to Play",
-        "description": "Label for the SegmentAudio selection menu."
+        "message": "Une partie du rendu pour jouer",
+        "description": "Étiquette pour le menu de sélection SegmentAudio."
     },
     "segmentAudioFullRendering": {
-        "message": "Rendering en français",
-        "description": "Selection option to play through the entire rendering."
+        "message": "Rendu complet",
+        "description": "Option de sélection pour lire l'ensemble du rendu."
     },
     "segmentAudioButton": {
         "message": "Play/Stop",
-        "description": "Label for playing and stopping audio renderings of selected audio segment."
+        "description": "Étiquette permettant de lire et d'arrêter les rendus audio du segment audio sélectionné."
     },
     "audioRenderingsLabel": {
-        "message": "Audio (Specialized renderings, best experienced with stereo headphones)",
-        "description": "Audio Renderings"
+        "message": "Audio (rendus spécialisés, à découvrir avec un casque stéréo)",
+        "description": "Rendu audio"
     },
     "textRenderingsLabel": {
-        "message": "Text (pour screenreaders)",
-        "description": "Text Renderings"
+        "message": "Texte (pour les lecteurs d'écran)",
+        "description": "Rendus textuels"
     },
     "languageSelectionLabel": {
         "message": "Langue",
-        "description": "Label for language selection menu."
+        "description": "Étiquette pour le menu de sélection de la langue."
     },
     "saveChanges": {
-        "message": "S'appliquer",
-        "description": "Label for saving user preferences."
+        "message": "Enregistrer",
+        "description": "Étiquette pour enregistrer les préférences de l'utilisateur."
     },
     "monoSoundLabel": {
         "message": "Mono Audio",
-        "description": "Label for mono audio option in extension preferences."
+        "description": "Étiquette pour l'option audio mono dans les préférences de l'extension."
     },
     "mcgillServerLabel": {
-        "message": "Serveur de McGill",
-        "description": "Label for mcgill server."
+        "message": "Serveur McGill",
+        "description": "Étiquette pour serveur McGill."
     },
     "customServerLabel": {
-        "message": "Custom (enter server URL)",
-        "description": "Label for custom server."
+        "message": "Personnalisé (entrer l'URL du serveur)",
+        "description": "Étiquette pour serveur personnalisé."
     },
     "noHaptics": {
-        "message": "Rien",
-        "description": "Label for no haptics option."
+        "message": "Aucune",
+        "description": "Étiquette pour pas d'option haptiques."
     },
     "Haply2diy": {
         "message": "Haply 2diy",
-        "description": "Label for Haply 2diy option."
+        "description": "Étiquette pour l'option Haply 2diy."
     },
     "Haply2diyNotSupported": {
-        "message": "Haply 2diy: Unavailable since this browser does not support Web Serial.",
-        "description": "Label for Haply 2diy option when it is not supported by browser"
+        "message": "Haply 2diy: Indisponible car ce navigateur ne supporte pas le Web Serial.",
+        "description": "Étiquette pour l'option Haply 2diy lorsqu'elle n'est pas supportée par le navigateur"
     },
     "preprocessMap": {
-        "message": "Get Preprocessed Map Data",
-        "description": "Fetch preprocessed JSON data for a map without renderings."
+        "message": "Obtenir des données cartographiques prétraitées",
+        "description": "Récupérer des données JSON prétraitées pour une carte sans rendu."
     },
     "saveDataSuccess": {
-        "message": "Your data has been saved successfully."
+        "message": "Vos données ont été sauvegardées avec succès."
     },
     "saveDataInvalid": {
-        "message": "The message sent by the extension was invalid. This should not happen."
+        "message": "Le message envoyé par l'extension n'était pas valide. Cela ne devrait pas se produire."
     },
     "savedataUnauthorized": {
-        "message": "The message sent by the extension was not authenticated for this response. If it has been over an hour, your data had already been deleted."
+        "message": "Le message envoyé par l'extension n'a pas été authentifié pour cette réponse. Si cela fait plus d'une heure, vos données ont déjà été supprimées."
     },
     "saveDataServerError": {
-        "message": "An error occurred while processing this request. This should not happen."
+        "message": "Une erreur s'est produite lors du traitement de cette demande. Cela ne devrait pas se produire."
     },
     "saveDataNotImplemented": {
-        "message": "Your data could not be saved as the server in use does not support this feature."
+        "message": "Vos données n'ont pas pu être sauvegardées car le serveur utilisé ne prend pas en charge cette fonctionnalité."
     },
     "explainRendering":{
-        "message": "Explain this rendering to me.",
-        "description": "Link with Explanation of Renderings"
+        "message": "Expliquez-moi ce rendu.",
+        "description": "Lien avec l'explication des rendus"
     },
     "getMapRendering": {
-        "message": "Interpret this map with IMAGE",
-        "description": "Label for button to get map renderings"
+        "message": "Interpréter cette carte avec IMAGE",
+        "description": "Étiquette pour le bouton permettant d'obtenir les rendus de la carte"
     },
     "getMapPreprocessorResponse": {
-        "message": "Get IMAGE preprocessed data",
-        "description": "Label for button to get Map Preprocessor Response"
+        "message": "Obtenir les données prétraitées IMAGE",
+        "description": "Étiquette pour bouton pour obtenir Map Preprocessor Response"
     },
     "tutorialLaunchPad": {
-        "message": "Help! How do I use IMAGE?",
-        "description": "Label for button to launch IMAGE tutorial"
+        "message": "Aide ! Comment utiliser IMAGE ?",
+        "description": "Étiquette pour le bouton de lancement du didacticiel IMAGE"
     },
     "localFileLaunchPad": {
-        "message": "Use IMAGE on a graphic on my computer",
-        "description": "Label for button to load local File"
+        "message": "Utiliser IMAGE sur un graphique de mon ordinateur",
+        "description": "Etiquette pour le bouton de chargement du fichier local"
     },
     "optionsLaunchPad": {
-        "message": "IMAGE options",
-        "description": "Label for button to launch IMAGE options"
+        "message": "Options d'IMAGE",
+        "description": "Étiquette pour le bouton permettant de lancer les options d'IMAGE"
     },
     "popUpTitle": {
-        "message": "IMAGE Extension",
-        "description": "Header of popup window"
+        "message": "Extension IMAGE",
+        "description": "En-tête de la fenêtre popup"
     }
 }
