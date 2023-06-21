@@ -65,7 +65,7 @@
     },
     "mcgillServerLabel": {
         "message": "McGill Server",
-        "description": "Label for mcgill server."
+        "description": "Label for McGill server."
     },
     "customServerLabel": {
         "message": "Custom (enter server URL)",
