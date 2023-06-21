@@ -70,6 +70,12 @@ export async function getCapabilities(): Promise<string[]>{
 }
 
 export async function getLanguage() {
-  let lang = await getAllStorageSyncData();
-  return lang["language"];
+  let langCode = await getAllStorageSyncData().then((languageCode) => {
+    return languageCode.language;
+  });
+
+  if (langCode == "auto") {
+    langCode = browser.i18n.getUILanguage().split("-")[0];
+  }
+  return langCode;
 }
