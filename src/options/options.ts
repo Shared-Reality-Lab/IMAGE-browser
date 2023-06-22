@@ -120,7 +120,7 @@ function restore_options() {
       haply2diy:false,
       audio:true,
       text:true,
-      language: ""
+      language: "auto"
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
