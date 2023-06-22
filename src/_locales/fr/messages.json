@@ -15,6 +15,10 @@
         "message": "Interpréter ce graphique avec IMAGE",
         "description": "Récupérer IMAGE rendus audio et haptiques pour une image."
     },
+    "renderingOptions": {
+        "message": "Options de rendu",
+        "description": "En-tête de la fenêtre d'options"
+    },
     "preprocessItem": {
         "message": "DEBUG : Obtenir les données prétraitées",
         "description": "Récupérer les données JSON prétraitées d'une image sans rendu."
@@ -62,6 +66,10 @@
     "monoSoundLabel": {
         "message": "Mono Audio",
         "description": "Étiquette pour l'option audio mono dans les préférences de l'extension."
+    },
+    "advancedOptions": {
+        "message": "Options avancées",
+        "description": "Étiquette pour les options avancées dans les préférences de l'extension."
     },
     "mcgillServerLabel": {
         "message": "Serveur McGill",
@@ -129,5 +137,9 @@
     "popUpTitle": {
         "message": "Extension IMAGE",
         "description": "En-tête de la fenêtre popup"
+    },
+    "debugText":{
+        "message": "Mode débogage",
+        "description": "Étiquette pour le bouton permettant de lancer le mode débogage"
     }
 }

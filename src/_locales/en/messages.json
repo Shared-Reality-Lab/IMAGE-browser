@@ -15,6 +15,10 @@
         "message": "Interpret this graphic with IMAGE",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
+    "renderingOptions": {
+        "message": "Rendering Options",
+        "description": "Header of option window"
+    },
     "preprocessItem": {
         "message": "DEBUG: Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
@@ -62,6 +66,10 @@
     "monoSoundLabel": {
         "message": "Mono Audio",
         "description": "Label for mono audio option in extension preferences."
+    },
+    "advancedOptions": {
+        "message": "Advanced Options",
+        "description": "Header for advanced options in extension preferences."
     },
     "mcgillServerLabel": {
         "message": "McGill Server",
@@ -129,5 +137,9 @@
     "popUpTitle": {
         "message": "IMAGE Extension",
         "description": "Header of popup window"
+    },
+    "debugText":{
+        "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
+        "description": "Debug mode text"
     }
 }

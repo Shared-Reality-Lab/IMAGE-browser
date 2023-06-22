@@ -33,6 +33,26 @@ for (let label of labels) {
   }
 }
 
+const h1 = Array.from(document.querySelectorAll("h1"));
+for (let heading1 of h1) {
+  const val = browser.i18n.getMessage(heading1.id);
+  if (val) {
+    heading1.textContent = val;
+  } else {
+    console.warn('Unknown element "' + heading1.id + '"');
+  }
+}
+
+const h3 = Array.from(document.querySelectorAll("h3"));
+for (let heading3 of h3) {
+  const val = browser.i18n.getMessage(heading3.id);
+  if (val) {
+    heading3.textContent = val;
+  } else {
+    console.warn('Unknown element "' + heading3.id + '"');
+  }
+}
+
 const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
 const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));
 const customServerSetting = <HTMLInputElement>(document.getElementById("custom-server"));

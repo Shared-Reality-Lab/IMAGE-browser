@@ -126,7 +126,7 @@ border-radius: 34px;
 border-radius: 50%;
 }
 
-#advanced-options{
+#advancedOptions, #renderingOptions{
 color: black;
 font-size: x-large;
 font-weight: 400;
@@ -161,7 +161,7 @@ font-weight: 400;
 line-height: 30pt;
 }
 
-#server-options{
+#serverOptions{
 color: black;
 font-size: medium;
 font-weight: 400;
