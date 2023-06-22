@@ -59,7 +59,15 @@
         "message": "Language",
         "description": "Label for language selection menu."
     },
-    "saveChanges": {
+    "automaticLanguage": {
+        "message": "Automatic",
+        "description": "Automatic language select option"
+    },
+    "cancelButton": {
+        "message": "Cancel",
+        "description": "Cancel button."
+    },
+    "saveChangesButton": {
         "message": "Save Changes",
         "description": "Label for saving user preferences."
     },
@@ -144,6 +152,6 @@
     },
     "debugText":{
         "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
-        "description": "Debug mode text"
+        "description": "Debug mode description"
     }
 }

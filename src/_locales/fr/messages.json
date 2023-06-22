@@ -59,7 +59,15 @@
         "message": "Langue",
         "description": "Étiquette pour le menu de sélection de la langue."
     },
-    "saveChanges": {
+    "automaticLanguage": {
+        "message": "Automatique",
+        "description": "Option de sélection pour la langue automatique."
+    },
+    "cancelButton": {
+        "message": "Annuler",
+        "description": "Bouton d'annulation."
+    },
+    "saveChangesButton": {
         "message": "Enregistrer",
         "description": "Étiquette pour enregistrer les préférences de l'utilisateur."
     },
@@ -70,6 +78,10 @@
     "advancedOptions": {
         "message": "Options avancées",
         "description": "Étiquette pour les options avancées dans les préférences de l'extension."
+    },
+    "serverOptions": {
+        "message": "Serveur",
+        "description": "Étiquette pour les options de serveur dans les préférences de l'extension."
     },
     "mcgillServerLabel": {
         "message": "Serveur McGill",
@@ -139,7 +151,7 @@
         "description": "En-tête de la fenêtre popup"
     },
     "debugText":{
-        "message": "Mode débogage",
-        "description": "Étiquette pour le bouton permettant de lancer le mode débogage"
+        "message": "L'activation du mode développeur permet d'accéder aux options de débogage à partir du menu contextuel du navigateur.",
+        "description": "Description du mode de débogage."
     }
 }
