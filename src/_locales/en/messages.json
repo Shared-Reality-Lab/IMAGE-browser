@@ -71,6 +71,10 @@
         "message": "Advanced Options",
         "description": "Header for advanced options in extension preferences."
     },
+    "serverOptions": {
+        "message": "Server Options",
+        "description": "Header for server options in extension preferences."
+    },
     "mcgillServerLabel": {
         "message": "McGill Server",
         "description": "Label for McGill server."
