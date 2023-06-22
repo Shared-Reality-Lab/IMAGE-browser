@@ -63,6 +63,10 @@
         "message": "Automatic",
         "description": "Automatic language select option"
     },
+    "languageWarning": {
+        "message": "Warning: IMAGE may unable to response with your desired language due to technical limitations.",
+        "description": "Warning for language selection"
+    },
     "cancelButton": {
         "message": "Cancel",
         "description": "Cancel button."
