@@ -153,5 +153,9 @@
     "debugText":{
         "message": "L'activation du mode développeur permet d'accéder aux options de débogage à partir du menu contextuel du navigateur.",
         "description": "Description du mode de débogage."
+    },
+    "developerMode": {
+        "message": "Mode développeur",
+        "description": "Étiquette pour le mode développeur"
     }
 }

@@ -22,34 +22,14 @@ let navigatorSerial = navigator.serial;
 var extVersion = process.env.NODE_ENV || "";
 //console.log("Extension Version options page", extVersion);
 
-// Set up localized names
-const labels = Array.from(document.querySelectorAll("label"));
-for (let label of labels) {
+// Set up localized names: getting all elements with class "localisation"
+const localisation = Array.from(document.querySelectorAll(".localisation"));
+for (let label of localisation) {
   const val = browser.i18n.getMessage(label.id);
   if (val) {
     label.textContent = val;
   } else {
     console.warn('Unknown element "' + label.id + '"');
-  }
-}
-
-const h1 = Array.from(document.querySelectorAll("h1"));
-for (let heading1 of h1) {
-  const val = browser.i18n.getMessage(heading1.id);
-  if (val) {
-    heading1.textContent = val;
-  } else {
-    console.warn('Unknown element "' + heading1.id + '"');
-  }
-}
-
-const h3 = Array.from(document.querySelectorAll("h3"));
-for (let heading3 of h3) {
-  const val = browser.i18n.getMessage(heading3.id);
-  if (val) {
-    heading3.textContent = val;
-  } else {
-    console.warn('Unknown element "' + heading3.id + '"');
   }
 }
 
@@ -167,8 +147,8 @@ function restore_options() {
 
 document.addEventListener("DOMContentLoaded", restore_options);
 
-const submit = document.getElementById("preferences-submit");
-const cancel = document.getElementById("cancel-button");
+const submit = document.getElementById("saveChangesButton");
+const cancel = document.getElementById("cancelButton");
 
 if (submit) {
   submit.textContent = browser.i18n.getMessage("saveChanges");

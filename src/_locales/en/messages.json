@@ -69,7 +69,7 @@
     },
     "saveChangesButton": {
         "message": "Save Changes",
-        "description": "Label for saving user preferences."
+        "description": "Save Changes button."
     },
     "monoSoundLabel": {
         "message": "Mono Audio",
@@ -153,5 +153,9 @@
     "debugText":{
         "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
         "description": "Debug mode description"
+    },
+    "developerMode": {
+        "message": "Developer Mode",
+        "description": "Header for developer mode options in extension preferences."
     }
 }

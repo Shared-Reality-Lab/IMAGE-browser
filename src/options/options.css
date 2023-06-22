@@ -1,5 +1,5 @@
 
- #preferences-submit {
+ #saveChangesButton {
   background: #7ed7f4 ; 
   border: none;
   border-radius: 12px;
@@ -7,13 +7,14 @@
   display: inline-block;
   font-size: 20px;
   font-weight: 400;
-  margin-top: 40px;
+  margin-top: 20px;
   text-decoration: none;
   width: 180px; 
   height: 40px; 
   margin-left: 20px;
 }
-#cancel-button{
+
+#cancelButton{
   background: rgb(176, 175, 175) ; 
   border: none;
   border-radius: 12px;
@@ -21,10 +22,14 @@
   display: inline-block;
   font-size: 20px;
   font-weight: 400;
-  margin-top: 40px;
+  margin-top: 20px;
   text-decoration: none;
   width: 100px; 
   height: 40px; 
+}
+
+button:hover {
+  cursor: pointer;
 }
 
 #input-url{
@@ -106,6 +111,10 @@ pointer-events: none;
 color: #808080;
 }
 
+.slider:hover {
+  cursor: pointer;
+}
+
 input:checked + .slider {
 background-color:#7ed7f4;
 }
@@ -126,7 +135,7 @@ border-radius: 34px;
 border-radius: 50%;
 }
 
-#advancedOptions, #renderingOptions{
+h1.localisation {
 color: black;
 font-size: x-large;
 font-weight: 400;
@@ -212,6 +221,5 @@ font-weight: 400;
 
 #debug-text-div{
   text-align: start;
-  margin-top: 20px;
 }
 
