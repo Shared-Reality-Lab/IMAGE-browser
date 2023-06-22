@@ -151,7 +151,7 @@ const submit = document.getElementById("saveChangesButton");
 const cancel = document.getElementById("cancelButton");
 
 if (submit) {
-  submit.textContent = browser.i18n.getMessage("saveChanges");
+  submit.textContent = browser.i18n.getMessage("saveChangesButton");
   submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
