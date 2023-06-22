@@ -4,7 +4,6 @@
         <link rel="stylesheet" href="./options.css">
     </head>
     <body>
-        
         <div>
            <h1 class="localisation" id="renderingOptions"></h1> 
             <div class="browser-style">
@@ -17,13 +16,14 @@
             </div>
         </div>
         
-        <div>
+        <div id="language-div">
             <label class="localisation" for="languageSelectionLabel" id="languageSelectionLabel"></label>
             <select name="language-selection" id="language-selection">
                 <option class="localisation" id="automaticLanguage" value="auto"></option>
                 <option value="en">English</option>
                 <option value="fr">Français</option>
             </select>
+            <label class="localisation" id="languageWarning"></label>
         </div>
 
         <div id="wrapper-div">

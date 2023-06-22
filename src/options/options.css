@@ -141,11 +141,6 @@ font-size: x-large;
 font-weight: 400;
 }
 
-#renderings-header{
-color: black;
-font-size: x-large;
-font-weight: 400;
-}
 #noHaptics{
 color: black;
 font-size: medium;
@@ -190,6 +185,15 @@ font-weight: 400;
 line-height: 20pt;
 }
 
+#language-div {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 1vw;
+}
+
 #languageSelectionLabel {
 color: black;
 font-size: medium;
@@ -211,6 +215,13 @@ select:hover {
 
 select:focus {
   background-color: #FFFFFF;
+}
+
+#languageWarning{
+  color: rgb(170, 30, 30);
+  font-size: medium;
+  font-weight: 400;
+  line-height: 20pt;
 }
 
 #debugText{
