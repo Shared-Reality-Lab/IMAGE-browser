@@ -24,17 +24,18 @@ import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage } fro
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { SERVER_URL } from './config';
 
-let ports : { [key: number]: Runtime.Port } = {};
+let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window;
 var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
-//console.log("Extension Version background page", extVersion);
-//console.log("Suffix Text", process.env.SUFFIX_TEXT);
+//console.debug("Extension Version background page", extVersion);
+//console.debug("Suffix Text", process.env.SUFFIX_TEXT);
 async function generateQuery(message: { context: string, url: string, dims: [number, number], graphicBlob: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
+  console.debug("inside generate query");
   return {
     "request_uuid": uuidv4(),
     "timestamp": Math.round(Date.now() / 1000),
@@ -48,8 +49,7 @@ async function generateQuery(message: { context: string, url: string, dims: [num
   } as IMAGERequest;
 }
 
-async function generateLocalQuery(message: { context: string, dims: [number, number], image: string , graphicBlob: string}): Promise<IMAGERequest> {
-
+async function generateLocalQuery(message: { context: string, dims: [number, number], image: string, graphicBlob: string }): Promise<IMAGERequest> {
   let renderers = await getRenderers();
   let capabilities = await getCapabilities();
   return {
@@ -79,7 +79,7 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
 
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message");
-  let query: IMAGERequest;
+  let query: IMAGERequest | undefined;
   switch (message["type"]) {
     case "info":
       const value = responseMap.get(message["request_uuid"]);
@@ -87,138 +87,202 @@ async function handleMessage(p: Runtime.Port, message: any) {
       responseMap.delete(message["request_uuid"]);
       break;
     case "resource":
+      query = await generateQuery(message);
+      break;
     case "localResource":
+      query = await generateLocalQuery(message);
+      break;
     case "mapResource":
+      console.debug("Generating map query");
+      query = await generateMapQuery(message);
+      break;
     case "settingsSaved":
+      await updateDebugContextMenu();
+      break;
     case "chartResource":
+      query = await generateChartQuery(message);
+      break;
     case "mapSearch":
-      // Get response and open new window
-      if (message["type"] === "resource") {
-        query = await generateQuery(message);
-      } else if (message["type"] === "mapResource") {
-        console.debug("Generating map query");
-        query = await generateMapQuery(message);
-      } else if (message["type"] === "mapSearch") {
-        console.debug("Generating map query");
-        query = await generateMapSearchQuery(message);
-      } else if (message["type"] === "chartResource") {
-        query = await generateChartQuery(message);
-      } else {
-        query = await generateLocalQuery(message);
-      }
-      if (message["toRender"] === "full") {
-        let items = await getAllStorageSyncData();
-        if (items["mcgillServer"] === true) {
-          serverUrl = SERVER_URL;
-        } else {
-          if (items["inputUrl"] !== "" && items["customServer"] === true) {
-            serverUrl = items["inputUrl"];
-          }
-        }
-        var progressWindow = await browser.windows.create({
-          type: "popup",
-          url: "progressBar/progressBar.html",
-          height: 100,
-          width: 400,
-        })
-        let resp: Response;
-        let json: IMAGEResponse = { "request_uuid": "", "timestamp": 0, "renderings": [] };
-        try{
-          resp = await fetch(serverUrl + "render", {
-            "method": "POST",
-            "headers": {
-              "Content-Type": "application/json"
-            },
-            "body": JSON.stringify(query)
-          });
-          browser.windows.remove(progressWindow.id!)
-          if (resp.ok) {
-            json = await resp.json();
-          } else {
-            browser.windows.create({
-              type: "panel",
-              url: "errors/http_error.html"
+      console.debug("Generating map query");
+      query = await generateMapSearchQuery(message);
+      break;
+    case "checkImageSize":
+      console.debug("Checking Image Size");
+      let blob = await fetch(message["sourceURL"]).then(r => r.blob());
+      const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
+      const sizeMb = blobFile.size / 1024 / 1024;
+      console.debug(`originalFile size ${sizeMb} MB`);
+      if (sizeMb > 4) {
+        console.debug(`Compressing Image to make it less than 4MB`);
+        const graphicBlobStr = await blobToBase64(blob);
+        /** compress image using external library in content script*/
+        let tabs = browser.tabs.query({ active: true, currentWindow: true });
+        tabs.then(async function (tabs) {
+          let currentTab = tabs[0];
+          //console.debug("current Tab", currentTab);
+          if (currentTab.id) {
+
+            ports[currentTab.id].postMessage({
+              "type": "compressImage",
+              "tabId": currentTab.id,
+              "graphicBlobStr": graphicBlobStr,
+              "blobType": blob.type
             });
-            console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
-            const textContent = await resp.text();
-            console.error(textContent);
-            throw new Error(textContent);
+            // browser.tabs.sendMessage(currentTab.id, { "type": "compressImage", "blob": blob });
           }
-        } catch {
-          browser.windows.remove(progressWindow.id!);
-          browser.windows.create({
-            type: "panel",
-            url: "errors/http_error.html"
-          });
-          return;
-        }
-        if (json["renderings"].length > 0) {
-          if (query["request_uuid"] !== undefined) {
-            responseMap.set(query["request_uuid"],
-              { "response": json, "request": query, "server": serverUrl }
-            );
-            if (renderingsPanel !== undefined) {
-              try{
-                await browser.windows.remove(renderingsPanel.id!)
-                renderingsPanel = await createPanel(query);
-              }catch{
-                renderingsPanel = await createPanel(query);
-              }
-            } else {
-              renderingsPanel = await createPanel(query);
-            }
-            // How to handle if request_uuid was undefined??
-          }
-        } else {
-          await browser.windows.create({
-            type: "panel",
-            url: 'errors/no_renderings.html?uuid=' +
-            encodeURIComponent((query['request_uuid']||'')) + "&hash=" +
-            encodeURIComponent(hash(query)) + "&serverURL=" +
-            encodeURIComponent(serverUrl.toString())
-          });
-        }
+        });
+        return;
       }
-      else if (message["toRender"] === "preprocess") {
-        let items = await getAllStorageSyncData();
-        if (items["mcgillServer"] === true) {
-          serverUrl = SERVER_URL;
-        } else {
-          if (items["inputUrl"] !== "" && items["customServer"] === true) {
-            serverUrl = items["inputUrl"];
-          }
-        }
-        try {
-          await browser.downloads.download({
-            url: serverUrl + "render/preprocess",
-            headers: [{ name: "Content-Type", value: "application/json" }],
-            body: JSON.stringify(query),
-            method: "POST",
-            saveAs: true
-          })
-        } catch (err) {
-          console.error(err);
-        }
-      } else if (message["toRender"] === "none") {
-        try {
-          await browser.downloads.download({
-            url: `data:application/json;base64,${btoa(JSON.stringify(query))}`, 
-            saveAs: true, 
-            filename: `${query['request_uuid']}.json`
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      if (message["type"] === "settingsSaved") {
-        await updateDebugContextMenu();
+      else {
+        const graphicBlobStr = await blobToBase64(blob);
+        message["graphicBlob"] = graphicBlobStr;
+        query = await generateQuery(message);
       }
       break;
     default:
       console.debug(message["type"]);
-      break;
+  }
+  if (query) {
+    console.debug("Value of toRender ", message["toRender"]);
+    switch (message["toRender"]) {
+      case "full":
+        {
+          let items = await getAllStorageSyncData();
+          if (items["mcgillServer"] === true) {
+            serverUrl = SERVER_URL;
+          } else {
+            if (items["inputUrl"] !== "" && items["customServer"] === true) {
+              serverUrl = items["inputUrl"];
+            }
+          }
+          var progressWindow = await browser.windows.create({
+            type: "popup",
+            url: "progressBar/progressBar.html",
+            height: 100,
+            width: 400,
+          })
+          let resp: Response;
+          let json: IMAGEResponse = { "request_uuid": "", "timestamp": 0, "renderings": [] };
+          try {
+            resp = await fetch(serverUrl + "render", {
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": JSON.stringify(query)
+            });
+            browser.windows.remove(progressWindow.id!)
+            if (resp.ok) {
+              json = await resp.json();
+            } else {
+              browser.windows.create({
+                type: "panel",
+                url: "errors/http_error.html"
+              });
+              console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
+              const textContent = await resp.text();
+              console.error(textContent);
+              throw new Error(textContent);
+            }
+          } catch {
+            browser.windows.remove(progressWindow.id!);
+            browser.windows.create({
+              type: "panel",
+              url: "errors/http_error.html"
+            });
+            return;
+          }
+          if (json["renderings"].length > 0) {
+            if (query["request_uuid"] !== undefined) {
+              responseMap.set(query["request_uuid"],
+                { "response": json, "request": query, "server": serverUrl }
+              );
+              if (renderingsPanel !== undefined) {
+                try {
+                  await browser.windows.remove(renderingsPanel.id!)
+                  renderingsPanel = await createPanel(query);
+                } catch {
+                  renderingsPanel = await createPanel(query);
+                }
+              } else {
+                renderingsPanel = await createPanel(query);
+              }
+              // How to handle if request_uuid was undefined??
+            }
+          } else {
+            await browser.windows.create({
+              type: "panel",
+              url: 'errors/no_renderings.html?uuid=' +
+                encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                encodeURIComponent(hash(query)) + "&serverURL=" +
+                encodeURIComponent(serverUrl.toString())
+            });
+          }
+        }
+        break;
+
+      case "preprocess":
+        {
+          let items = await getAllStorageSyncData();
+          if (items["mcgillServer"] === true) {
+            serverUrl = SERVER_URL;
+          } else {
+            if (items["inputUrl"] !== "" && items["customServer"] === true) {
+              serverUrl = items["inputUrl"];
+            }
+          }
+          try {
+            await browser.downloads.download({
+              url: serverUrl + "render/preprocess",
+              headers: [{ name: "Content-Type", value: "application/json" }],
+              body: JSON.stringify(query),
+              method: "POST",
+              saveAs: true
+            })
+          } catch (err) {
+            console.error(err);
+          }
+        }
+        break;
+      case "none":
+        {
+          try {
+            await browser.downloads.download({
+              url: `data:application/json;base64,${btoa(JSON.stringify(query))}`,
+              saveAs: true,
+              filename: `${query['request_uuid']}.json`
+            });
+          } catch (err) {
+            console.error(err);
+          }
+        }
+        break;
+    }
   }
 }
+function blobToBase64(blob: Blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+};
+
+async function createOffscreen() {
+  // @ts-ignore
+  await browser.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['BLOBS'],
+    justification: 'keep service worker running',
+  }).catch(() => {});
+}
+browser.runtime.onInstalled.addListener(() => {createOffscreen();});
+// browser.runtime.onStartup.addListener(() => {createOffscreen();});
+// a message from an offscreen document every 50 second resets the inactivity timer
+browser.runtime.onMessage.addListener(msg => {
+  if (msg.keepAlive) console.log('keepAlive');
+});
 
 async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
@@ -229,28 +293,29 @@ async function updateDebugContextMenu() {
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        if(tabs[i].url && !tabs[i].url?.startsWith("chrome://")){
+        if (tabs[i].url && !tabs[i].url?.startsWith("chrome://")) {
           browser.scripting.insertCSS({
-            target: {tabId: tabs[i].id || 0},
+            target: { tabId: tabs[i].id || 0 },
             css: `
             button#preprocessor-map-button{
               display: inline-block;
             }`,
-        });
+          });
         }
-      }},function(){});
+      }
+    }, function () { });
 
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
-      },onCreated);
+      }, onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
-      },onCreated);
+      }, onCreated);
     }
 
     browser.storage.sync.set({
@@ -269,16 +334,17 @@ async function updateDebugContextMenu() {
     });
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
-        if(tabs[i].url && !tabs[i].url?.startsWith("chrome://")){
+        if (tabs[i].url && !tabs[i].url?.startsWith("chrome://")) {
           browser.scripting.insertCSS({
-            target: {tabId: tabs[i].id || 0},
+            target: { tabId: tabs[i].id || 0 },
             css: `
             button#preprocessor-map-button{
               display: none;
             }`,
-        });
+          });
         }
-      }},function(){});
+      }
+    }, function () { });
   }
 }
 
@@ -288,7 +354,7 @@ function storeConnection(p: Runtime.Port) {
     ports[id] = p;
     ports[id].onMessage.addListener(handleMessage.bind(null, p));
     ports[id].onDisconnect.addListener((p: Runtime.Port) => {
-      if(id){
+      if (id) {
         delete ports[id];
       }
     });
@@ -329,7 +395,7 @@ function getCurrentTabInfo() {
     function (tabs) {
       handleUpdated(tabs[0].id, tabs[0]);
     },
-    function (error) { console.log(error) }
+    function (error) { console.debug(error) }
   );
 }
 
@@ -354,22 +420,23 @@ var previousToggleState: Boolean;
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
-  console.log("debug value inside storage sync data", showDebugOptions);
+  console.debug("debug value inside storage sync data", showDebugOptions);
   if (showDebugOptions) {
     browser.contextMenus.create({
       id: "preprocess-only",
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     }, onCreated);
     browser.contextMenus.create({
       id: "request-only",
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
-    },onCreated);
+    }, onCreated);
   }
 });
 
 browser.runtime.onInstalled.addListener(function (object) {
+  createOffscreen();
   let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
 
   if ((object.reason === "install")) {
@@ -380,17 +447,17 @@ browser.runtime.onInstalled.addListener(function (object) {
       height: 700,
     });
   }
-  
-browser.contextMenus.create({
-  id: "mwe-item",
-  title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") +  process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
-  contexts: ["image"]
-}, onCreated);
+
+  browser.contextMenus.create({
+    id: "mwe-item",
+    title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
+    contexts: ["image"]
+  }, onCreated);
 
 });
 
 browser.commands.onCommand.addListener((command) => {
-  console.log(`Command: ${command}`);
+  console.debug(`Command: ${command}`);
   browser.windows.create({
     type: "panel",
     url: "launchpad/launchpad.html",
