@@ -37,6 +37,15 @@ script.onload = function () {
     script.remove();
 };
 
+// script to add sr-only buttons
+var graphicScript = document.createElement('script');
+graphicScript.src = browser.runtime.getURL('screenReader.js');
+(document.head || document.documentElement).appendChild(graphicScript);
+graphicScript.onload = function () {
+    graphicScript.remove();
+};
+
+
 window.addEventListener("message", function (event) {
     // We only accept messages from our script in highcharts.js
     if (event.source != window)
@@ -47,6 +56,17 @@ window.addEventListener("message", function (event) {
             "highChartsData": event.data.charts || null,
             "toRender": "full"
         });
+    }
+    if (event.data.messageFrom && (event.data.messageFrom == "screenReaderGraphic")) {
+        let imageData = event.data.imageData;
+        port.postMessage({
+            "type": "checkImageSize",
+            "context": "",
+            "dims": [imageData.naturalWidth, imageData.naturalHeight],
+            "url": window.location.href,
+            "sourceURL": imageData.sourceURL,
+            "toRender": "full"
+        });    
     }
 });
 

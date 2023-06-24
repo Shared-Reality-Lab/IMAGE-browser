@@ -436,7 +436,7 @@ getAllStorageSyncData().then((items) => {
 });
 
 browser.runtime.onInstalled.addListener(function (object) {
-  //createOffscreen();
+  createOffscreen();
   let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
 
   if ((object.reason === "install")) {
