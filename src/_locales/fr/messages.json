@@ -64,7 +64,7 @@
         "description": "Option de sélection pour la langue automatique."
     },
     "languageWarning": {
-        "message": "Avertissement : IMAGE peut ne pas être en mesure de répondre dans la langue souhaitée en raison de limitations techniques.",
+        "message": "Avertissement : Dans quelques cas, les résultats d'IMAGE peuvent apparaître en anglais ou en français au lieu de la langue choisie, en raison de limitations techniques.",
         "description": "Avertissement pour la selection de la langue."
     },
     "cancelButton": {
