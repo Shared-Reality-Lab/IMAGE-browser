@@ -189,7 +189,6 @@ line-height: 20pt;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  justify-content: center;
   align-items: baseline;
   gap: 1vw;
 }
