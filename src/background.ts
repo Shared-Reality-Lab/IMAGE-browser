@@ -277,8 +277,8 @@ async function createOffscreen() {
     justification: 'keep service worker running',
   }).catch(() => {});
 }
-browser.runtime.onInstalled.addListener(() => {createOffscreen();});
-// browser.runtime.onStartup.addListener(() => {createOffscreen();});
+//browser.runtime.onInstalled.addListener(() => {createOffscreen();});
+browser.runtime.onStartup.addListener(() => {createOffscreen();});
 // a message from an offscreen document every 50 second resets the inactivity timer
 browser.runtime.onMessage.addListener(msg => {
   if (msg.keepAlive) console.log('keepAlive');
