@@ -80,7 +80,7 @@ export async function getLanguage() {
 
     let UILangCode = UILang.slice(0, 2);
     if (["en", "fr"].includes(UILangCode)) {
-      langCode = UILang;
+      langCode = UILangCode;
     }
     else {
       console.log("UILang not supported: " + UILang);
