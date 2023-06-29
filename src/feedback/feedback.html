@@ -5,20 +5,15 @@
     </head>
     <body>
         <main class="container">
-            <p>
-                Normally, we do not keep or view information such as the graphic, URL, or your settings.
-                However, providing this information to us can help us improve the quality of your experience in the future.
-                If you agree, we will save the information you are sending, and members of the IMAGE project team will view the information from this one request.
-                In any case, the graphics provided will only be used to improve your experience and will not be made available to any party outside the IMAGE project team.
-                If you do not want to allow us to access this information, the request will be deleted like normal from our server, and you will still be able to fill out the feedback form.
-                <strong>Please make sure there is no personal information in the graphic or in your feedback.</strong>
+            <p class="localisation" id="feedbackMessage">
+                <strong class="localisation" id="feedbackNoPersonalInfo"></strong>
             </p>
             <div>
                 <div>
                     <input type="checkbox" id="consent-save">
-                    <label for="consent-save">(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above.</label>
+                    <label class="localisation" id="feedbackConsent"></label>
                 </div>
-                <button type="submit" class="btn btn-primary" id="submit-button">Open Form</button>
+                <button type="submit" class="btn btn-primary localisation" id="feedbackSubmit"></button>
             </div>
         </main>
         <script type="module" src="./feedback.ts"></script>

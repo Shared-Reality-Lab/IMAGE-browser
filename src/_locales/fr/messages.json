@@ -209,5 +209,21 @@
     "commonIssueMaps": {
         "message": "Cartes : Seules les cartes pour lesquelles nous pouvons déterminer la latitude et la longitude du centre de la carte peuvent générer des rendus. Si cet emplacement ne comporte aucun point d'intérêt ni aucune rue à proximité, IMAGE ne peut générer aucun rendu utilisable. Aujourd'hui, seules les cartes Google Maps intégrées dans une page sont prises en charge, mais d'autres formats, tels que Open Street Maps, pourraient l'être à l'avenir.",
         "description": "Problèmes courants avec les cartes"
+    },
+    "feedbackMessage": {
+        "message": "Normalement, nous ne conservons ni ne consultons des informations telles que le graphique, l'URL ou vos paramètres. Cependant, le fait de nous fournir ces informations peut nous aider à améliorer la qualité de votre expérience à l'avenir. Si vous êtes d'accord, nous enregistrerons les informations que vous nous envoyez et les membres de l'équipe du projet IMAGE consulteront les informations de cette seule demande. En tout état de cause, les graphiques fournis ne seront utilisés que pour améliorer votre expérience et ne seront pas mis à la disposition de tiers en dehors de l'équipe du projet IMAGE. Si vous ne souhaitez pas que nous ayons accès à ces informations, la demande sera supprimée normalement de notre serveur et vous pourrez toujours remplir le formulaire de retour d'information.",
+        "description": "Message pour le formulaire d'évaluation"
+    },
+    "feedbackNoPersonalInfo": {
+        "message": "Veillez à ce qu'aucune information personnelle ne figure dans le graphique ou dans vos commentaires.",
+        "description": "Mise en garde sur les informations personnelles pour le formulaire d'évaluation"
+    },
+    "feedbackConsent" : {
+        "message": "(Optionnel) Je consens à ce que le projet IMAGE enregistre cette demande et les réponses qui y sont associées dans les conditions décrites ci-dessus.",
+        "description": "Consentement à l'enregistrement de la demande"
+    },
+    "feedbackSubmit": {
+        "message": "Ouvert le formulaire d'évaluation",
+        "description": "Bouton pour ouvrir le formulaire d'évaluation"
     }
 }

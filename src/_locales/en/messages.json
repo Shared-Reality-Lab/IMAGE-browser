@@ -209,5 +209,21 @@
     "commonIssueMaps": {
         "message": "Maps: Only maps where we can determine the latitude and longitude of the center of the map can generate renderings. If that location has no points of interest or streets nearby, IMAGE cannot generate any usable renderings. Today, only Google Maps embedded in a page are supported, although other formats, such as Open Street Maps, may be supported in the future.",
         "description": "Common issue with maps"
+    },
+    "feedbackMessage": {
+        "message": "Normally, we do not keep or view information such as the graphic, URL, or your settings. However, providing this information to us can help us improve the quality of your experience in the future. If you agree, we will save the information you are sending, and members of the IMAGE project team will view the information from this one request.\nIn any case, the graphics provided will only be used to improve your experience and will not be made available to any party outside the IMAGE project team. \nIf you do not want to allow us to access this information, the request will be deleted like normal from our server, and you will still be able to fill out the feedback form.",
+        "description": "Feedback message"
+    },
+    "feedbackNoPersonalInfo": {
+        "message": "Please make sure there is no personal information in the graphic or in your feedback.",
+        "description": "Feedback message, personal information caution"
+    },
+    "feedbackConsent" : {
+        "message": "(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above.",
+        "description": "Consent to save request"
+    },
+    "feedbackSubmit": {
+        "message": "Open Form",
+        "description": "Button to open feedback form"
     }
 }

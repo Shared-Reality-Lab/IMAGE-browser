@@ -15,6 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import  browser  from "webextension-polyfill";
+import { queryLocalisation } from "../utils";
 
 let port = browser.runtime.connect();
 let navigatorSerial = navigator.serial;
@@ -22,16 +23,8 @@ let navigatorSerial = navigator.serial;
 var extVersion = process.env.NODE_ENV || "";
 //console.log("Extension Version options page", extVersion);
 
-// Set up localized names: getting all elements with class "localisation"
-const localisation = Array.from(document.querySelectorAll(".localisation"));
-for (let label of localisation) {
-  const val = browser.i18n.getMessage(label.id);
-  if (val) {
-    label.textContent = val;
-  } else {
-    console.warn('Unknown element "' + label.id + '"');
-  }
-}
+// load localized labels 
+queryLocalisation();
 
 const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
 const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));

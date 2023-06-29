@@ -16,6 +16,10 @@
  */
 import 'bootstrap/dist/css/bootstrap.css';
 import browser from "webextension-polyfill";
+import { queryLocalisation } from '../utils';
+
+// load localized labels
+queryLocalisation();
 
 const urlParams = new URLSearchParams(window.location.search);
 const request_uuid = urlParams.get("uuid") || "";
@@ -26,7 +30,7 @@ if (request_uuid === "" || objectHash === "" || serverURL === "") {
     console.error("UUID or hash or server empty. This shouldn't happen. Verify GET parameters."); 
 }
 
-const formButton = document.getElementById("submit-button");
+const formButton = document.getElementById("feedbackSubmit");
 formButton?.addEventListener("click", () => {
     const checkbox = document.getElementById("consent-save") as HTMLInputElement;
     if (checkbox?.checked) {
