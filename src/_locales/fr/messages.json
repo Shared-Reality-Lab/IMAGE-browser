@@ -154,6 +154,10 @@
         "message": "Extension IMAGE",
         "description": "En-tête de la fenêtre popup"
     },
+    "getRenderingLocalFile": {
+        "message": "Obtenir le rendu de l'IMAGE",
+        "description": "Étiquette pour le bouton permettant d'obtenir des rendus d'un fichier local"
+    },
     "debugText":{
         "message": "L'activation du mode développeur permet d'accéder aux options de débogage à partir du menu contextuel du navigateur.",
         "description": "Description du mode de débogage."

@@ -154,6 +154,10 @@
         "message": "IMAGE Extension",
         "description": "Header of popup window"
     },
+    "getRenderingLocalFile": {
+        "message": "Get IMAGE Rendering",
+        "description": "Label for button to get renderings from local file"
+    },
     "debugText":{
         "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
         "description": "Debug mode description"
