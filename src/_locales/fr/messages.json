@@ -225,5 +225,9 @@
     "feedbackSubmit": {
         "message": "Ouvert le formulaire d'évaluation",
         "description": "Bouton pour ouvrir le formulaire d'évaluation"
+    },
+    "firstLaunchMessage": {
+        "message": "Vous venez d'installer IMAGE! Pour obtenir des instructions sur l'utilisation d'IMAGE, rendez-vous sur le site:",
+        "description": "Message de premier lancement"
     }
 }

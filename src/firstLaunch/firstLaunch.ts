@@ -1,22 +1,23 @@
-import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap';
 import "./firstLaunch.scss";
+import { queryLocalisation } from '../utils';
 
-import browser from "webextension-polyfill";
+// Load localised labels
+queryLocalisation();
 
 window.onload = () =>{
-    let closeButton = document.getElementById("close-button");
+    let closeButton = document.getElementById("closingButton");
     
-    let title = document.getElementById("firstlaunch-title");
+    let title = document.getElementById("popUpTitle");
     if (title) {
-        //console.log(process.env);
-        title.textContent = browser.i18n.getMessage("popUpTitle");
-        //console.log("extVersion from info", process.env.NODE_ENV);
+        console.log("extVersion from info", process.env.NODE_ENV);
         if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
             title.textContent += process.env.SUFFIX_TEXT
         }
     }
 
+    // Event listener on the close button
     closeButton?.addEventListener("click", function(){
         window.close();
     });

@@ -225,5 +225,9 @@
     "feedbackSubmit": {
         "message": "Open Form",
         "description": "Button to open feedback form"
+    },
+    "firstLaunchMessage": {
+        "message": "You have just installed IMAGE! For Instructions on how to use IMAGE, goto:",
+        "description": "First launch message"
     }
 }
