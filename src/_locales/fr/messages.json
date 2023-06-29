@@ -161,5 +161,49 @@
     "developerMode": {
         "message": "Mode développeur",
         "description": "Étiquette pour le mode développeur"
+    },
+    "errorMessage": {
+        "message": "Une erreur s'est produite lors de la connexion au serveur IMAGE. Veuillez réessayer plus tard. Si cette erreur persiste, veuillez contacter l'équipe IMAGE par courriel à ",
+        "description": "Message d'erreur lorsque le serveur est inaccessible."
+    },
+    "closingButton": {
+        "message": "Fermer",
+        "description": "Bouton pour fermer la fenêtre d'erreur."
+    },
+    "unableToRender": {
+        "message": "IMAGE ne peut pas rendre ce graphique.",
+        "description": "Message d'incapatibilité de rendu."
+    },
+    "feedbackFormLinkBefore": {
+        "message": "Si vous souhaitez nous en faire part, veuillez utiliser ",
+        "description": "Message du formulaire d'évaluation, avant le lien."
+    },
+    "feedbackFormLink": {
+        "message": "notre formulaire d'évaluation.",
+        "description": "Le lien du formulaire d'évaluation."
+    },
+    "feedbackFormLinkAfter" : { 
+        "message": "Si vous ne pouvez pas utiliser le formulaire, vous pouvez également envoyer un lien vers ce graphique et une brève description du problème par courrier électronique:",
+        "description": "Message du formulaire d'évaluation, après le lien."
+    },
+    "feedbackFormCaution": {
+        "message": "Dans les deux cas, veillez à ce que le graphique que vous envoyez ne contienne aucune information personnelle.",
+        "description": "Message du formulaire d'évaluation, mise en garde sur les informations personnelles."
+    },
+    "commonIssues": {
+        "message": "Certains problèmes courants empêchent IMAGE de générer un rendu.",
+        "description": "Problèmes courants"
+    },
+    "commonIssuePhotograph": {
+        "message": "Graphiques/photographies: Les scènes ne contenant que des objets inhabituels ou bizarrement encadrés, des collages d'images séparées, des graphiques très stylisés ou dessinés à la main et des diagrammes ne sont pas encore bien pris en charge par les outils d'apprentissage automatique et risquent de ne pas produire de rendus utilisables.",
+        "description": "Problèmes courants avec graphiques et photographies"
+    },
+    "commonIssuesHighCharts": {
+        "message": "Diagrammes : Nous ne prenons en charge qu'un sous-ensemble de graphiques mis en forme avec le format HighCharts. Actuellement, cela signifie qu'il ne peut s'agir que de graphiques circulaires, de graphiques à tendance unique ou de graphiques à ligne unique. D'autres formats sont en cours de développement.",
+        "description": "Problèmes courants avec  HighCharts"
+    },
+    "commonIssueMaps": {
+        "message": "Cartes : Seules les cartes pour lesquelles nous pouvons déterminer la latitude et la longitude du centre de la carte peuvent générer des rendus. Si cet emplacement ne comporte aucun point d'intérêt ni aucune rue à proximité, IMAGE ne peut générer aucun rendu utilisable. Aujourd'hui, seules les cartes Google Maps intégrées dans une page sont prises en charge, mais d'autres formats, tels que Open Street Maps, pourraient l'être à l'avenir.",
+        "description": "Problèmes courants avec les cartes"
     }
 }
