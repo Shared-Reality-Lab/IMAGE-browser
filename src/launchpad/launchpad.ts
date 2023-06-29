@@ -2,19 +2,12 @@ import browser from "webextension-polyfill";
 import 'bootstrap/dist/css/bootstrap.css';
 import "./launchpad.scss";
 import { TUTORIAL_PAGE } from "../config";
+import { queryLocalisation } from "../utils";
 
 let port = browser.runtime.connect();
 
 // Set up localized names: getting all elements with class "localisation"
-const localised_labels = Array.from(document.querySelectorAll(".localisation"));
-for (let label of localised_labels) {
-  const val = browser.i18n.getMessage(label.id);
-  if (val) {
-    label.textContent = val;
-  } else {
-    console.warn('Unknown element "' + label.id + '"');
-  }
-}
+queryLocalisation();
 
 window.onload = () => {
     // Update renderings label
