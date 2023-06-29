@@ -29,6 +29,8 @@ import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
 
+import { queryLocalisation } from '../utils';
+
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
@@ -43,6 +45,9 @@ window.onload = ()=>{
     audio.play();
 }
 
+// Load localised labels for the title, footer
+queryLocalisation();
+
 port.onMessage.addListener(async (message) => {
     if (message) {
         renderings = message["response"];
@@ -55,8 +60,6 @@ port.onMessage.addListener(async (message) => {
     // Update renderings label
     let title = document.getElementById("renderingTitle");
     if (title) {
-        //console.log(process.env);
-        title.textContent = browser.i18n.getMessage("renderingTitle");
         //console.log("extVersion from info", process.env.NODE_ENV);
         if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
             title.textContent += process.env.SUFFIX_TEXT
@@ -248,7 +251,7 @@ port.onMessage.addListener(async (message) => {
     }
     //Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
-    const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
+    const feedbackAnchor = document.getElementById("feedbackFormLink") as HTMLAnchorElement;
     if (feedbackAnchor) {
         feedbackAnchor.href = "../feedback/feedback.html?uuid=" +
                 encodeURIComponent(request_uuid) + "&hash=" +

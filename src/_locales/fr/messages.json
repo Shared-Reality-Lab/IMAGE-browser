@@ -183,7 +183,7 @@
         "description": "Message du formulaire d'évaluation, avant le lien."
     },
     "feedbackFormLink": {
-        "message": "notre formulaire d'évaluation.",
+        "message": "notre formulaire d'évaluation",
         "description": "Le lien du formulaire d'évaluation."
     },
     "feedbackFormLinkAfter" : { 
@@ -229,5 +229,13 @@
     "firstLaunchMessage": {
         "message": "Vous venez d'installer IMAGE! Pour obtenir des instructions sur l'utilisation d'IMAGE, rendez-vous sur le site:",
         "description": "Message de premier lancement"
+    },
+    "infoFooterFeedback" : {
+        "message" : "Comment avez-vous trouvé ces interprétations ? Nous aimons recevoir des commentaires et des rapports de bogues en utilisant ",
+        "description" : "Message d'évaluation en bas de page, avant le lien d'évaluation"
+    },
+    "infoFooterAnythingElse" : {
+        "message": "Pour toute autre question, vous pouvez nous écrire à ",
+        "description": "Message d'évaluation en bas de page, avant l'adresse e-mail de IMAGE"
     }
 }

@@ -183,7 +183,7 @@
         "description": "Feedback form message, before feedback link"
     },
     "feedbackFormLink": {
-        "message": "our feedback form.",
+        "message": "our feedback form",
         "description": "Feedback form link as <a> tag"
     },
     "feedbackFormLinkAfter" : { 
@@ -229,5 +229,13 @@
     "firstLaunchMessage": {
         "message": "You have just installed IMAGE! For Instructions on how to use IMAGE, goto:",
         "description": "First launch message"
+    },
+    "infoFooterFeedback" : {
+        "message" : "How did you like these interpretations? We love getting feedback and bug reports using",
+        "description" : "Feedback message at info footer, before feedback link"
+    },
+    "infoFooterAnythingElse" : {
+        "message": "For anything else, you can also email us at ",
+        "description": "Feedback message at info footer, before email address"
     }
 }
