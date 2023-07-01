@@ -1,5 +1,5 @@
 
- #preferences-submit {
+ #saveChangesButton {
   background: #7ed7f4 ; 
   border: none;
   border-radius: 12px;
@@ -7,13 +7,14 @@
   display: inline-block;
   font-size: 20px;
   font-weight: 400;
-  margin-top: 40px;
+  margin-top: 20px;
   text-decoration: none;
   width: 180px; 
   height: 40px; 
   margin-left: 20px;
 }
-#cancel-button{
+
+#cancelButton{
   background: rgb(176, 175, 175) ; 
   border: none;
   border-radius: 12px;
@@ -21,10 +22,14 @@
   display: inline-block;
   font-size: 20px;
   font-weight: 400;
-  margin-top: 40px;
+  margin-top: 20px;
   text-decoration: none;
   width: 100px; 
   height: 40px; 
+}
+
+button:hover {
+  cursor: pointer;
 }
 
 #input-url{
@@ -106,6 +111,10 @@ pointer-events: none;
 color: #808080;
 }
 
+.slider:hover {
+  cursor: pointer;
+}
+
 input:checked + .slider {
 background-color:#7ed7f4;
 }
@@ -126,17 +135,12 @@ border-radius: 34px;
 border-radius: 50%;
 }
 
-#advanced-options{
+h1.localisation {
 color: black;
 font-size: x-large;
 font-weight: 400;
 }
 
-#renderings-header{
-color: black;
-font-size: x-large;
-font-weight: 400;
-}
 #noHaptics{
 color: black;
 font-size: medium;
@@ -161,7 +165,7 @@ font-weight: 400;
 line-height: 30pt;
 }
 
-#server-options{
+#serverOptions{
 color: black;
 font-size: medium;
 font-weight: 400;
@@ -181,6 +185,44 @@ font-weight: 400;
 line-height: 20pt;
 }
 
+#language-div {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 1vw;
+}
+
+#languageSelectionLabel {
+color: black;
+font-size: medium;
+font-weight: 400;
+}
+
+select {
+  padding: 10px 12px;
+  border: 2px solid #7ed7f4;
+  border-radius: 12px;
+  font-size: 16px;
+  background-color: #7ed7f4;
+}
+
+select:hover {
+  cursor: pointer;
+  background-color: #A0E4FD;
+}
+
+select:focus {
+  background-color: #FFFFFF;
+}
+
+#languageWarning{
+  color: rgb(170, 30, 30);
+  font-size: medium;
+  font-weight: 400;
+  line-height: 20pt;
+}
+
 #debugText{
 color: black;
 font-size: medium;
@@ -189,6 +231,5 @@ font-weight: 400;
 
 #debug-text-div{
   text-align: start;
-  margin-top: 20px;
 }
 

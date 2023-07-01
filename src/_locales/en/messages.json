@@ -15,6 +15,10 @@
         "message": "Interpret this graphic with IMAGE",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
+    "renderingOptions": {
+        "message": "Rendering Options",
+        "description": "Header of option window"
+    },
     "preprocessItem": {
         "message": "DEBUG: Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
@@ -51,17 +55,41 @@
         "message": "Text (for screenreaders)",
         "description": "Text Renderings"
     },
-    "saveChanges": {
+    "languageSelectionLabel": {
+        "message": "Language",
+        "description": "Label for language selection menu."
+    },
+    "automaticLanguage": {
+        "message": "Automatic",
+        "description": "Automatic language select option"
+    },
+    "languageWarning": {
+        "message": "Warning: In some cases, IMAGE results may appear in English or French instead of your chosen language due to technical limitations.",
+        "description": "Warning for language selection"
+    },
+    "cancelButton": {
+        "message": "Cancel",
+        "description": "Cancel button."
+    },
+    "saveChangesButton": {
         "message": "Save Changes",
-        "description": "Label for saving user preferences."
+        "description": "Save Changes button."
     },
     "monoSoundLabel": {
         "message": "Mono Audio",
         "description": "Label for mono audio option in extension preferences."
     },
+    "advancedOptions": {
+        "message": "Advanced Options",
+        "description": "Header for advanced options in extension preferences."
+    },
+    "serverOptions": {
+        "message": "Server Options",
+        "description": "Header for server options in extension preferences."
+    },
     "mcgillServerLabel": {
         "message": "McGill Server",
-        "description": "Label for mcgill server."
+        "description": "Label for McGill server."
     },
     "customServerLabel": {
         "message": "Custom (enter server URL)",
@@ -125,5 +153,13 @@
     "popUpTitle": {
         "message": "IMAGE Extension",
         "description": "Header of popup window"
+    },
+    "debugText":{
+        "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
+        "description": "Debug mode description"
+    },
+    "developerMode": {
+        "message": "Developer Mode",
+        "description": "Header for developer mode options in extension preferences."
     }
 }

@@ -4,57 +4,66 @@
         <link rel="stylesheet" href="./options.css">
     </head>
     <body>
-        
         <div>
-           <h1 id="renderings-header">Rendering Options</h1> 
+           <h1 class="localisation" id="renderingOptions"></h1> 
             <div class="browser-style">
                 <input type="checkbox" id="audio-renderings" name="audio-renderings">
-                <label for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
+                <label class="localisation" for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
             </div>
             <div class="browser-style">
                 <input type="checkbox" id="text-renderings" name="text-renderings">
-                <label for="textRenderingsLabel" id="textRenderingsLabel"></label>
+                <label class="localisation" for="textRenderingsLabel" id="textRenderingsLabel"></label>
             </div>
+        </div>
+        
+        <div id="language-div">
+            <label class="localisation" for="languageSelectionLabel" id="languageSelectionLabel"></label>
+            <select name="language-selection" id="language-selection">
+                <option class="localisation" id="automaticLanguage" value="auto"></option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+            </select>
+            <label class="localisation" id="languageWarning"></label>
         </div>
 
         <div id="wrapper-div">
-            <h1 id="advanced-options">Advanced Options</h1> 
-            <h3 id="server-options">Server</h3>
+            <h1 class="localisation" id="advancedOptions"></h1> 
+            <h3 class="localisation" id="serverOptions"></h3>
             <div class="browser-style">
                 <input type="radio" id="mcgill-server" name="serverOptions" checked>
-                <label for="mcgillServerLabel" id="mcgillServerLabel"></label>
+                <label class="localisation" for="mcgillServerLabel" id="mcgillServerLabel"></label>
             </div>  
             <div class="browser-style">
                 <input type="radio" id="custom-server" name="serverOptions">
-                <label for="customServerLabel" id="customServerLabel"></label>
+                <label class="localisation" for="customServerLabel" id="customServerLabel"></label>
                 <div>
                     <input type= "text" id = "input-url">
                 </div>
             </div> 
             <div id="developer-mode">
-                <h1 id = "developer-mode-text">Developer Mode</h1>
+                <h1 class="localisation" id="developerMode"></h1>
                 <div id= "div-togglebutton" class="toggle-container">
-                    <input type="checkbox" id = "toggle"/>
+                    <input type="checkbox" id="toggle"/>
                     <div class="slider round"></div>
                 </div>
             </div>
-            <div id = "debug-text-div">
-                <h3 id="debugText">Enabling developer mode allows access to debug options from the context menu in the browser.</h1>
+            <div id="debug-text-div">
+                <h3 class="localisation" id="debugText"></h3>
             </div>
        </div>
 
         <div id="developerSettingsDiv" style="display: none;"> 
             <div class="browser-style">
                 <input type="radio" id="none-option" name="hapticsOptions" checked>
-                <label for="noHaptics" id="noHaptics"></label>
+                <label class="localisation" for="noHaptics" id="noHaptics"></label>
             </div>
             <div class="browser-style">
                 <input type="radio" id="haply-option" name="hapticsOptions">
-                <label for="Haply2diy" id="Haply2diy"></label>
+                <label class="localisation" for="Haply2diy" id="Haply2diy"></label>
             </div>
         </div>
-        <button class="cancel button" type="button" id="cancel-button">Cancel</button>
-        <button class="save button" type="button" id="preferences-submit">Save Changes</button>
+        <button class="localisation" type="button" id="cancelButton"/>
+        <button class="localisation" type="button" id="saveChangesButton"/>
     </body>
     <script type="module" src="./options.ts"></script>
 </html>

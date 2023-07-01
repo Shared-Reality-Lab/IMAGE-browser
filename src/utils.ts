@@ -16,7 +16,8 @@ export function getAllStorageSyncData() {
       text: true,
       processItem: "",
       requestItem: "",
-      mweItem: ""
+      mweItem: "",
+      language: ""
     });
 };
 
@@ -66,4 +67,27 @@ export async function getCapabilities(): Promise<string[]>{
     capabilities.push(CAPABILITIES.debugMode);
   }
   return capabilities;
+}
+
+export async function getLanguage() {
+  let langCode = await getAllStorageSyncData().then((languageCode) => {
+    return languageCode.language;
+  });
+
+  if (langCode == "auto") {
+    let UILang = browser.i18n.getUILanguage();
+    console.log("Browser UI Language (locale): " + UILang);
+
+    let UILangCode = UILang.slice(0, 2);
+    if (["en", "fr"].includes(UILangCode)) {
+      langCode = UILangCode;
+    }
+    else {
+      console.log("UILang not supported: " + UILang);
+      console.log("Falling back to English as default.")
+      langCode = "en";
+    }
+  }
+  
+  return langCode;
 }

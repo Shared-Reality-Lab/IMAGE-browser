@@ -22,9 +22,9 @@ let navigatorSerial = navigator.serial;
 var extVersion = process.env.NODE_ENV || "";
 //console.log("Extension Version options page", extVersion);
 
-// Set up localized names
-const labels = Array.from(document.querySelectorAll("label"));
-for (let label of labels) {
+// Set up localized names: getting all elements with class "localisation"
+const localisation = Array.from(document.querySelectorAll(".localisation"));
+for (let label of localisation) {
   const val = browser.i18n.getMessage(label.id);
   if (val) {
     label.textContent = val;
@@ -41,6 +41,7 @@ const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option
 const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
 const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
+const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
 
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
@@ -94,7 +95,8 @@ function saveOptions() {
     noHaptics: noHapticsSetting.checked,
     haply2diy: haply2diySetting.checked,
     audio:audioRenderingsSetting.checked,
-    text:textRenderingsSetting.checked
+    text:textRenderingsSetting.checked,
+    language:languageSetting.value
   }),
     (function () {
       optionsCheck();
@@ -117,7 +119,8 @@ function restore_options() {
       noHaptics:true,
       haply2diy:false,
       audio:true,
-       text:true
+      text:true,
+      language: "auto"
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -129,6 +132,7 @@ function restore_options() {
         haply2diySetting.checked= items["haply2diy"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
+        languageSetting.value = items["language"];
 
         if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
@@ -143,11 +147,11 @@ function restore_options() {
 
 document.addEventListener("DOMContentLoaded", restore_options);
 
-const submit = document.getElementById("preferences-submit");
-const cancel = document.getElementById("cancel-button");
+const submit = document.getElementById("saveChangesButton");
+const cancel = document.getElementById("cancelButton");
 
 if (submit) {
-  submit.textContent = browser.i18n.getMessage("saveChanges");
+  submit.textContent = browser.i18n.getMessage("saveChangesButton");
   submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
