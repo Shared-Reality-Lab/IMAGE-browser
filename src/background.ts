@@ -80,6 +80,7 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message");
   let query: IMAGERequest | undefined;
+  graphicUrl=message["sourceURL"];
   switch (message["type"]) {
     case "info":
       const value = responseMap.get(message["request_uuid"]);
@@ -493,7 +494,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 
 function createPanel(query: IMAGERequest) {
   let window = browser.windows.create({
-    type: "panel",
+    type: "normal",
     url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
     height: 1080,
     width: 1920
