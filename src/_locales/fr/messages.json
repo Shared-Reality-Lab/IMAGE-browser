@@ -27,6 +27,10 @@
         "message": "DEBUG : Obtenir les données de la requête",
         "description": "Demande de téléchargement à envoyer au serveur."
     },
+    "processingRequest": {
+        "message": "Traiter la demande",
+        "description": "Titre de la barre de progression"
+    },
     "renderingTitle": {
         "message": "Rendus",
         "description": "En-tête de la fenêtre popup"

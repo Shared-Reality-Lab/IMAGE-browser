@@ -27,6 +27,10 @@
         "message": "DEBUG: Get Request Data",
         "description": "Download request to be sent to server."
     },
+    "processingRequest": {
+        "message": "Processing the request",
+        "description": "Progress bar title"
+    },
     "renderingTitle": {
         "message": "Renderings",
         "description": "Header of popup window"
