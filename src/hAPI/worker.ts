@@ -14,13 +14,18 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
+
 import { Vector } from "./libraries/Vector";
 import { Board } from "./libraries/Board";
 import { Device } from "./libraries/Device";
+import { PantographV3 } from './libraries/PantographV3';
 import { Pantograph } from "./libraries/Pantograph";
 import { convexhull } from './convex-hull';
 
 // TODO: set object types
+
+// set to false if using old 2DIY
+let usePantographV3 = false;
 
 // declaration of haply specific variables
 const widgetOneID = 5;
@@ -310,15 +315,28 @@ self.addEventListener("message", async function (event) {
     await haplyBoard.init();
 
     widgetOne = new Device(widgetOneID, haplyBoard);
-    pantograph = new Pantograph();
+    if (usePantographV3) {
 
-    widgetOne.set_mechanism(pantograph);
+      pantograph = new Pantograph();
+      widgetOne.set_mechanism(pantograph);
 
-    widgetOne.add_actuator(1, 1, 2); //CCW
-    widgetOne.add_actuator(2, 0, 1); //CW
+      widgetOne.add_actuator(1, 1, 2); //CCW
+      widgetOne.add_actuator(2, 1, 1); //CCW
 
-    widgetOne.add_encoder(1, 1, 241, 10752, 2);
-    widgetOne.add_encoder(2, 0, -61, 10752, 1);
+      widgetOne.add_encoder(1, 1, 97.23, 2048 * 2.5 * 1.0194 * 1.0154, 2); //right in theory
+      widgetOne.add_encoder(2, 1, 82.77, 2048 * 2.5 * 1.0194, 1); //left in theory
+    } else {
+
+      pantograph = new PantographV3();
+      widgetOne.set_mechanism(pantograph);
+
+      // Haply v1 config
+      widgetOne.add_actuator(1, 1, 2); //CCW
+      widgetOne.add_actuator(2, 0, 1); //CW
+
+      widgetOne.add_encoder(1, 1, 241, 10752, 2);
+      widgetOne.add_encoder(2, 0, -61, 10752, 1);
+    }
     widgetOne.device_set_parameters();
 
     fEE.set(0, 0);
