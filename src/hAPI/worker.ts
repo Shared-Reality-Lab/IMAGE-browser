@@ -25,7 +25,7 @@ import { convexhull } from './convex-hull';
 // TODO: set object types
 
 // set to false if using old 2DIY
-let usePantographV3 = false;
+let usePantographV3 = true;
 
 // declaration of haply specific variables
 const widgetOneID = 5;
@@ -317,7 +317,7 @@ self.addEventListener("message", async function (event) {
     widgetOne = new Device(widgetOneID, haplyBoard);
     if (usePantographV3) {
 
-      pantograph = new Pantograph();
+      pantograph = new PantographV3();
       widgetOne.set_mechanism(pantograph);
 
       widgetOne.add_actuator(1, 1, 2); //CCW
@@ -327,7 +327,7 @@ self.addEventListener("message", async function (event) {
       widgetOne.add_encoder(2, 1, 82.77, 2048 * 2.5 * 1.0194, 1); //left in theory
     } else {
 
-      pantograph = new PantographV3();
+      pantograph = new Pantograph();
       widgetOne.set_mechanism(pantograph);
 
       // Haply v1 config
@@ -337,8 +337,8 @@ self.addEventListener("message", async function (event) {
       widgetOne.add_encoder(1, 1, 241, 10752, 2);
       widgetOne.add_encoder(2, 0, -61, 10752, 1);
     }
-    widgetOne.device_set_parameters();
 
+    widgetOne.device_set_parameters();
     fEE.set(0, 0);
   }
 
