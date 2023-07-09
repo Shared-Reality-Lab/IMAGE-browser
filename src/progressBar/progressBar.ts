@@ -27,7 +27,7 @@ window.onload = () => {
 }
 
 // Play Processing Data when waiting
-let processingAudio = new Audio('src/audio/IMAGESoundCueV1_Prog.mp3');
+let processingAudio = new Audio('../audio/IMAGESoundCueV1_Prog.mp3');
 setInterval(function(){
 	processingAudio.play();
 }, 3000);
