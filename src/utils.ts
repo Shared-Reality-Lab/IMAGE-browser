@@ -17,7 +17,7 @@ export function getAllStorageSyncData() {
       processItem: "",
       requestItem: "",
       mweItem: "",
-      language: ""
+      language: "auto"
     });
 };
 
