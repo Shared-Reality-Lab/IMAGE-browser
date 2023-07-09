@@ -1,6 +1,5 @@
 import progressbar from "progressbar.js";
 import { queryLocalisation } from "../utils";
-import browser from "webextension-polyfill";
 
 // Load localised title
 queryLocalisation();
