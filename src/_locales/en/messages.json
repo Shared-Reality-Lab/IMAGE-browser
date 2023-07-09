@@ -47,6 +47,10 @@
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
     },
+    "downloadAudioFile": {
+        "message": "Download Audio File",
+        "description": "Label for button to download audio rendering."
+    },
     "segmentAudioButton": {
         "message": "Play/Stop",
         "description": "Label for playing and stopping audio renderings of selected audio segment."

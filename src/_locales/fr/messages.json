@@ -47,6 +47,10 @@
         "message": "Rendu complet",
         "description": "Option de sélection pour lire l'ensemble du rendu."
     },
+    "downloadAudioFile": {
+        "message": "Télécharger le fichier audio",
+        "description": "Etiquette pour le bouton de téléchargement du rendu audio."
+    },
     "segmentAudioButton": {
         "message": "Play/Stop",
         "description": "Étiquette permettant de lire et d'arrêter les rendus audio du segment audio sélectionné."

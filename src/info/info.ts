@@ -105,7 +105,7 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audio"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = "Download Audio File";
+            download.textContent = browser.i18n.getMessage("downloadAudioFile");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -181,7 +181,7 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audioFile"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = "Download Audio File";
+            download.textContent = browser.i18n.getMessage("downloadAudioFile");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
