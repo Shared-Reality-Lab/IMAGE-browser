@@ -20,14 +20,16 @@ var bar = new progressbar.Line('#progress', {
 
 bar.animate(1);
 
-window.onload = ()=>{
-    let audio = new Audio('./audio-files/image_request_sent.mp3');
-    audio.play();
+// Play Request Sent sound on load
+window.onload = () => {
+    let requestSentAudio = new Audio('../audio/IMAGESoundCueV1_ReqSent.mp3');
+    requestSentAudio.play();
 }
 
-var audio = new Audio('./audio-files/earcon_server_communication_IMAGE_processing-data.mp3');
+// Play Processing Data when waiting
+let processingAudio = new Audio('src/audio/IMAGESoundCueV1_Prog.mp3');
 setInterval(function(){
-	audio.play();
+	processingAudio.play();
 }, 3000);
 
 

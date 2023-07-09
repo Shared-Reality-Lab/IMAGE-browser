@@ -40,9 +40,10 @@ let request: IMAGERequest;
 let serverUrl: string;  // Retrived through the message in case the settings have changed
 let port = browser.runtime.connect();
 
+// Play Results Arrive audio
 window.onload = ()=>{
-    let audio = new Audio('../progressBar/audio-files/earcon_server_communication_IMAGE_results-arrived.mp3');
-    audio.play();
+    let resultArriveAudio = new Audio('../audio/IMAGESoundCueV1_ResArr.mp3');
+    resultArriveAudio.play();
 }
 
 // Load localised labels for the title, footer
