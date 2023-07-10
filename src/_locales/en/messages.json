@@ -162,6 +162,10 @@
         "message": "Get IMAGE preprocessed data",
         "description": "Label for button to get Map Preprocessor Response"
     },
+    "getChartRendering": {
+        "message": "Interpret this chart with IMAGE",
+        "description": "Label for button to get chart renderings"
+    },
     "tutorialLaunchPad": {
         "message": "Help! How do I use IMAGE?",
         "description": "Label for button to launch IMAGE tutorial"

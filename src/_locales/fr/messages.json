@@ -162,6 +162,10 @@
         "message": "Obtenir les données prétraitées IMAGE",
         "description": "Étiquette pour bouton pour obtenir Map Preprocessor Response"
     },
+    "getChartRendering": {
+        "message": "Interpréter ce graphique avec IMAGE",
+        "description": "Étiquette pour le bouton permettant d'obtenir les rendus du graphique"
+    },
     "tutorialLaunchPad": {
         "message": "Aide ! Comment utiliser IMAGE ?",
         "description": "Étiquette pour le bouton de lancement du didacticiel IMAGE"
