@@ -18,7 +18,7 @@ window.onload = () =>{
     }
 
     // Event listener on the close button
-    closeButton?.addEventListener("click", function(){
+    closeButton?.addEventListener("click", () => {
         window.close();
     });
 }
