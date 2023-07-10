@@ -45,9 +45,6 @@ window.onload = ()=>{
     audio.play();
 }
 
-// Load localised labels for the title, footer
-queryLocalisation();
-
 port.onMessage.addListener(async (message) => {
     if (message) {
         renderings = message["response"];
@@ -105,7 +102,8 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audio"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            download.classList.add("localisation");
+            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -119,8 +117,9 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(selectDiv);
             const fullRenderingHeader = document.createElement("h2");
             const fullRenderingButton = document.createElement("button");
-            fullRenderingButton.classList.add("btn","btn-secondary");
-            fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
+            fullRenderingButton.id = "segmentAudioFullRendering";
+            fullRenderingButton.classList.add("btn","btn-secondary", "localisation");
+            // fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
             fullRenderingButton.addEventListener("click", function(){
                 playPauseAudio(-1);
             });
@@ -181,7 +180,9 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audioFile"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            download.id = "downloadAudioFile";
+            download.classList.add("localisation");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -214,7 +215,9 @@ port.onMessage.addListener(async (message) => {
             selectContainer.style.display = "flex";
             selectContainer.style.width = "50%";
             const selectDesc = document.createElement("p");
-            selectDesc.innerText = "Please choose a SVG Layer";
+            // selectDesc.innerText = browser.i18n.getMessage("svgLayerSelection");
+            selectDesc.id = "svgLayerSelection";
+            selectDesc.classList.add("localisation");
             const select = document.createElement("select");
             select.classList.add("layer-select");
             select.setAttribute("id", "svg-layer");
@@ -258,6 +261,9 @@ port.onMessage.addListener(async (message) => {
                 encodeURIComponent(hash(request)) + "&serverURL=" +
                 encodeURIComponent(serverUrl);
     }
+
+    // Load localised labels for the title, footer, buttons, etc.
+    queryLocalisation();
 });
 
 port.postMessage({
