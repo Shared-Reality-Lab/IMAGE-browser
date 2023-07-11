@@ -19,6 +19,18 @@
         "message": "Rendering Options",
         "description": "Header of option window"
     },
+    "noInputURL": {
+        "message": "Continuing without entering Custom URL will not give any renderings.",
+        "description": "Error message when no URL is provided."
+    },
+    "noRenderings": {
+        "message": "No interpretations will appear when both Audio and Text are unchecked!",
+        "description": "Error message when no renderings are returned."
+    },
+    "perferencesSaved": {
+        "message": "Preferences Saved!",
+        "description": "Message displayed when settings are saved."
+    },
     "preprocessItem": {
         "message": "DEBUG: Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
@@ -46,6 +58,14 @@
     "segmentAudioFullRendering": {
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
+    },
+    "downloadAudioFile": {
+        "message": "Download Audio File",
+        "description": "Label for button to download audio rendering."
+    },
+    "svgLayerSelection": {
+        "message": "Please choose a SVG Layer",
+        "description": "Label for SVG layer selection menu."
     },
     "segmentAudioButton": {
         "message": "Play/Stop",
@@ -141,6 +161,10 @@
     "getMapPreprocessorResponse": {
         "message": "Get IMAGE preprocessed data",
         "description": "Label for button to get Map Preprocessor Response"
+    },
+    "getChartRendering": {
+        "message": "Interpret this chart with IMAGE",
+        "description": "Label for button to get chart renderings"
     },
     "tutorialLaunchPad": {
         "message": "Help! How do I use IMAGE?",

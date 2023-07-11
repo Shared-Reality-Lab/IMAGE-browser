@@ -19,6 +19,18 @@
         "message": "Options de rendu",
         "description": "En-tête de la fenêtre d'options"
     },
+    "noInputURL": {
+        "message": "Continuer sans entrer l'URL personnalisé ne donnera aucun rendu.",
+        "description": "Message d'erreur si aucune URL n'est fournie."
+    },
+    "noRenderings": {
+        "message": "Aucune interprétation n'apparaîtra si les cases Audio et Texte ne sont pas cochées !",
+        "description": "Message d'erreur si aucun rendu n'est renvoyé."
+    },
+    "perferencesSaved": {
+        "message": "Préférences enregistrées !",
+        "description": "Message affiché lorsque les paramètres sont enregistrés."
+    },
     "preprocessItem": {
         "message": "DEBUG : Obtenir les données prétraitées",
         "description": "Récupérer les données JSON prétraitées d'une image sans rendu."
@@ -46,6 +58,14 @@
     "segmentAudioFullRendering": {
         "message": "Rendu complet",
         "description": "Option de sélection pour lire l'ensemble du rendu."
+    },
+    "downloadAudioFile": {
+        "message": "Télécharger le fichier audio",
+        "description": "Etiquette pour le bouton de téléchargement du rendu audio."
+    },
+    "svgLayerSelection": {
+        "message": "Veuillez choisir une couche SVG",
+        "description": "Étiquette pour le menu de sélection des couches SVG."
     },
     "segmentAudioButton": {
         "message": "Play/Stop",
@@ -141,6 +161,10 @@
     "getMapPreprocessorResponse": {
         "message": "Obtenir les données prétraitées IMAGE",
         "description": "Étiquette pour bouton pour obtenir Map Preprocessor Response"
+    },
+    "getChartRendering": {
+        "message": "Interpréter ce graphique avec IMAGE",
+        "description": "Étiquette pour le bouton permettant d'obtenir les rendus du graphique"
     },
     "tutorialLaunchPad": {
         "message": "Aide ! Comment utiliser IMAGE ?",
