@@ -29,6 +29,8 @@ import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
 
+import { queryLocalisation } from '../utils';
+
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
@@ -55,8 +57,6 @@ port.onMessage.addListener(async (message) => {
     // Update renderings label
     let title = document.getElementById("renderingTitle");
     if (title) {
-        //console.log(process.env);
-        title.textContent = browser.i18n.getMessage("renderingTitle");
         //console.log("extVersion from info", process.env.NODE_ENV);
         if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
             title.textContent += process.env.SUFFIX_TEXT
@@ -102,7 +102,8 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audio"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = "Download Audio File";
+            download.classList.add("localisation");
+            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -116,8 +117,9 @@ port.onMessage.addListener(async (message) => {
             contentDiv.append(selectDiv);
             const fullRenderingHeader = document.createElement("h2");
             const fullRenderingButton = document.createElement("button");
-            fullRenderingButton.classList.add("btn","btn-secondary");
-            fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
+            fullRenderingButton.id = "segmentAudioFullRendering";
+            fullRenderingButton.classList.add("btn","btn-secondary", "localisation");
+            // fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
             fullRenderingButton.addEventListener("click", function(){
                 playPauseAudio(-1);
             });
@@ -178,7 +180,9 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audioFile"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            download.textContent = "Download Audio File";
+            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            download.id = "downloadAudioFile";
+            download.classList.add("localisation");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -211,7 +215,9 @@ port.onMessage.addListener(async (message) => {
             selectContainer.style.display = "flex";
             selectContainer.style.width = "50%";
             const selectDesc = document.createElement("p");
-            selectDesc.innerText = "Please choose a SVG Layer";
+            // selectDesc.innerText = browser.i18n.getMessage("svgLayerSelection");
+            selectDesc.id = "svgLayerSelection";
+            selectDesc.classList.add("localisation");
             const select = document.createElement("select");
             select.classList.add("layer-select");
             select.setAttribute("id", "svg-layer");
@@ -248,13 +254,16 @@ port.onMessage.addListener(async (message) => {
     }
     //Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
-    const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
+    const feedbackAnchor = document.getElementById("feedbackFormLink") as HTMLAnchorElement;
     if (feedbackAnchor) {
         feedbackAnchor.href = "../feedback/feedback.html?uuid=" +
                 encodeURIComponent(request_uuid) + "&hash=" +
                 encodeURIComponent(hash(request)) + "&serverURL=" +
                 encodeURIComponent(serverUrl);
     }
+
+    // Load localised labels for the title, footer, buttons, etc.
+    queryLocalisation();
 });
 
 port.postMessage({

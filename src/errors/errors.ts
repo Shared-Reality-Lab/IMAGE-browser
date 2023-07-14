@@ -14,10 +14,14 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
-const closeButton : Element | null = document.getElementById('closing-button');
+import { queryLocalisation } from "../utils";
+
+queryLocalisation();
+
+const closeButton : Element | null = document.getElementById('closingButton');
 closeButton?.addEventListener("click", () => window.close());
 
-const feedbackAnchor = document.getElementById("feedback-a") as HTMLAnchorElement;
+const feedbackAnchor = document.getElementById("feedbackFormLink") as HTMLAnchorElement;
 if (feedbackAnchor) {
     feedbackAnchor.href += window.location.search;
 }

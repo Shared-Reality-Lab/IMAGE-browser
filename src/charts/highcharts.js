@@ -36,10 +36,16 @@ function processCharts() {
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
         let chartButton = document.createElement("button");
-        let chartButtonText = "Interpret this chart with IMAGE";
+        // Set button text based on language (this is a workaround)
+        let chartButtonText;
+        if (navigator.language === 'fr')
+          chartButtonText = "Interpréter ce graphique avec IMAGE";
+        else
+          chartButtonText = "Interpret this chart with IMAGE";
         if (extVersion === "test") {
           chartButtonText += " (test)"
         }
+
         chartButton.innerText = chartButtonText;
         chartButton.style.position = "relative";
         chartButton.style.marginTop = "1rem";

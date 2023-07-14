@@ -1,7 +1,10 @@
-import progressbar from "progressbar.js"
+import progressbar from "progressbar.js";
+import { queryLocalisation } from "../utils";
 
-var ProgressBar = require('progressbar.js');
-var bar = new ProgressBar.Line('#progress', {
+// Load localised title
+queryLocalisation();
+
+var bar = new progressbar.Line('#progress', {
     strokeWidth: 1,
     easing: 'easeInOut',
     duration: 10000,

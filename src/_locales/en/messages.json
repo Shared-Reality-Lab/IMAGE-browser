@@ -19,6 +19,18 @@
         "message": "Rendering Options",
         "description": "Header of option window"
     },
+    "noInputURL": {
+        "message": "Continuing without entering Custom URL will not give any renderings.",
+        "description": "Error message when no URL is provided."
+    },
+    "noRenderings": {
+        "message": "No interpretations will appear when both Audio and Text are unchecked!",
+        "description": "Error message when no renderings are returned."
+    },
+    "perferencesSaved": {
+        "message": "Preferences Saved!",
+        "description": "Message displayed when settings are saved."
+    },
     "preprocessItem": {
         "message": "DEBUG: Get Preprocessed Data",
         "description": "Fetch preprocessed JSON data for an image without renderings."
@@ -26,6 +38,10 @@
     "requestItem": {
         "message": "DEBUG: Get Request Data",
         "description": "Download request to be sent to server."
+    },
+    "processingRequest": {
+        "message": "Processing the request",
+        "description": "Progress bar title"
     },
     "renderingTitle": {
         "message": "Renderings",
@@ -42,6 +58,14 @@
     "segmentAudioFullRendering": {
         "message": "Full Rendering",
         "description": "Selection option to play through the entire rendering."
+    },
+    "downloadAudioFile": {
+        "message": "Download Audio File",
+        "description": "Label for button to download audio rendering."
+    },
+    "svgLayerSelection": {
+        "message": "Please choose a SVG Layer",
+        "description": "Label for SVG layer selection menu."
     },
     "segmentAudioButton": {
         "message": "Play/Stop",
@@ -138,6 +162,10 @@
         "message": "Get IMAGE preprocessed data",
         "description": "Label for button to get Map Preprocessor Response"
     },
+    "getChartRendering": {
+        "message": "Interpret this chart with IMAGE",
+        "description": "Label for button to get chart renderings"
+    },
     "tutorialLaunchPad": {
         "message": "Help! How do I use IMAGE?",
         "description": "Label for button to launch IMAGE tutorial"
@@ -154,6 +182,10 @@
         "message": "IMAGE Extension",
         "description": "Header of popup window"
     },
+    "getRenderingLocalFile": {
+        "message": "Get IMAGE Rendering",
+        "description": "Label for button to get renderings from local file"
+    },
     "debugText":{
         "message": "Enabling developer mode allows access to debug options from the context menu in the browser.",
         "description": "Debug mode description"
@@ -161,5 +193,77 @@
     "developerMode": {
         "message": "Developer Mode",
         "description": "Header for developer mode options in extension preferences."
+    },
+    "errorMessage": {
+        "message": "An error occurred while trying to connect to the IMAGE server. Please try again later. If this error persists, please contact the IMAGE team by email at ",
+        "description": "Error message when server is unreachable."
+    },
+    "closingButton": {
+        "message": "Close Window",
+        "description": "Button to close error window."
+    },
+    "unableToRender": {
+        "message": "IMAGE is unable to render this graphic.",
+        "description": "Unable to render message"
+    },
+    "feedbackFormLinkBefore": {
+        "message": "If you would like to let us know about this, please use",
+        "description": "Feedback form message, before feedback link"
+    },
+    "feedbackFormLink": {
+        "message": "our feedback form",
+        "description": "Feedback form link as <a> tag"
+    },
+    "feedbackFormLinkAfter" : { 
+        "message": "If you are unable to use the form, you can also send a link to this graphic and a short description of the problem via email:",
+        "description": "Feedback form message, after feedback link"
+    },
+    "feedbackFormCaution": {
+        "message": "In either case, please ensure that the graphic you are sending contains no personal information.",
+        "description": "Feedback form message, personal information caution"
+    },
+    "commonIssues": {
+        "message": "There are some common issues that prevent IMAGE from being able to generate a rendering.",
+        "description": "Common issues header"
+    },
+    "commonIssuePhotograph": {
+        "message": "Graphics/Photographs: Scenes containing only unusual or oddly framed objects, collages of separate pictures, highly stylized or hand-drawn graphics, and diagrams are not yet well supported by the machine learning tools, and may not produce any usable renderings.",
+        "description": "Common issue with graphics/photographs"
+    },
+    "commonIssuesHighCharts": {
+        "message": "Charts: We only support a subset of charts formatted with the HighCharts format. Currently, this means they can only be pie charts, or single-trend area or single-line charts. Further formats are under development.",
+        "description": "Common issue with HighCharts"
+    },
+    "commonIssueMaps": {
+        "message": "Maps: Only maps where we can determine the latitude and longitude of the center of the map can generate renderings. If that location has no points of interest or streets nearby, IMAGE cannot generate any usable renderings. Today, only Google Maps embedded in a page are supported, although other formats, such as Open Street Maps, may be supported in the future.",
+        "description": "Common issue with maps"
+    },
+    "feedbackMessage": {
+        "message": "Normally, we do not keep or view information such as the graphic, URL, or your settings. However, providing this information to us can help us improve the quality of your experience in the future. If you agree, we will save the information you are sending, and members of the IMAGE project team will view the information from this one request.\nIn any case, the graphics provided will only be used to improve your experience and will not be made available to any party outside the IMAGE project team. \nIf you do not want to allow us to access this information, the request will be deleted like normal from our server, and you will still be able to fill out the feedback form.",
+        "description": "Feedback message"
+    },
+    "feedbackNoPersonalInfo": {
+        "message": "Please make sure there is no personal information in the graphic or in your feedback.",
+        "description": "Feedback message, personal information caution"
+    },
+    "feedbackConsent" : {
+        "message": "(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above.",
+        "description": "Consent to save request"
+    },
+    "feedbackSubmit": {
+        "message": "Open Form",
+        "description": "Button to open feedback form"
+    },
+    "firstLaunchMessage": {
+        "message": "You have just installed IMAGE! For Instructions on how to use IMAGE, goto:",
+        "description": "First launch message"
+    },
+    "infoFooterFeedback" : {
+        "message" : "How did you like these interpretations? We love getting feedback and bug reports using",
+        "description" : "Feedback message at info footer, before feedback link"
+    },
+    "infoFooterAnythingElse" : {
+        "message": "For anything else, you can also email us at ",
+        "description": "Feedback message at info footer, before email address"
     }
 }

@@ -4,24 +4,19 @@
         <link rel="stylesheet" href="./errors.css">
     </head>
     <body>
+        <p class="localisation" id="unableToRender"/>
         <p>
-            IMAGE is unable to render this graphic. If you would like to let us know about this, please use <a id="feedback-a" href="../feedback/feedback.html" target="_blank">our feedback form</a>. 
-            If you are unable to use the form, you can also send a link to this graphic and a short description of the problem via email: <a href = "mailto: image@cim.mcgill.ca"> image@cim.mcgill.ca</a>.
-            In either case, please ensure that the graphic you are sending contains no personal information.
+            <span class="localisation" id="feedbackFormLinkBefore"></span> 
+            <a id="feedbackFormLink" href="../feedback/feedback.html" target="_blank"/>.
+            <a href="mailto: image@cim.mcgill.ca"> image@cim.mcgill.ca </a>.
+            <span class="localisation" id="feedbackFormLinkAfter"></span> 
+            <span class="localisation" id="feedbackFormCaution"></span> 
         </p>
-        <p>
-            There are some common issues that prevent IMAGE from being able to generate a rendering.
-        </p>
-        <p>
-            Graphics/Photographs: Scenes containing only unusual or oddly framed objects, collages of separate pictures, highly stylized or hand-drawn graphics, and diagrams are not yet well supported by the machine learning tools, and may not produce any usable renderings.
-        </p>
-        <p>
-            Charts: We only support a subset of charts formatted with the <a href="https://www.highcharts.com/">HighCharts</a> format. Currently, this means they can only be pie charts, or single-trend area or single-line charts. Further formats are under development.
-        </p>
-        <p>
-            Maps: Only maps where we can determine the latitude and longitude of the center of the map can generate renderings. If that location has no points of interest or streets nearby, IMAGE cannot generate any usable renderings. Today, only Google Maps embedded in a page are supported, although other formats, such as Open Street Maps, may be supported in the future.
-        <p>
-        <button id="closing-button" type="button" > Close Window </button>
-        <script type="text/javascript" src="./errors.ts"></script>
+        <p class="localisation" id="commonIssues"/>
+        <p class="localisation" id="commonIssuesPhotograph"/>
+        <p class="localisation" id="commonIssuesHighCharts"/>
+        <p class="localisation" id="commonIssuesMaps"/>
+        <button class="localisation" id="closingButton" type="button"></button>
+        <script type="module" src="./errors.ts"></script>
     </body>
 </html>

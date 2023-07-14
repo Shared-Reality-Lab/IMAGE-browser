@@ -91,3 +91,16 @@ export async function getLanguage() {
   
   return langCode;
 }
+
+export function queryLocalisation() {
+  // Set up localized names: getting all elements with class "localisation"
+  const localisation = Array.from(document.querySelectorAll(".localisation"));
+  for (let label of localisation) {
+    const val = browser.i18n.getMessage(label.id);
+    if (val) {
+      label.textContent = val;
+    } else {
+      console.warn('Unknown element "' + label.id + '"');
+    }
+  }
+}

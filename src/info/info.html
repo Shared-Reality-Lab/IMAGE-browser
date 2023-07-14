@@ -5,11 +5,17 @@
     </head>
     <body>
         <header class="container">
-            <h1 class="title" id="renderingTitle"></h1>
+            <h1 class="localisation title" id="renderingTitle"></h1>
         </header>
         <main id="renderings-container"></main>
         <footer class="container">
-            <p>How did you like these interpretations? We love getting feedback and bug reports using <a id="feedback-a" href="../feedback/feedback.html" target="_blank">our feedback form</a>. For anything else, you can also email us at <a href = "mailto:image@cim.mcgill.ca">image@cim.mcgill.ca</a>. In either case, please make sure you do not send any personal information.</p>
+            <p>
+                <span class="localisation" id="infoFooterFeedback"></span>
+                <a class="localisation" id="feedbackFormLink" href="../feedback/feedback.html" target="_blank"></a>.
+                <span class="localisation" id="infoFooterAnythingElse"></span>
+                <a href = "mailto:image@cim.mcgill.ca">image@cim.mcgill.ca</a>.
+                <span class="localisation" id="feedbackFormCaution"></span>
+            </p>
         </footer>
         <script type="module" src="./info.ts"></script>
     </body>

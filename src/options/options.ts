@@ -15,6 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import  browser  from "webextension-polyfill";
+import { queryLocalisation } from "../utils";
 
 let port = browser.runtime.connect();
 let navigatorSerial = navigator.serial;
@@ -22,16 +23,8 @@ let navigatorSerial = navigator.serial;
 var extVersion = process.env.NODE_ENV || "";
 //console.log("Extension Version options page", extVersion);
 
-// Set up localized names: getting all elements with class "localisation"
-const localisation = Array.from(document.querySelectorAll(".localisation"));
-for (let label of localisation) {
-  const val = browser.i18n.getMessage(label.id);
-  if (val) {
-    label.textContent = val;
-  } else {
-    console.warn('Unknown element "' + label.id + '"');
-  }
-}
+// load localized labels 
+queryLocalisation();
 
 const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
 const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));
@@ -75,13 +68,13 @@ function optionsCheck(){
   })
   .then((items)=>{
     if(items["inputUrl"]=== "" && items["customServer"]=== true){
-    window.alert("Continuing without entering Custom URL will not give any renderings.");
+      window.alert(browser.i18n.getMessage("noInputURL"));
     } 
     else if(items["noHaptics"]=== true && items["audio"]=== false && items["text"]=== false ){
-      window.alert("No interpretations will appear when both Audio and Text are unchecked!");
+      window.alert(browser.i18n.getMessage("noRenderings"));
     }
     else{
-     window.alert("Preferences Saved!");
+     window.alert(browser.i18n.getMessage("perferencesSaved"));
     }
   });
 }
@@ -139,9 +132,9 @@ function restore_options() {
         }
     });
     if(extVersion === "test"){
-      document.getElementById("renderings-header")!.innerText += process.env.SUFFIX_TEXT;
-      document.getElementById("advanced-options")!.innerText += process.env.SUFFIX_TEXT;
-      document.getElementById("developer-mode-text")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("renderingOptions")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("advancedOptions")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("developerMode")!.innerText += process.env.SUFFIX_TEXT;
     } 
 }
 
@@ -151,17 +144,11 @@ const submit = document.getElementById("saveChangesButton");
 const cancel = document.getElementById("cancelButton");
 
 if (submit) {
-  submit.textContent = browser.i18n.getMessage("saveChangesButton");
   submit?.addEventListener("click", saveOptions);
 } else {
   console.warn('Could not find submit button with ID "preferences-submit"');
 }
 
-function reload(){
-  window.location.reload();
-}
-
 if(cancel){
-  cancel?.addEventListener("click", reload
-  );
+  cancel?.addEventListener("click", () => window.location.reload());
 }
