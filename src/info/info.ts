@@ -115,8 +115,9 @@ port.onMessage.addListener(async (message) => {
             let contentDiv = utils.addRenderingContent(container, contentId);
             const selectDiv = document.createElement("div");
             selectDiv.classList.add("form-floating");
+            const renderingsList = document.createElement("ul");
             contentDiv.append(selectDiv);
-            const fullRenderingHeader = document.createElement("h2");
+            const fullRenderingHeader = document.createElement("li");
             const fullRenderingButton = document.createElement("button");
             fullRenderingButton.id = "segmentAudioFullRendering";
             fullRenderingButton.classList.add("btn","btn-secondary", "localisation");
@@ -125,7 +126,7 @@ port.onMessage.addListener(async (message) => {
                 playPauseAudio(-1);
             });
             fullRenderingHeader.append(fullRenderingButton);
-            selectDiv.append(fullRenderingHeader);
+            renderingsList.append(fullRenderingHeader);
 
             const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
             // Set up audio controls
@@ -166,7 +167,7 @@ port.onMessage.addListener(async (message) => {
 
             for (let idx = 0; idx < audioInfo.length; idx++) {
                 const val = audioInfo[idx];
-                const headerElement = document.createElement("h2");
+                const headerElement = document.createElement("li");
                 const buttonElement = document.createElement("button");
                 buttonElement.classList.add("btn","btn-secondary");
                 buttonElement.textContent = val["name"]
@@ -174,9 +175,9 @@ port.onMessage.addListener(async (message) => {
                 buttonElement.addEventListener("click",function(){
                     playPauseAudio(idx,audioInfo[idx])
                 });
-                selectDiv.append(headerElement);
+                renderingsList.append(headerElement);
             }
-
+            selectDiv.append(renderingsList);
 
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audioFile"] as string);
