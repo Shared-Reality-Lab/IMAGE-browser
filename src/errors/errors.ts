@@ -28,6 +28,6 @@ if (feedbackAnchor) {
 
 // Play error sound on load
 window.onload = ()=>{
-    let errorAudio = new Audio('../audio/IMAGESoundCueV1_Error.mp3');
+    let errorAudio = new Audio('../audio/IMAGE-Error.mp3');
     errorAudio.play();
 }

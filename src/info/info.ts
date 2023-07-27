@@ -42,7 +42,7 @@ let port = browser.runtime.connect();
 
 // Play Results Arrive audio
 window.onload = ()=>{
-    let resultArriveAudio = new Audio('../audio/IMAGESoundCueV1_ResArr.mp3');
+    let resultArriveAudio = new Audio('../audio/IMAGE-ResultsArrived.mp3');
     resultArriveAudio.play();
 }
 

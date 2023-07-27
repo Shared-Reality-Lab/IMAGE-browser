@@ -22,12 +22,12 @@ bar.animate(1);
 
 // Play Request Sent sound on load
 window.onload = () => {
-    let requestSentAudio = new Audio('../audio/IMAGESoundCueV1_ReqSent.mp3');
+    let requestSentAudio = new Audio('../audio/IMAGE-RequestSent.mp3');
     requestSentAudio.play();
 }
 
 // Play Processing Data when waiting
-let processingAudio = new Audio('../audio/IMAGESoundCueV1_Prog.mp3');
+let processingAudio = new Audio('../audio/IMAGE-Processing.mp3');
 setInterval(function(){
 	processingAudio.play();
 }, 3000);
