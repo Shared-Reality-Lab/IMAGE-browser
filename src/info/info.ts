@@ -28,6 +28,7 @@ import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
+import { getAllStorageSyncData } from '../utils';
 
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
@@ -256,6 +257,13 @@ port.onMessage.addListener(async (message) => {
                 encodeURIComponent(serverUrl);
     }
 });
+
+// window.addEventListener("beforeunload", function(e){
+//     e.preventDefault();
+//     e.returnValue = "Hello World";
+//     // Do something
+//     // alert("Window Closed!!");
+//  });
 
 port.postMessage({
     "type": "info",

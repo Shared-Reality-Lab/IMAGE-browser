@@ -11,13 +11,14 @@ export function getAllStorageSyncData() {
       developerMode: false,
       previousToggleState:false,
       noHaptics: true,
-      haply2diy: false,
+      haply2diy2gen: false,
+      haply2diy3gen: false,
       audio: true,
       text: true,
       processItem: "",
       requestItem: "",
       mweItem: "",
-      language: ""
+      language: "auto"
     });
 };
 
@@ -32,7 +33,7 @@ export async function getRenderers(): Promise<string[]>{
     if(items["text"]){
       renderers.push(RENDERERS.text);
     }
-    if(items["haply2diy"]){
+    if(items["haply2diy2gen"] || items["haply2diy3gen"]){
       renderers.push(RENDERERS.simpleHaptics);
       renderers.push(RENDERERS.photoAudioHaptics);
     }

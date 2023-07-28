@@ -139,6 +139,10 @@ self.addEventListener("message", async function (event) {
   // get image data from the main script
   if (event) {
 
+    if(event.data.haply2diy2gen){
+      usePantographV3 = false;
+    }
+
     if (event.data.doneWithAudio != undefined) {
       doneWithAudio = event.data.doneWithAudio;
     }
