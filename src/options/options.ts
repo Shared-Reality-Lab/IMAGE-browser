@@ -31,7 +31,8 @@ const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-s
 const customServerSetting = <HTMLInputElement>(document.getElementById("custom-server"));
 const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
 const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
-const haply2diySetting =  <HTMLInputElement>(document.getElementById("haply-option"));
+const haply2diy2genSetting =  <HTMLInputElement>(document.getElementById("haply-2gen-option"));
+const haply2diy3genSetting =  <HTMLInputElement>(document.getElementById("haply-3gen-option"));
 const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
 const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
@@ -44,13 +45,17 @@ if (toggleButton) {
 
 function showDeveloperSettings() {
   if(toggleButton.checked){
-    let haplyLabel = document.querySelector("#Haply2diy");
+    let haply2genLabel = document.querySelector("#Haply2diy2gen");
+    let haply3genLabel = document.querySelector("#Haply2diy3gen");
     if(navigatorSerial){
-      haplyLabel!.textContent = browser.i18n.getMessage("Haply2diy");
-      (document.getElementById("haply-option") as HTMLInputElement)!.disabled = false;
+      haply2genLabel!.textContent = browser.i18n.getMessage("Haply2diy2gen");
+      haply3genLabel!.textContent = browser.i18n.getMessage("Haply2diy3gen");
+      (document.getElementById("haply-2gen-option") as HTMLInputElement)!.disabled = false;
+      (document.getElementById("haply-3gen-option") as HTMLInputElement)!.disabled = false;
     } else {
-      haplyLabel!.textContent = browser.i18n.getMessage("Haply2diyNotSupported");
-      (document.getElementById("haply-option") as HTMLInputElement)!.disabled = true;
+      haply2genLabel!.textContent = browser.i18n.getMessage("Haply2diyNotSupported");
+      (document.getElementById("haply-2gen-option") as HTMLInputElement)!.disabled = true;
+      (document.getElementById("haply-3gen-option") as HTMLInputElement)!.disabled = true;
     }
     developerSettings.style.display = "block";
   } else {
@@ -86,7 +91,8 @@ function saveOptions() {
     customServer: customServerSetting.checked,
     developerMode: toggleButton.checked,
     noHaptics: noHapticsSetting.checked,
-    haply2diy: haply2diySetting.checked,
+    haply2diy2gen: haply2diy2genSetting.checked,
+    haply2diy3gen: haply2diy3genSetting.checked,
     audio:audioRenderingsSetting.checked,
     text:textRenderingsSetting.checked,
     language:languageSetting.value
@@ -110,7 +116,8 @@ function restore_options() {
       previousToggleState:false,
       developerMode: false,
       noHaptics:true,
-      haply2diy:false,
+      haply2diy2gen:false,
+      haply2diy3gen: false,
       audio:true,
       text:true,
       language: "auto"
@@ -122,7 +129,8 @@ function restore_options() {
         customServerSetting.checked = items["customServer"];
         toggleButton.checked = items["developerMode"];
         noHapticsSetting.checked= items["noHaptics"];
-        haply2diySetting.checked= items["haply2diy"];
+        haply2diy2genSetting.checked= items["haply2diy2gen"];
+        haply2diy3genSetting.checked= items["haply2diy3gen"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];

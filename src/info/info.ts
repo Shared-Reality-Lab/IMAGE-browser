@@ -28,6 +28,7 @@ import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
+import { getAllStorageSyncData } from '../utils';
 
 import { queryLocalisation } from '../utils';
 
@@ -266,6 +267,13 @@ port.onMessage.addListener(async (message) => {
     // Load localised labels for the title, footer, buttons, etc.
     queryLocalisation();
 });
+
+// window.addEventListener("beforeunload", function(e){
+//     e.preventDefault();
+//     e.returnValue = "Hello World";
+//     // Do something
+//     // alert("Window Closed!!");
+//  });
 
 port.postMessage({
     "type": "info",

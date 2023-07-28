@@ -123,9 +123,13 @@
         "message": "None",
         "description": "Label for no haptics option."
     },
-    "Haply2diy": {
-        "message": "Haply 2diy",
-        "description": "Label for Haply 2diy option."
+    "Haply2diy2gen": {
+        "message": "Haply 2diy-2Gen",
+        "description": "Label for Haply 2diy-2Gen option."
+    },
+    "Haply2diy3gen": {
+        "message": "Haply 2diy-3Gen",
+        "description": "Label for Haply 2diy-3Gen option."
     },
     "Haply2diyNotSupported": {
         "message": "Haply 2diy: Unavailable since this browser does not support Web Serial.",

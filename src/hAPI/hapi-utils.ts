@@ -9,6 +9,7 @@ import * as worker from './worker';
 
 import browser from "webextension-polyfill";
 import { BreakKey } from "./worker";
+import { getAllStorageSyncData } from "../utils";
 
 // canvas dimensions for haptic rendering
 const canvasWidth = 800;
@@ -131,7 +132,6 @@ function imgToWorldFrame(x1: number, y1: number): [number, number] {
 export async function processHapticsRendering(rendering: ImageRendering, graphic_url: string, container: HTMLElement, contentId : string){
     let endEffector: canvasCircle;
     let border: canvasRectangle;
-
     // end effector x/y coordinates
     let posEE: Vector;
     let deviceOrigin: Vector;
@@ -254,7 +254,7 @@ export async function processHapticsRendering(rendering: ImageRendering, graphic
     // true when playing an audio segment
     let playingAudio = false;
 
-    const worker = new Worker(browser.runtime.getURL("./hAPI/worker.js"), { type: "module" });
+    const worker = new Worker(browser.runtime.getURL("./hAPI/worker.js"), { type: "module"});
 
     // Play an audio segment with a given offset and duration.
     let sourceNode: AudioBufferSourceNode;
@@ -266,9 +266,11 @@ export async function processHapticsRendering(rendering: ImageRendering, graphic
     }
 
     // Start
-    btnStart.addEventListener("click", _ => {
+    btnStart.addEventListener("click", async _ => {
+        let items = await getAllStorageSyncData();
         worker.postMessage({
-            start: true
+            start: true,
+            haply2diy2gen: items["haply2diy2gen"]
         });
     })
 
