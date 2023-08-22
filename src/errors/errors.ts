@@ -25,3 +25,9 @@ const feedbackAnchor = document.getElementById("feedbackFormLink") as HTMLAnchor
 if (feedbackAnchor) {
     feedbackAnchor.href += window.location.search;
 }
+
+// Play error sound on load
+window.onload = ()=>{
+    let errorAudio = new Audio('../audio/IMAGE-Error.mp3');
+    errorAudio.play();
+}

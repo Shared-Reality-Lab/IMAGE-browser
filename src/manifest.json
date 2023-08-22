@@ -61,7 +61,7 @@
             "hAPI/worker.ts",
             "errors/*.html",
             "progressBar/progressBar.html",
-            "progressBar/audio-files/*",
+            "audio/*",
             "offscreen.html",
             "offscreen.js"
         ],
