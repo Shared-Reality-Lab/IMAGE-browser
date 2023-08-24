@@ -8,7 +8,7 @@
         "description": "Nom de l'extension de test"
     },
     "extensionDescription": {
-        "message": "Extension pour le projet IMAGE McGill. Il s'agit d'une version bêta.",
+        "message": "Extension pour le projet IMAGE à McGill. Il s'agit d'une version bêta.",
         "description": "Brève description de l'extension."
     },
     "menuItem": {
@@ -64,7 +64,7 @@
         "description": "Etiquette pour le bouton de téléchargement du rendu audio."
     },
     "svgLayerSelection": {
-        "message": "Veuillez choisir une couche SVG",
+        "message": "Veuillez choisir un calque du SVG",
         "description": "Étiquette pour le menu de sélection des couches SVG."
     },
     "segmentAudioButton": {
@@ -73,11 +73,11 @@
     },
     "audioRenderingsLabel": {
         "message": "Audio (rendus spécialisés, à découvrir avec un casque stéréo)",
-        "description": "Rendu audio"
+        "description": "Option pour rendu d'audio"
     },
     "textRenderingsLabel": {
         "message": "Texte (pour les lecteurs d'écran)",
-        "description": "Rendus textuels"
+        "description": "Option pour rendus textuels"
     },
     "languageSelectionLabel": {
         "message": "Langue",
@@ -259,7 +259,7 @@
         "description": "Bouton pour ouvrir le formulaire d'évaluation"
     },
     "firstLaunchMessage": {
-        "message": "Vous venez d'installer IMAGE! Pour obtenir des instructions sur l'utilisation d'IMAGE, rendez-vous sur le site:",
+        "message": "Vous venez d'installer IMAGE ! Pour obtenir des instructions sur l'utilisation d'IMAGE, rendez-vous sur le site:",
         "description": "Message de premier lancement"
     },
     "infoFooterFeedback" : {
