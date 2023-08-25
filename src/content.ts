@@ -31,7 +31,7 @@ versionDiv.setAttribute("ext-version", extVersion);
 (document.head || document.documentElement).appendChild(versionDiv);
 
 var script = document.createElement('script');
-script.src = browser.runtime.getURL('charts/highcharts.js');
+script.src = browser.runtime.getURL('buttons.js');
 (document.head || document.documentElement).appendChild(script);
 script.onload = function () {
     script.remove();
@@ -48,7 +48,20 @@ window.addEventListener("message", function (event) {
             "toRender": "full"
         });
     }
+    if (event.data.messageFrom && (event.data.messageFrom == "screenReaderGraphic")) {
+        let imageData = event.data.imageData;
+        port.postMessage({
+            "type": "checkImageSize",
+            "context": "",
+            "dims": [imageData.naturalWidth, imageData.naturalHeight],
+            "url": window.location.href,
+            "sourceURL": imageData.sourceURL,
+            "toRender": "full"
+        });    
+    }
 });
+
+
 
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;

@@ -63,7 +63,8 @@
             "progressBar/progressBar.html",
             "audio/*",
             "offscreen.html",
-            "offscreen.js"
+            "offscreen.js",
+            "buttons.js"
         ],
         "matches": ["<all_urls>"]
     }],
