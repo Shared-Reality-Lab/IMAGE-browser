@@ -16,7 +16,7 @@
  */
 import 'bootstrap/dist/css/bootstrap.css';
 import browser from "webextension-polyfill";
-import { queryLocalisation, getLanguage } from '../utils';
+import { queryLocalisation } from '../utils';
 
 // load localized labels
 queryLocalisation();
@@ -32,8 +32,9 @@ if (request_uuid === "" || objectHash === "" || serverURL === "") {
 
 const formButton = document.getElementById("feedbackSubmit");
 formButton?.addEventListener("click", () => {
-    const lang = navigator.language.slice(0, 2);
     const checkbox = document.getElementById("consent-save") as HTMLInputElement;
+    let lang = browser.i18n.getUILanguage().slice(0, 2);
+
     if (checkbox?.checked) {
         const saveEndPointUrl = new URL("/authenticate/" + request_uuid + "/" + objectHash, serverURL);
         console.debug(saveEndPointUrl);
