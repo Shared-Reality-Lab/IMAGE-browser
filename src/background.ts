@@ -309,12 +309,12 @@ async function updateDebugContextMenu() {
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: "",
         contexts: ["image"]
       }, onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: "",
         contexts: ["image"]
       }, onCreated);
     }
@@ -364,10 +364,19 @@ function storeConnection(p: Runtime.Port) {
 
 /*Enable the context menu options*/
 function enableContextMenu() {
-  browser.contextMenus.update("mwe-item", { enabled: true });
+  browser.contextMenus.update("mwe-item", {
+    enabled: true,
+    title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem")
+  });
   if (showDebugOptions) {
-    browser.contextMenus.update("preprocess-only", { enabled: true })
-    browser.contextMenus.update("request-only", { enabled: true });
+    browser.contextMenus.update("preprocess-only", {
+      enabled: true,
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      })
+    browser.contextMenus.update("request-only", {
+      enabled: true,
+      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
+    });
   }
 }
 
@@ -454,7 +463,6 @@ browser.runtime.onInstalled.addListener(function (object) {
     title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
     contexts: ["image"]
   }, onCreated);
-
 });
 
 browser.commands.onCommand.addListener((command) => {
