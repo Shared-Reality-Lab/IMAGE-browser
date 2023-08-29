@@ -20,14 +20,14 @@ import hash from "object-hash";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage } from './utils';
+import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, device } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { SERVER_URL } from './config';
 
 let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
-var renderingsPanel: browser.Windows.Window;
+var renderingsPanel: browser.Windows.Window | browser.Tabs.Tab;
 var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
 //console.debug("Extension Version background page", extVersion);
@@ -80,7 +80,7 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message");
   let query: IMAGERequest | undefined;
-  graphicUrl=message["sourceURL"];
+  graphicUrl = message["sourceURL"];
   switch (message["type"]) {
     case "info":
       const value = responseMap.get(message["request_uuid"]);
@@ -156,12 +156,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
               serverUrl = items["inputUrl"];
             }
           }
-          var progressWindow = await browser.windows.create({
+          var progressWindow = device == "desktop" ? await browser.windows.create({
             type: "popup",
             url: "progressBar/progressBar.html",
             height: 100,
             width: 400,
-          })
+          }) : await browser.tabs.create({
+            url: "progressBar/progressBar.html",
+          });
           let resp: Response;
           let json: IMAGEResponse = { "request_uuid": "", "timestamp": 0, "renderings": [] };
           try {
@@ -172,13 +174,15 @@ async function handleMessage(p: Runtime.Port, message: any) {
               },
               "body": JSON.stringify(query)
             });
-            browser.windows.remove(progressWindow.id!)
+            device == "desktop" ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
             if (resp.ok) {
               json = await resp.json();
             } else {
-              browser.windows.create({
+              device == "desktop" ? browser.windows.create({
                 type: "panel",
                 url: "errors/http_error.html"
+              }) : browser.tabs.create({
+                url: "errors/http_error.html",
               });
               console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
               const textContent = await resp.text();
@@ -186,10 +190,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
               throw new Error(textContent);
             }
           } catch {
-            browser.windows.remove(progressWindow.id!);
-            browser.windows.create({
+            device == "desktop" ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
+            device == "desktop" ? browser.windows.create({
               type: "panel",
               url: "errors/http_error.html"
+            }) : browser.tabs.create({
+              url: "errors/http_error.html",
             });
             return;
           }
@@ -200,7 +206,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
               );
               if (renderingsPanel !== undefined) {
                 try {
-                  await browser.windows.remove(renderingsPanel.id!)
+                  await device == "desktop" ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
                   renderingsPanel = await createPanel(query);
                 } catch {
                   renderingsPanel = await createPanel(query);
@@ -211,8 +217,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
               // How to handle if request_uuid was undefined??
             }
           } else {
-            await browser.windows.create({
+            await device == "desktop" ? browser.windows.create({
               type: "panel",
+              url: 'errors/no_renderings.html?uuid=' +
+                encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                encodeURIComponent(hash(query)) + "&serverURL=" +
+                encodeURIComponent(serverUrl.toString())
+            }) : browser.tabs.create({
               url: 'errors/no_renderings.html?uuid=' +
                 encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
                 encodeURIComponent(hash(query)) + "&serverURL=" +
@@ -276,10 +287,10 @@ async function createOffscreen() {
     url: 'offscreen.html',
     reasons: ['BLOBS'],
     justification: 'keep service worker running',
-  }).catch(() => {});
+  }).catch(() => { });
 }
 //browser.runtime.onInstalled.addListener(() => {createOffscreen();});
-browser.runtime.onStartup.addListener(() => {createOffscreen();});
+browser.runtime.onStartup.addListener(() => { createOffscreen(); });
 // a message from an offscreen document every 50 second resets the inactivity timer
 browser.runtime.onMessage.addListener(msg => {
   if (msg.keepAlive) console.log('keepAlive');
@@ -441,11 +452,13 @@ browser.runtime.onInstalled.addListener(function (object) {
   let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
 
   if ((object.reason === "install")) {
-    browser.windows.create({
+    device == "desktop" ? browser.windows.create({
       type: "panel",
       url: internalUrl,
       width: 700,
       height: 700,
+    }) : browser.tabs.create({
+      url: internalUrl,
     });
   }
 
@@ -459,11 +472,13 @@ browser.runtime.onInstalled.addListener(function (object) {
 
 browser.commands.onCommand.addListener((command) => {
   console.debug(`Command: ${command}`);
-  browser.windows.create({
+  device == "desktop" ? browser.windows.create({
     type: "panel",
     url: "launchpad/launchpad.html",
     width: 700,
     height: 700,
+  }) : browser.tabs.create({
+    url: "launchpad/launchpad.html",
   });
 });
 
@@ -493,11 +508,13 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 function createPanel(query: IMAGERequest) {
-  let window = browser.windows.create({
+  let window = device == "desktop" ? browser.windows.create({
     type: "normal",
     url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
     height: 1080,
     width: 1920
+  }) : browser.tabs.create({
+    url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
   });
   return window;
 }
