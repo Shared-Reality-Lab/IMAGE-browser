@@ -33,6 +33,8 @@ if (request_uuid === "" || objectHash === "" || serverURL === "") {
 const formButton = document.getElementById("feedbackSubmit");
 formButton?.addEventListener("click", () => {
     const checkbox = document.getElementById("consent-save") as HTMLInputElement;
+    let lang = browser.i18n.getUILanguage().slice(0, 2);
+
     if (checkbox?.checked) {
         const saveEndPointUrl = new URL("/authenticate/" + request_uuid + "/" + objectHash, serverURL);
         console.debug(saveEndPointUrl);
@@ -57,9 +59,19 @@ formButton?.addEventListener("click", () => {
            console.error(err);
            alert(browser.i18n.getMessage("saveDataUnknownError"));
         }).then(() => {
-            window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url&entry.1541900668=" + request_uuid);
+            if (lang === 'fr') {
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url&entry.1541900668=" + request_uuid);
+            }
+            else {
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url&entry.1541900668=" + request_uuid);
+            }
         });
     } else {
-        window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url");
+        if (lang === 'fr') {
+            window.open("https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url");
+        }
+        else {
+            window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url");
+        }
     }
 });
