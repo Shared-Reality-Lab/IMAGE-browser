@@ -269,5 +269,9 @@
     "infoFooterAnythingElse" : {
         "message": "Pour toute autre question, vous pouvez nous écrire à ",
         "description": "Message d'évaluation en bas de page, avant l'adresse e-mail de IMAGE"
+    },
+    "infoRenderingsTitle" : {
+        "message": "Rendus d'extension IMAGE",
+        "description": "Titre pour les rendus"
     }
 }
