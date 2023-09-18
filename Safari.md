@@ -15,6 +15,7 @@ To build and run the IMAGE browser extension, follow these steps:
 1. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies using the following commands
    ```bash
    git clone https://github.com/Shared-Reality-Lab/IMAGE-browser.git
+   cd IMAGE-browser
    npm install
    ```
 
