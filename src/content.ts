@@ -57,7 +57,7 @@ window.addEventListener("message", function (event) {
             "url": window.location.href,
             "sourceURL": imageData.sourceURL,
             "toRender": "full"
-        });    
+        });
     }
 });
 

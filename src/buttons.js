@@ -23,7 +23,7 @@ import * as utils from './charts/charts-utils';
 })();
 
 function processCharts() {
-  if(window.Highcharts){
+  if (window.Highcharts) {
     var divChartMap = {};
     var extVersion = document.getElementById("version-div").getAttribute("ext-version");
     //console.log("From HighCharts", extVersion);
@@ -69,13 +69,16 @@ function processCharts() {
 function processGraphics() {
   console.debug("inside screenreader script");
   let images = document.getElementsByTagName("img");
+  let userAgents = navigator.userAgent;
   /** add a button below each image - visible to screen reader only */
-  for(let image of images){
+  for (let image of images) {
     let button = document.createElement("button");
     button.innerText = "Interpret graphic with IMAGE";
     /** add styles to button to make it visible to only screen reader */
-    button.classList.add("sr-only");
-    button.addEventListener("click", function(){
+    if (!userAgents.includes("iPhone")) {
+      button.classList.add("sr-only");
+    }
+    button.addEventListener("click", function () {
       let imageData = {
         "naturalWidth": image.naturalWidth,
         "naturalHeight": image.naturalHeight,
