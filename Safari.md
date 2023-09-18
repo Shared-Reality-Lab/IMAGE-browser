@@ -1,7 +1,7 @@
 # Building the IMAGE Browser Extension for Safari
 
 ## Prerequisites
-Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites installed on your macOS system:
+Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites:
 
 - **macOS**
 - **Xcode**
@@ -12,7 +12,11 @@ Before you start building the IMAGE browser extension for Safari, ensure that yo
 ## Building the Extension
 To build and run the IMAGE browser extension, follow these steps:
 
-1. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies as described in the [README.md](README.md) file.
+1. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies using the following commands
+   ```bash
+   git clone https://github.com/Shared-Reality-Lab/IMAGE-browser.git
+   npm install
+   ```
 
 2. **Build the Extension:** Use the following command to build the extension in the root directory of the repository:
    ```bash
