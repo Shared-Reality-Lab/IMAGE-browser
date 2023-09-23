@@ -1,11 +1,11 @@
 import browser from "webextension-polyfill";
-import { CAPABILITIES, RENDERERS, DEVICES } from "./config";
+import { CAPABILITIES, RENDERERS, PANELS } from "./config";
 
-export let device = DEVICES.desktop;
+export let panel = PANELS.window;
 export function getAllStorageSyncData() {
   let userAgent = navigator.userAgent;
   if (userAgent.includes("iPhone")) {
-    device = DEVICES.mobile;
+    panel = PANELS.tab;
     console.debug("mobile device");
   } else {
     console.debug("desktop device");

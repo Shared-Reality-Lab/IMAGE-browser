@@ -17,13 +17,19 @@ export const RENDERERS = Object.freeze({
 
 /** Capabilities supported by Extension */
 export const CAPABILITIES = Object.freeze({
-    debugMode : "ca.mcgill.a11y.image.capability.DebugMode"
+    debugMode: "ca.mcgill.a11y.image.capability.DebugMode"
 });
 
-/** Devices supported by extension*/
-export const DEVICES = {
-    mobile: "mobile",
-    desktop: "desktop"
+/** Buttons visibility switch*/
+export const BUTTONS = {
+    visible: "visible",
+    hidden: "hidden"
+}
+
+/** IMAGE result creates a new tab or a new window */
+export const PANELS = {
+    tab: "tab",
+    window: "window"
 }
 
 export const TUTORIAL_PAGE: string = "https://image.a11y.mcgill.ca/pages/tutorial.html";
