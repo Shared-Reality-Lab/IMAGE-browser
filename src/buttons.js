@@ -1,5 +1,5 @@
 import * as utils from './charts/charts-utils';
-import { BUTTONS } from "./config";
+import { displayButtons } from "./config";
 
 
 (function () {
@@ -70,10 +70,10 @@ function processCharts() {
 function processGraphics() {
   console.debug("inside screenreader script");
   let userAgent = navigator.userAgent;
-  let buttons = BUTTONS.hidden;
+  let buttons = displayButtons;
   /* Make buttons visible if the user agent is iPhone*/
   if (userAgent.includes("iPhone")) {
-    buttons = BUTTONS.visible;
+    buttons = true;
   }
   let images = document.getElementsByTagName("img");
   /** add a button below each image - visible to screen reader only */
@@ -81,7 +81,7 @@ function processGraphics() {
     let button = document.createElement("button");
     button.innerText = "Interpret graphic with IMAGE";
     /* Make the button hidden depending on the config */
-    if (buttons == BUTTONS.hidden) {
+    if (!buttons) {
       button.classList.add("sr-only");
     }
     /** add styles to button to make it visible to only screen reader */

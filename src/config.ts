@@ -20,16 +20,10 @@ export const CAPABILITIES = Object.freeze({
     debugMode: "ca.mcgill.a11y.image.capability.DebugMode"
 });
 
-/** Buttons visibility switch*/
-export const BUTTONS = {
-    visible: "visible",
-    hidden: "hidden"
-}
+/** Buttons visibility switch to false default*/
+export const displayButtons = false;
 
 /** IMAGE result creates a new tab or a new window */
-export const PANELS = {
-    tab: "tab",
-    window: "window"
-}
+export const openRenderingsinWindow = true;
 
 export const TUTORIAL_PAGE: string = "https://image.a11y.mcgill.ca/pages/tutorial.html";

@@ -20,9 +20,9 @@ import hash from "object-hash";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
-import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, panel } from './utils';
+import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { SERVER_URL, PANELS } from './config';
+import { SERVER_URL } from './config';
 
 let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -156,7 +156,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
               serverUrl = items["inputUrl"];
             }
           }
-          var progressWindow = panel == PANELS.window ? await browser.windows.create({
+          var progressWindow = windowsPanel ? await browser.windows.create({
             type: "popup",
             url: "progressBar/progressBar.html",
             height: 100,
@@ -174,11 +174,11 @@ async function handleMessage(p: Runtime.Port, message: any) {
               },
               "body": JSON.stringify(query)
             });
-            panel == PANELS.window ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
+            windowsPanel ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
             if (resp.ok) {
               json = await resp.json();
             } else {
-              panel == PANELS.window ? browser.windows.create({
+              windowsPanel ? browser.windows.create({
                 type: "panel",
                 url: "errors/http_error.html"
               }) : browser.tabs.create({
@@ -190,8 +190,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
               throw new Error(textContent);
             }
           } catch {
-            panel == PANELS.window ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
-            panel == PANELS.window ? browser.windows.create({
+            windowsPanel ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
+            windowsPanel ? browser.windows.create({
               type: "panel",
               url: "errors/http_error.html"
             }) : browser.tabs.create({
@@ -206,7 +206,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
               );
               if (renderingsPanel !== undefined) {
                 try {
-                  await panel == PANELS.window ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
+                  await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
                   renderingsPanel = await createPanel(query);
                 } catch {
                   renderingsPanel = await createPanel(query);
@@ -217,7 +217,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
               // How to handle if request_uuid was undefined??
             }
           } else {
-            await panel == PANELS.window ? browser.windows.create({
+            await windowsPanel ? browser.windows.create({
               type: "panel",
               url: 'errors/no_renderings.html?uuid=' +
                 encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
@@ -461,7 +461,7 @@ browser.runtime.onInstalled.addListener(function (object) {
   let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
 
   if ((object.reason === "install")) {
-    panel == PANELS.window ? browser.windows.create({
+    windowsPanel ? browser.windows.create({
       type: "panel",
       url: internalUrl,
       width: 700,
@@ -480,7 +480,7 @@ browser.runtime.onInstalled.addListener(function (object) {
 
 browser.commands.onCommand.addListener((command) => {
   console.debug(`Command: ${command}`);
-  panel == PANELS.window ? browser.windows.create({
+  windowsPanel ? browser.windows.create({
     type: "panel",
     url: "launchpad/launchpad.html",
     width: 700,
@@ -516,7 +516,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 function createPanel(query: IMAGERequest) {
-  let window = panel == PANELS.window ? browser.windows.create({
+  let window = windowsPanel ? browser.windows.create({
     type: "normal",
     url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
     height: 1080,
