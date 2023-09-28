@@ -1,5 +1,10 @@
 # Building the IMAGE Browser Extension for Safari
 
+These instructions are for manually building and installing the the extension for Safari on either OSX or iOS.
+Note that builds are currently [automated via github actions](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions), including building extensions for both iOS and OSX.
+If you are only looking to try the extension, and not build it yourself, you can [download the most recent extension artifact](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions).
+[SATVIK: Are those artifacts installable? If so, is it obvious how to do so? If not, I'd modify to indicate that although there is an automated build process, the artifacts are not installable for whatever the reason is, and indicate the instructions below must be followed to actually create and install the Safari extension.]
+
 ## Prerequisites
 Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites:
 
@@ -86,8 +91,12 @@ While using the IMAGE browser extension on Safari, please be aware of the follow
 
 - The extension does not produce any sound when an IMAGE request is sent.
 - The feedback link is missing when an IMAGE result is received for maps and charts.
-- Haptics are not supported by Safari.
-- The extension may become non-responsive and require a manual restart.
+- The extension may become non-responsive and require a manual restart. [SATVIK: Can you provide more detail on what seems to trigger this, or how rare it is?]
 - On the Feedback page, selecting "(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above" may cause the "open form" button to not work as intended.
+- Connecting haptic devices is not supported.
 
-Please keep these issues in mind while using the extension and refer to the project's documentation for any updates or fixes.
+## Issues with Submitting iOS Safari Extension to App Store:
+In addition to the above known issues, the following issues will need to be handled specifically for submitting the iOS version of the extension to the App Store, in order to make it widely available:
+
+- Apple does not allow background workers in iOS Safari extensions.
+- [SATVIK: Is that the only blocking issue? Is it accurately worded?]
