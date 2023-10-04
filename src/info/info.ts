@@ -26,6 +26,9 @@ import { IMAGERequest } from "../types/request.schema";
 
 import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
+
+import * as n64Utils from '../N64Board/n64-utils';
+
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
 import { getAllStorageSyncData } from '../utils';
@@ -192,8 +195,12 @@ port.onMessage.addListener(async (message) => {
             }
         }
 
+        // if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
+        //     hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
+        // }
+
         if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
-            hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
+            n64Utils.processRendering(rendering, graphic_url, container, contentId)
         }
 
         if(rendering["type_id"] === RENDERERS.svgLayers){

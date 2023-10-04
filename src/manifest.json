@@ -59,6 +59,8 @@
             "maps/maps-utils.ts",
             "hAPI/hapi-utils.ts",
             "hAPI/worker.ts",
+            "N64Board/n64-utils.ts",
+            "N64Board/worker.ts",
             "errors/*.html",
             "progressBar/progressBar.html",
             "audio/*",
