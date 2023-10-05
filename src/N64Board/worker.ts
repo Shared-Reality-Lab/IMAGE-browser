@@ -23,23 +23,10 @@ import { PantographV3 } from '../hAPI/libraries/PantographV3';
 import { Pantograph } from "../hAPI/libraries/Pantograph";
 import { convexhull } from '../hAPI/convex-hull';
 
-// TODO: set object types
-
-// set to false if using old 2DIY
-let usePantographV3 = true;
-
-// declaration of haply specific variables
-const widgetOneID = 5;
-let widgetOne: any;
-let pantograph;
-let haplyBoard;
+let n64board: N64Board;
 let messageCount: number = 0;
 
 // store required handler json
-let baseObjectData: Array<any> = [];
-let objectData: Array<any> = []
-let segmentData: Array<any> = [];
-let baseSegmentData: Array<any> = [];
 let audioData: Array<any> = [];
 
 // end-effector x/y coords
@@ -65,6 +52,7 @@ export type SubSegment = {
 
 let segments: SubSegment[][] = [];
 let objects: SubSegment[][] = [];
+let packet = new Int8Array(3);
 
 self.addEventListener("message", async function (event) {
 
@@ -126,20 +114,23 @@ self.addEventListener("message", async function (event) {
     // objects = createObjs(objectData);
     // segments = createSegs(segmentData);
 
-    this.self.postMessage({
-      peekaboo: "peekaboo"
-    });
+    // this.self.postMessage({
+    //   peekaboo: "peekaboo",
+    //   packet: packet
+    // });
     //   positions: { x: positions.x, y: positions.y },
     //   objectData: createObjs(baseObjectData),
     //   segmentData: createSegs(baseSegmentData),
     // });
   }
 
+  console.log("in worker");
+
   /************ BEGIN SETUP CODE *****************/
   if (messageCount < 1) {
     messageCount++;
-    haplyBoard = new Board();
-    await haplyBoard.init();
+    n64board = new N64Board();
+    await n64board.init();
   }
 
   /************************ END SETUP CODE ************************* */
@@ -148,7 +139,17 @@ self.addEventListener("message", async function (event) {
 
   while (true) {
 
-    prevPos.set(convPosEE.clone());
+    //console.log("worker loop");
+
+    packet = await n64board.receive();
+
+
+    this.self.postMessage({
+      peekaboo: "peekaboo",
+      packet: packet
+    });
+
+    //prevPos.set(convPosEE.clone());
 
     // send required data back
     /**

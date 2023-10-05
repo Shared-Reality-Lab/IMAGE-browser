@@ -252,7 +252,8 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
             // we've selected the COM port
             btn.style.visibility = 'hidden';
 
-            //const msgdata = msg.data;
+            const msgdata = msg.data;
+            console.log(msgdata.packet);
 
             // only request to run draw() once
             if (firstCall) {
