@@ -1,19 +1,24 @@
 import { canvasCircle } from "../types/canvas-circle";
 import { canvasRectangle } from "../types/canvas-rectangle";
 import { ImageRendering } from "../types/response.schema";
-import { Vector } from "../types/vector";
+//import { Vector } from "../types/vector";
 
 import * as infoUtils from '../info/info-utils';
 import * as worker from './worker';
 
 import browser from "webextension-polyfill";
 import { getAllStorageSyncData } from "../utils";
+import { Vector } from "../hAPI/libraries/Vector";
 
 // canvas dimensions for haptic rendering
 const canvasWidth = 800;
 const canvasHeight = 500;
 const pixelsPerMeter = 6000;
 
+let loc = new Vector(0, 0);
+let pos = new Vector(0, 0);
+let button: number;
+const joystickSensitivity = 0.04;
 /**
  * Updates the canvas at each timeframe.
  * @param posEE The 2DIY workspace position.
@@ -25,25 +30,43 @@ const pixelsPerMeter = 6000;
  * @param objects List of objects to draw.
  * @param ctx Canvas context.
  */
-function updateAnimation(posEE: Vector,
+function updateAnimation(pos: Vector,
     endEffector: canvasCircle,
-    deviceOrigin: Vector,
     border: canvasRectangle,
     drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
     segments: worker.SubSegment[][], objects: worker.SubSegment[][],
     ctx: CanvasRenderingContext2D) {
 
+        console.log("0");
+
     // drawing bounding boxes and centroids
     drawBoundaries(drawingInfo, segments, objects, ctx);
     border.draw();
 
-    //scaling end effector position to canvas
-    let xE = pixelsPerMeter * (-posEE.x + 0.014);
-    let yE = pixelsPerMeter * ((posEE.y / 0.805) - 0.0311);
+    let joystickInputX = pos.x; /* Get joystick X value (-93 to 93) */
+    let joystickInputY = -1 * pos.y; /* Get joystick Y value (-93 to 93) */
+  
+    // Calculate the new position based on joystick input
+    loc.x += joystickInputX * joystickSensitivity;
+    loc.y += joystickInputY * joystickSensitivity;
 
-    // set position of virtual avatar in canvas
-    endEffector.x = deviceOrigin.x + xE - 100;
-    endEffector.y = deviceOrigin.y + yE - 167;
+
+    // Ensure the circle stays within the canvas bounds
+    loc.x = constrain(loc.x, 0, canvasWidth);
+    loc.y = constrain(loc.y, 0, canvasHeight);
+  
+    // if (button & BUTTON_GREEN) {
+    //   col = color(0, 255, 0); // Green
+    // } else if (button & BUTTON_BLUE) {
+    //   col = color(0, 0, 255); // Blue
+    //   snd.play();
+    // } else {
+    //   col = color(255, 255, 255); // Default color
+    // }
+  
+    //fill(col);
+    endEffector.x = loc.x;
+    endEffector.y = loc.y;
     endEffector.draw();
 }
 
@@ -106,6 +129,16 @@ function imgToWorldFrame(x1: number, y1: number): [number, number] {
     const y = y1 * canvasHeight;
     return [x, y]
 }
+
+/**
+ * @param val incoming value to constrain
+ * @param min minimum value of constrained range
+ * @param max maximum value of constrained range
+ * @returns Tuple containing the [x, y] position for the canvas
+ */
+function constrain(val: number, min: number, max: number) {
+    return val > max ? max : val < min ? min : val;
+  }
 
 /**
  * Returns a HTML canvas of specified properties.
@@ -177,18 +210,18 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     img.src = graphic_url;
 
     // world resolution properties
-    const worldPixelWidth = 800;
+    //worldPixelWidth = 800;
 
-    posEE = {
-        x: 0,
-        y: 0
-    };
+    // posEE = {
+    //     x: 0,
+    //     y: 0
+    // };
 
-    // initial position of end effector avatar
-    deviceOrigin = {
-        x: worldPixelWidth / 2,
-        y: 0
-    };
+    // // initial position of end effector avatar
+    // deviceOrigin = {
+    //     x: worldPixelWidth / 2,
+    //     y: 0
+    // };
 
     border = {
         draw: function () {
@@ -217,7 +250,7 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         console.log("in draw");
-        updateAnimation(posEE, endEffector, deviceOrigin, border, drawingInfo, segments, objects, ctx);
+        updateAnimation(pos, endEffector, border, drawingInfo, segments, objects, ctx);
         window.requestAnimationFrame(draw);
     }
 
@@ -253,7 +286,10 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
             btn.style.visibility = 'hidden';
 
             const msgdata = msg.data;
-            console.log(msgdata.packet);
+            pos.x = msgdata.packet[0];
+            pos.y = msgdata.packet[1];
+
+            console.log(pos);
 
             // only request to run draw() once
             if (firstCall) {
