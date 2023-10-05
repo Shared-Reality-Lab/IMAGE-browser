@@ -17,8 +17,11 @@ let loc = new Vector(0, 0);
 let pos = new Vector(0, 0);
 let button: number;
 
-let entityType = 0;
-let index = 0;
+let segmentIndex = 0;
+
+
+let segs: any[] = [];
+let objs: any[] = [];
 
 const joystickSensitivity = 0.04;
 
@@ -27,11 +30,13 @@ enum ButtonStatus {
     BUTTON_BLUE = 1,
     BUTTON_GREEN = 2,
     BUTTON_GRAY = 4,
-    BUTTON_L = 8,
-    BUTTON_R = 16
+    BUTTON_START = 8,
+    BUTTON_L = 16,
+    BUTTON_R = 32
 }
 
 buttonStatus: ButtonStatus;
+
 let canClick = true;
 
 /**
@@ -48,12 +53,10 @@ let canClick = true;
 function updateAnimation(pos: Vector,
     endEffector: canvasCircle,
     border: canvasRectangle,
-    drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
-    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
     ctx: CanvasRenderingContext2D) {
 
     // drawing bounding boxes and centroids
-    drawBoundaries(segs, index, ctx);
+    drawBoundaries(segs, segmentIndex, ctx);
     border.draw();
 
     let joystickInputX = pos.x; /* Get joystick X value (-93 to 93) */
@@ -68,35 +71,6 @@ function updateAnimation(pos: Vector,
     loc.x = constrain(loc.x, 0, canvasWidth);
     loc.y = constrain(loc.y, 0, canvasHeight);
 
-    switch (button) {
-        case ButtonStatus.BUTTON_GRAY:
-            endEffector.color = 'gray';
-            break;
-        case ButtonStatus.BUTTON_GREEN:
-            endEffector.color = 'green';
-            if (canClick) {
-                // Your code for handling the click event goes here
-                index = index >= (segs.length - 1) ? 0 : index + 1;
-
-                // Disable further clicks for a brief period
-                canClick = false;
-
-                // Set a timeout to re-enable clicking after a delay (e.g., 1 second)
-                setTimeout(() => {
-                    canClick = true;
-                }, 500); // Adjust the delay as needed (1 second in this example)
-            }
-
-            break;
-        case ButtonStatus.BUTTON_BLUE:
-            endEffector.color = 'blue';
-            //snd.play();
-            break;
-        case ButtonStatus.NONE:
-            endEffector.color = 'white';
-            break;
-    }
-
     endEffector.x = loc.x;
     endEffector.y = loc.y;
     endEffector.draw();
@@ -109,26 +83,13 @@ function updateAnimation(pos: Vector,
  * @param objects List of objects to draw.
  * @param ctx 
  */
-function drawBoundaries(segments: any, index: number,
+function drawBoundaries(segments: any, segmentIndex: number,
     ctx: CanvasRenderingContext2D) {
-
-    console.log(index);
-
-
-    //if (drawingInfo != undefined) {
-
-    //const j = segments[i].contours[0].length;
-
-    // subsegment and segment index
-    //const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];
     ctx.lineWidth = 2;
-
-    // segments
-    //if (drawingInfo['haplyType'] == 0) {
     ctx.strokeStyle = "blue";
 
-    if (segments[index].contours[0].length > 0) {
-        segments[index].contours[0].forEach((contour: { coordinates: any[]; }) => {
+    if (segments[segmentIndex].contours[0].length > 0) {
+        segments[segmentIndex].contours[0].forEach((contour: { coordinates: any[]; }) => {
             contour.coordinates.forEach((coord: any[]) => {
                 const pX = coord[0];
                 const pY = coord[1];
@@ -137,18 +98,6 @@ function drawBoundaries(segments: any, index: number,
             });
         });
     }
-
-    // if (segments[i].contours[0].length > 0) {
-
-    //     for (let j = 0; j < segments[i].contours[0].length; j++) {
-    //         segments[i].contours[0][j].coordinates.forEach((coord: any[]) => {
-    //             const pX = coord[0];
-    //             const pY = coord[1];
-    //             let [pointX, pointY] = imgToWorldFrame(pX, pY);
-    //             ctx.strokeRect(pointX, pointY, 1, 1);
-    //         })
-    //     }
-    // }
 }
 
 /**
@@ -200,16 +149,13 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     let firstCall: boolean = true;
 
     const data = rendering["data"]["info"] as any;
-
+    console.log(data);
     const audioCtx = new window.AudioContext();
-
     const audioBuffer = await fetch(data["audioFile"] as string).then(resp => {
-
         return resp.arrayBuffer();
     }).then(buffer => {
         return audioCtx.decodeAudioData(buffer);
     }).catch(e => { console.error(e); throw e; });
-
 
     let div = document.createElement("div");
     div.classList.add("row");
@@ -220,6 +166,31 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
 
     contentDiv.id = contentId;
     div.append(contentDiv);
+
+    let currentOffset: number | undefined;
+    let currentDuration: number | undefined;
+    let sourceNode: AudioBufferSourceNode | undefined;
+    let currentAudioIndex: number = -2;
+
+    function playPauseAudio(index: number, segmentOffset: number, segmentDuration: number) {
+        if (index == currentAudioIndex && sourceNode) {
+            /** Do not create a new audio context, just pause/play the current audio*/
+            (sourceNode.playbackRate.value == 0) ? (sourceNode.playbackRate.value = 1) : (sourceNode.playbackRate.value = 0);
+            currentAudioIndex = index;
+        }
+        else {
+            if (sourceNode) {
+                sourceNode.stop();
+            }
+            setTimeout(function () {
+                sourceNode = audioCtx.createBufferSource();
+                sourceNode.addEventListener("ended", () => { sourceNode = undefined; });
+                sourceNode.buffer = audioBuffer;
+                sourceNode.connect(audioCtx.destination);
+                sourceNode.start(0, segmentOffset, segmentDuration);
+            }, 20);
+        }
+    }
 
     // adding buttons
     let btn = infoUtils.createButton(contentDiv, "btn", "Connect to N64 Controller");
@@ -238,20 +209,6 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
 
     const img = new Image();
     img.src = graphic_url;
-
-    // world resolution properties
-    //worldPixelWidth = 800;
-
-    // posEE = {
-    //     x: 0,
-    //     y: 0
-    // };
-
-    // // initial position of end effector avatar
-    // deviceOrigin = {
-    //     x: worldPixelWidth / 2,
-    //     y: 0
-    // };
 
     border = {
         draw: function () {
@@ -279,20 +236,8 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        updateAnimation(pos, endEffector, border, drawingInfo, segments, objects, ctx);
+        updateAnimation(pos, endEffector, border, ctx);
         window.requestAnimationFrame(draw);
-    }
-
-    // define segments and objects
-    let segments: worker.SubSegment[][];
-    let objects: worker.SubSegment[][];
-    let drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number };
-
-    // Audio Modes
-    const enum AudioMode {
-        Play,
-        Finished,
-        Idle,
     }
 
     const worker = new Worker(browser.runtime.getURL("./N64Board/worker.js"), { type: "module" });
@@ -321,13 +266,35 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
 
             // only request to run draw() once
             if (firstCall) {
-                //console.log("first call?");
-                //if (msgdata.segmentData != undefined ||
-                //   msgdata.objectData != undefined) {
                 window.requestAnimationFrame(draw);
                 firstCall = false;
-                //}
             }
+
+            // handle audio/button events here
+            switch (button) {
+                case ButtonStatus.BUTTON_START:
+                    endEffector.color = 'red';
+                    // fix playback issue
+                    runFunc(playPauseAudio(segmentIndex, segs[segmentIndex].offset, segs[segmentIndex].duration));
+                    break;
+                case ButtonStatus.BUTTON_GRAY:
+                    endEffector.color = 'gray';
+                    break;
+                case ButtonStatus.BUTTON_GREEN:
+                    endEffector.color = 'green';
+                    runFunc(cycleSegment);
+                    break;
+                case ButtonStatus.BUTTON_BLUE:
+                    endEffector.color = 'blue';
+                    //snd.play();
+                    break;
+                case ButtonStatus.NONE:
+                    endEffector.color = 'white';
+                    break;
+            }
+
+            isInSegment(pos);
+
         });
     });
 
@@ -337,9 +304,6 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     //     audioData.mode = AudioMode.Finished;
     // }
 }
-
-let segs: any[] = [];
-let objs: any[] = [];
 
 function getSegmentsFromData(data: any) {
 
@@ -352,3 +316,31 @@ function getSegmentsFromData(data: any) {
         }
     });
 }
+
+// prevent double taps
+function runFunc(func: any) {
+    if (canClick) {
+        // handling the clcik
+        //segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
+        func();
+
+        // disable further clicks for a brief period
+        canClick = false;
+
+        // set a timeout to re-enable clicking after delay
+        setTimeout(() => {
+            canClick = true;
+        }, 1000);
+    }
+
+}
+
+function cycleSegment() {
+    segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
+}
+
+function isInSegment(pos: Vector) {
+    let normalizedX = pos.x / canvasWidth;
+    let normaliedY = pos.y / canvasHeight;
+}
+
