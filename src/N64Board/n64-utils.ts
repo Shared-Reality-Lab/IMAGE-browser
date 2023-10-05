@@ -293,16 +293,11 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
                     break;
             }
 
-            isInSegment(pos);
+            //ray-casting
+            console.log(isInSegment(loc, segs[segmentIndex]));
 
         });
     });
-
-    // Stop the current audio segment from progressing.
-    // function stopAudioNode() {
-    //     sourceNode.stop();
-    //     audioData.mode = AudioMode.Finished;
-    // }
 }
 
 function getSegmentsFromData(data: any) {
@@ -339,8 +334,24 @@ function cycleSegment() {
     segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
 }
 
-function isInSegment(pos: Vector) {
-    let normalizedX = pos.x / canvasWidth;
-    let normaliedY = pos.y / canvasHeight;
-}
+function isInSegment(loc: Vector, segment: any): boolean {
+    const x = loc.x / canvasWidth;
+    const y = loc.y / canvasHeight;
+    let inside = false;
 
+    segment.contours[0].forEach((contour: { coordinates: any[]; }) => {
+        for (let i = 0, j = contour.coordinates.length - 1; i < contour.coordinates.length; j = i++) {
+            const xi = contour.coordinates[i][0];
+            const yi = contour.coordinates[i][1];
+            const xj = contour.coordinates[j][0];
+            const yj = contour.coordinates[j][1];
+
+            const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+
+            if (intersect) {
+                inside = !inside;
+            }
+        }
+    });
+    return inside;
+}
