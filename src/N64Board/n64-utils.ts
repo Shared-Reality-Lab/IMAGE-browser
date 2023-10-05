@@ -17,6 +17,9 @@ let loc = new Vector(0, 0);
 let pos = new Vector(0, 0);
 let button: number;
 
+let entityType = 0;
+let index = 0;
+
 const joystickSensitivity = 0.04;
 
 enum ButtonStatus {
@@ -29,6 +32,7 @@ enum ButtonStatus {
 }
 
 buttonStatus: ButtonStatus;
+let canClick = true;
 
 /**
  * Updates the canvas at each timeframe.
@@ -49,7 +53,7 @@ function updateAnimation(pos: Vector,
     ctx: CanvasRenderingContext2D) {
 
     // drawing bounding boxes and centroids
-    drawBoundaries(drawingInfo, segments, objects, ctx);
+    drawBoundaries(segs, index, ctx);
     border.draw();
 
     let joystickInputX = pos.x; /* Get joystick X value (-93 to 93) */
@@ -70,6 +74,19 @@ function updateAnimation(pos: Vector,
             break;
         case ButtonStatus.BUTTON_GREEN:
             endEffector.color = 'green';
+            if (canClick) {
+                // Your code for handling the click event goes here
+                index = index >= (segs.length - 1) ? 0 : index + 1;
+
+                // Disable further clicks for a brief period
+                canClick = false;
+
+                // Set a timeout to re-enable clicking after a delay (e.g., 1 second)
+                setTimeout(() => {
+                    canClick = true;
+                }, 500); // Adjust the delay as needed (1 second in this example)
+            }
+
             break;
         case ButtonStatus.BUTTON_BLUE:
             endEffector.color = 'blue';
@@ -92,45 +109,46 @@ function updateAnimation(pos: Vector,
  * @param objects List of objects to draw.
  * @param ctx 
  */
-function drawBoundaries(drawingInfo: { haplyType: worker.Type, segIndex: number, subSegIndex: number },
-    segments: worker.SubSegment[][], objects: worker.SubSegment[][],
+function drawBoundaries(segments: any, index: number,
     ctx: CanvasRenderingContext2D) {
-    if (drawingInfo != undefined) {
 
-        // subsegment and segment index
-        const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];
-        ctx.lineWidth = 4;
+    console.log(index);
 
-        // segments
-        if (drawingInfo['haplyType'] == 0) {
-            ctx.strokeStyle = "blue";
-            if (segments[i][j] != undefined) {
-                segments[i][j].coordinates.forEach(coord => {
-                    const pX = coord.x;
-                    const pY = coord.y;
-                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
-                    ctx.strokeRect(pointX, pointY, 1, 1);
-                })
-            }
-        }
 
-        // objects
-        else if (drawingInfo['haplyType'] == 1) {
-            ctx.strokeStyle = "orange";
-            if (objects[i][j] != undefined) {
-                objects[i][j].coordinates.forEach(coord => {
-                    const pX = coord.x;
-                    const pY = coord.y;
-                    let [pointX, pointY] = imgToWorldFrame(pX, pY);
+    //if (drawingInfo != undefined) {
 
-                    // bigger size for single point objects
-                    const size = objects[i][j].coordinates.length == 1 ? 20 : 1
-                    ctx.strokeRect(pointX, pointY, size, size);
-                })
-            }
-        }
+    //const j = segments[i].contours[0].length;
+
+    // subsegment and segment index
+    //const [i, j] = [drawingInfo['segIndex'], drawingInfo['subSegIndex']];
+    ctx.lineWidth = 2;
+
+    // segments
+    //if (drawingInfo['haplyType'] == 0) {
+    ctx.strokeStyle = "blue";
+
+    if (segments[index].contours[0].length > 0) {
+        segments[index].contours[0].forEach((contour: { coordinates: any[]; }) => {
+            contour.coordinates.forEach((coord: any[]) => {
+                const pX = coord[0];
+                const pY = coord[1];
+                let [pointX, pointY] = imgToWorldFrame(pX, pY);
+                ctx.strokeRect(pointX, pointY, 1, 1);
+            });
+        });
     }
 
+    // if (segments[i].contours[0].length > 0) {
+
+    //     for (let j = 0; j < segments[i].contours[0].length; j++) {
+    //         segments[i].contours[0][j].coordinates.forEach((coord: any[]) => {
+    //             const pX = coord[0];
+    //             const pY = coord[1];
+    //             let [pointX, pointY] = imgToWorldFrame(pX, pY);
+    //             ctx.strokeRect(pointX, pointY, 1, 1);
+    //         })
+    //     }
+    // }
 }
 
 /**
@@ -177,9 +195,6 @@ function createCanvas(contentDiv: HTMLElement, width: number, height: number) {
 export async function processRendering(rendering: ImageRendering, graphic_url: string, container: HTMLElement, contentId: string) {
     let endEffector: canvasCircle;
     let border: canvasRectangle;
-    // end effector x/y coordinates
-    let posEE: Vector;
-    let deviceOrigin: Vector;
 
     // virtual end effector avatar offset
     let firstCall: boolean = true;
@@ -264,7 +279,6 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        console.log("in draw");
         updateAnimation(pos, endEffector, border, drawingInfo, segments, objects, ctx);
         window.requestAnimationFrame(draw);
     }
@@ -289,14 +303,14 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
         let n64port = await navigator.serial.requestPort();
         console.log("incoming", data);
 
+        getSegmentsFromData(data);
+
         // send all the rendering info
         worker.postMessage({
             renderingData: data
         });
 
-
         worker.addEventListener("message", function (msg) {
-            console.log("in the worker");
             // we've selected the COM port
             btn.style.visibility = 'hidden';
 
@@ -304,8 +318,6 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
             pos.x = msgdata.packet[0];
             pos.y = msgdata.packet[1];
             button = msgdata.packet[2];
-
-            console.log(pos);
 
             // only request to run draw() once
             if (firstCall) {
@@ -324,4 +336,19 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     //     sourceNode.stop();
     //     audioData.mode = AudioMode.Finished;
     // }
+}
+
+let segs: any[] = [];
+let objs: any[] = [];
+
+function getSegmentsFromData(data: any) {
+
+    let entities = data["entities"];
+    entities.forEach((entity: any) => {
+        if (entity.entityType === 'segment') {
+            segs.push(entity);
+        } else if (entity.entityType === 'object') {
+            objs.push(entity);
+        }
+    });
 }

@@ -124,8 +124,6 @@ self.addEventListener("message", async function (event) {
     // });
   }
 
-  console.log("in worker");
-
   /************ BEGIN SETUP CODE *****************/
   if (messageCount < 1) {
     messageCount++;
