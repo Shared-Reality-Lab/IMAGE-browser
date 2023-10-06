@@ -8,6 +8,7 @@ import * as worker from './worker';
 import browser from "webextension-polyfill";
 import { getAllStorageSyncData } from "../utils";
 import { Vector } from "../hAPI/libraries/Vector";
+import { startOscillator, stopOscillator, setPanPosition } from "./oscillator";
 
 // canvas dimensions for haptic rendering
 const canvasWidth = 800;
@@ -36,8 +37,19 @@ enum ButtonStatus {
 }
 
 buttonStatus: ButtonStatus;
-
 let canClick = true;
+
+// enum AudioOutput {
+//     Vibration = 2,
+//     Headphone = 3
+// }
+
+// let outputVibration: string;
+// let outputHeadphone: string;
+
+let insideRegion = false;
+
+const vib = new Audio('../../audio/noise.mp3');
 
 /**
  * Updates the canvas at each timeframe.
@@ -65,7 +77,6 @@ function updateAnimation(pos: Vector,
     // Calculate the new position based on joystick input
     loc.x += joystickInputX * joystickSensitivity;
     loc.y += joystickInputY * joystickSensitivity;
-
 
     // Ensure the circle stays within the canvas bounds
     loc.x = constrain(loc.x, 0, canvasWidth);
@@ -172,7 +183,15 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     let sourceNode: AudioBufferSourceNode | undefined;
     let currentAudioIndex: number = -2;
 
+    // get the audio output devices to switch between vibrations and headphones
+    // await navigator.mediaDevices.getUserMedia({ audio: true });
+    // let devices = await navigator.mediaDevices.enumerateDevices();
+    // const audioDevices = devices.filter((device) => device.kind === "audiooutput");
+    // outputVibration = audioDevices[AudioOutput.Vibration].deviceId;
+    // outputHeadphone = audioDevices[AudioOutput.Headphone].deviceId;
+
     function playPauseAudio(index: number, segmentOffset: number, segmentDuration: number) {
+
         if (index == currentAudioIndex && sourceNode) {
             /** Do not create a new audio context, just pause/play the current audio*/
             (sourceNode.playbackRate.value == 0) ? (sourceNode.playbackRate.value = 1) : (sourceNode.playbackRate.value = 0);
@@ -293,9 +312,39 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
                     break;
             }
 
-            //ray-casting
-            console.log(isInSegment(loc, segs[segmentIndex]));
+            // constantly get our location
+            // should be -1, 1 and not 1, -1, but I flipped the actual location of the actuators
+            insideRegion = isInSegment(loc, segs[segmentIndex]);
 
+            if (insideRegion) {
+                const spatialPosition = mapValue(loc.x, 0, canvasWidth, 1, -1);
+                setPanPosition(spatialPosition, 0, 0);
+                startOscillator();
+            } else {
+                stopOscillator();
+            }
+
+            //ray-casting
+            // if (isInSegment(loc, segs[segmentIndex])) {
+
+            //     // constantly get our location
+            //     // should be -1, 1 and not 1, -1, but I flipped the actual location of the actuators
+            //     const spatialPosition = mapValue(loc.x, 0, canvasWidth, 1, -1);
+            //     setPanPosition(spatialPosition, 0, 0);
+
+            //     // this only runs once
+            //     if (!insideRegion) {
+            //         vib.setSinkId(outputVibration)
+            //         startOscillator();
+            //         insideRegion = true;
+            //     }
+            // } else {
+            //     insideRegion = false;
+            //     try {
+            //         stopOscillator(); // Stops the oscillator
+            //     } catch (error) {
+            //     }
+            // }
         });
     });
 }
@@ -315,7 +364,7 @@ function getSegmentsFromData(data: any) {
 // prevent double taps
 function runFunc(func: any) {
     if (canClick) {
-        // handling the clcik
+        // handling the click
         //segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
         func();
 
@@ -354,4 +403,12 @@ function isInSegment(loc: Vector, segment: any): boolean {
         }
     });
     return inside;
+}
+
+function mapValue(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
+    // Ensure the input value is within the specified range
+    value = Math.min(Math.max(value, inMin), inMax);
+    // Calculate the mapped value
+    const mappedValue = ((value - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin;
+    return mappedValue;
 }
