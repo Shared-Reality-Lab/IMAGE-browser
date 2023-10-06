@@ -39,17 +39,9 @@ enum ButtonStatus {
 buttonStatus: ButtonStatus;
 let canClick = true;
 
-// enum AudioOutput {
-//     Vibration = 2,
-//     Headphone = 3
-// }
-
-// let outputVibration: string;
-// let outputHeadphone: string;
-
 let insideRegion = false;
 
-const vib = new Audio('../../audio/noise.mp3');
+const vib = new Audio('../../audio/wall.wav');
 
 /**
  * Updates the canvas at each timeframe.
@@ -324,6 +316,11 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
                 stopOscillator();
             }
 
+            if (touchingWall(loc, pos)) {
+                console.log("bump");
+                vib.play();
+            }
+
             //ray-casting
             // if (isInSegment(loc, segs[segmentIndex])) {
 
@@ -347,6 +344,31 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
             // }
         });
     });
+}
+
+function touchingWall(loc: Vector, speed: Vector): boolean {
+
+    console.log(speed.y);
+
+    //right wall
+    if (loc.x >= canvasWidth && speed.x > 0) {
+        return true;
+    }
+
+    //left wall
+    if (loc.x <= 0 && speed.x < 0) {
+        return true;
+    }
+
+    if (loc.y <= 0 && speed.y > 0) {
+        return true;
+    }
+
+    if (loc.y >= canvasHeight && speed.y < 0) {
+        return true;
+    }
+
+    return false;
 }
 
 function getSegmentsFromData(data: any) {
