@@ -3,12 +3,11 @@ import { canvasRectangle } from "../types/canvas-rectangle";
 import { ImageRendering } from "../types/response.schema";
 
 import * as infoUtils from '../info/info-utils';
-import * as worker from './worker';
 
 import browser from "webextension-polyfill";
-import { getAllStorageSyncData } from "../utils";
 import { Vector } from "../hAPI/libraries/Vector";
-import { startOscillator, stopOscillator, setPanPosition } from "./oscillator";
+import { SpatialAudioPlayer } from "./SpatialAudioPlayer"
+import * as utils from "./Utils";
 
 // canvas dimensions for haptic rendering
 const canvasWidth = 800;
@@ -19,8 +18,6 @@ let pos = new Vector(0, 0);
 let button: number;
 
 let segmentIndex = 0;
-
-
 let segs: any[] = [];
 let objs: any[] = [];
 
@@ -37,11 +34,12 @@ enum ButtonStatus {
 }
 
 buttonStatus: ButtonStatus;
+
 let canClick = true;
-
 let insideRegion = false;
+const vibrationId = 2;
 
-const vib = new Audio('../../audio/wall.wav');
+const wall = new Audio('../../audio/wall.wav');
 
 /**
  * Updates the canvas at each timeframe.
@@ -144,7 +142,7 @@ function createCanvas(contentDiv: HTMLElement, width: number, height: number) {
     return canvas;
 }
 
-export async function processRendering(rendering: ImageRendering, graphic_url: string, container: HTMLElement, contentId: string) {
+export async function processRendering(rendering: ImageRendering, graphicUrl: string, container: HTMLElement, contentId: string) {
     let endEffector: canvasCircle;
     let border: canvasRectangle;
 
@@ -170,20 +168,14 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     contentDiv.id = contentId;
     div.append(contentDiv);
 
-    let currentOffset: number | undefined;
-    let currentDuration: number | undefined;
     let sourceNode: AudioBufferSourceNode | undefined;
     let currentAudioIndex: number = -2;
+    let audioOutVibration = new SpatialAudioPlayer(vibrationId);
+    audioOutVibration.setOscillator();
 
-    // get the audio output devices to switch between vibrations and headphones
-    // await navigator.mediaDevices.getUserMedia({ audio: true });
-    // let devices = await navigator.mediaDevices.enumerateDevices();
-    // const audioDevices = devices.filter((device) => device.kind === "audiooutput");
-    // outputVibration = audioDevices[AudioOutput.Vibration].deviceId;
-    // outputHeadphone = audioDevices[AudioOutput.Headphone].deviceId;
+    let audioOutHeadphone = new SpatialAudioPlayer();
 
     function playPauseAudio(index: number, segmentOffset: number, segmentDuration: number) {
-
         if (index == currentAudioIndex && sourceNode) {
             /** Do not create a new audio context, just pause/play the current audio*/
             (sourceNode.playbackRate.value == 0) ? (sourceNode.playbackRate.value = 1) : (sourceNode.playbackRate.value = 0);
@@ -217,9 +209,8 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
         throw new Error('Failed to get 2D context');
     }
     const ctx: CanvasRenderingContext2D = res;
-
     const img = new Image();
-    img.src = graphic_url;
+    img.src = graphicUrl;
 
     border = {
         draw: function () {
@@ -257,8 +248,6 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
     btn.addEventListener("click", async _ => {
 
         let n64port = await navigator.serial.requestPort();
-        console.log("incoming", data);
-
         getSegmentsFromData(data);
 
         // send all the rendering info
@@ -275,95 +264,113 @@ export async function processRendering(rendering: ImageRendering, graphic_url: s
             pos.y = msgdata.packet[1];
             button = msgdata.packet[2];
 
+            const spatialXPosition = utils.mapValue(loc.x, 0, canvasWidth, 1, -1);
+            const spatialYPosition = utils.mapValue(loc.y, 0, canvasHeight, 1, -1);
+
+            // constantly get our normalized location
+            const normalizedX = loc.x / canvasWidth;
+            const normalizedY = loc.y / canvasHeight;
+            const normalizedVec = new Vector(normalizedX, normalizedY);
+
+            // constantly update the pan position
+            audioOutHeadphone.setPanPosition(spatialXPosition, spatialYPosition, 0);
+            audioOutVibration.setPanPosition(spatialXPosition, spatialYPosition, 0);
+
+            // if we are inside a segment
+            insideRegion = utils.isInSegment(normalizedVec, segs[segmentIndex]);
+
             // only request to run draw() once
             if (firstCall) {
                 window.requestAnimationFrame(draw);
                 firstCall = false;
             }
 
-            // handle audio/button events here
+            // handle button events here
             switch (button) {
                 case ButtonStatus.BUTTON_START:
                     endEffector.color = 'red';
                     // fix playback issue
-                    runFunc(playPauseAudio(segmentIndex, segs[segmentIndex].offset, segs[segmentIndex].duration));
+                    runFunc(playPauseAudio(segmentIndex, segs[segmentIndex].offset, segs[segmentIndex].duration), 1000);
                     break;
                 case ButtonStatus.BUTTON_GRAY:
                     endEffector.color = 'gray';
                     break;
                 case ButtonStatus.BUTTON_GREEN:
                     endEffector.color = 'green';
-                    runFunc(cycleSegment);
+                    runFunc(cycleSegment, 1000);
                     break;
                 case ButtonStatus.BUTTON_BLUE:
+                    //console.log("gggg");//
                     endEffector.color = 'blue';
-                    //snd.play();
+                    // audioOutHeadphone.setAudioFile('../../audio/water.mp3');
+                    if (insideRegion) {
+                        runFunc(function () {
+                            audioOutHeadphone.setAudioFile('../../audio/water.mp3');
+                            audioOutHeadphone.startAudio();
+                        }, 600);
+                    }
                     break;
                 case ButtonStatus.NONE:
                     endEffector.color = 'white';
                     break;
             }
 
-            // constantly get our location
-            // should be -1, 1 and not 1, -1, but I flipped the actual location of the actuators
-            insideRegion = isInSegment(loc, segs[segmentIndex]);
-
+            // vibrate if we're inside a region
             if (insideRegion) {
-                const spatialPosition = mapValue(loc.x, 0, canvasWidth, 1, -1);
-                setPanPosition(spatialPosition, 0, 0);
-                startOscillator();
+                audioOutVibration.startAudio();
             } else {
-                stopOscillator();
+                audioOutVibration.stopAudio();
             }
 
+            // feedback when colliding with wall
             if (touchingWall(loc, pos)) {
-                console.log("bump");
-                vib.play();
+                wall.play();
             }
-
-            //ray-casting
-            // if (isInSegment(loc, segs[segmentIndex])) {
-
-            //     // constantly get our location
-            //     // should be -1, 1 and not 1, -1, but I flipped the actual location of the actuators
-            //     const spatialPosition = mapValue(loc.x, 0, canvasWidth, 1, -1);
-            //     setPanPosition(spatialPosition, 0, 0);
-
-            //     // this only runs once
-            //     if (!insideRegion) {
-            //         vib.setSinkId(outputVibration)
-            //         startOscillator();
-            //         insideRegion = true;
-            //     }
-            // } else {
-            //     insideRegion = false;
-            //     try {
-            //         stopOscillator(); // Stops the oscillator
-            //     } catch (error) {
-            //     }
-            // }
         });
     });
 }
 
+// function getAudioSound() {
+//     const audioContext = new window.AudioContext();
+//     const sound = new Audio('../../audio/water.mp3');
+//     const panner = audioContext.createPanner();
+//     panner.panningModel = 'HRTF';
+//     const audioSource = audioContext.createMediaElementSource(sound);
+//     audioSource.connect(panner);
+//     panner.connect(audioContext.destination);
+// }
+
+// let hasSoundStarted = false;
+// function playSound(sound: any, spatialXPosition: number, spatialYPosition: number) {
+//     if (isInSegment(loc, segs[segmentIndex])) {
+
+//         .setPosition(spatialXPosition, spatialYPosition, 0);
+
+//         // Connect the audio element to the audio context
+
+//         sound.play();
+
+//     }
+// }
+
 function touchingWall(loc: Vector, speed: Vector): boolean {
 
-    console.log(speed.y);
-
-    //right wall
+    // right wall
     if (loc.x >= canvasWidth && speed.x > 0) {
         return true;
     }
 
-    //left wall
+    // left wall
     if (loc.x <= 0 && speed.x < 0) {
         return true;
     }
 
+    // top wall
     if (loc.y <= 0 && speed.y > 0) {
         return true;
     }
 
+    // bottom wall
     if (loc.y >= canvasHeight && speed.y < 0) {
         return true;
     }
@@ -384,7 +391,7 @@ function getSegmentsFromData(data: any) {
 }
 
 // prevent double taps
-function runFunc(func: any) {
+function runFunc(func: any, timeout: number) {
     if (canClick) {
         // handling the click
         //segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
@@ -396,41 +403,11 @@ function runFunc(func: any) {
         // set a timeout to re-enable clicking after delay
         setTimeout(() => {
             canClick = true;
-        }, 1000);
+        }, timeout);
     }
 
 }
 
 function cycleSegment() {
     segmentIndex = segmentIndex >= (segs.length - 1) ? 0 : segmentIndex + 1;
-}
-
-function isInSegment(loc: Vector, segment: any): boolean {
-    const x = loc.x / canvasWidth;
-    const y = loc.y / canvasHeight;
-    let inside = false;
-
-    segment.contours[0].forEach((contour: { coordinates: any[]; }) => {
-        for (let i = 0, j = contour.coordinates.length - 1; i < contour.coordinates.length; j = i++) {
-            const xi = contour.coordinates[i][0];
-            const yi = contour.coordinates[i][1];
-            const xj = contour.coordinates[j][0];
-            const yj = contour.coordinates[j][1];
-
-            const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-
-            if (intersect) {
-                inside = !inside;
-            }
-        }
-    });
-    return inside;
-}
-
-function mapValue(value: number, inMin: number, inMax: number, outMin: number, outMax: number) {
-    // Ensure the input value is within the specified range
-    value = Math.min(Math.max(value, inMin), inMax);
-    // Calculate the mapped value
-    const mappedValue = ((value - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin;
-    return mappedValue;
 }
