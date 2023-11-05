@@ -269,5 +269,9 @@
     "infoFooterAnythingElse" : {
         "message": "For anything else, you can also email us at ",
         "description": "Feedback message at info footer, before email address"
+    },
+    "infoRenderingsTitle" : {
+        "message": "IMAGE Extension Renderings",
+        "description": "Title for Renderings"
     }
 }
