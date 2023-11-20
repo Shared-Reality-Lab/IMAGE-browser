@@ -37,6 +37,7 @@ function processCharts() {
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
         let chartButton = document.createElement("button");
+        chartButton.type = "button";
         // Set button text based on language (this is a workaround)
         let chartButtonText;
         if (navigator.language === 'fr')
@@ -85,6 +86,7 @@ function processGraphics() {
     }
 
     let button = document.createElement("button");
+    button.type = "button";
     button.innerText = "Interpret graphic with IMAGE";
     /* Make the button hidden depending on the config */
     if (!buttons) {
