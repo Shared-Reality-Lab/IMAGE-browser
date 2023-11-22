@@ -91,7 +91,7 @@ While using the IMAGE browser extension on Safari, please be aware of the follow
 
 - The extension does not produce any sound when an IMAGE request is sent.
 - The feedback link is missing when an IMAGE result is received for maps and charts.
-- The extension may become non-responsive and require a manual restart. This behavious is usually noticed when Safari is restarted in iOS.
+- The extension will become unresponsive and require a manual restart everytime Safari is restarted.
 - On the Feedback page, selecting "(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above" may cause the "open form" button to not work as intended.
 - Connecting haptic devices is not supported.
 
