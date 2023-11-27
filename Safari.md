@@ -1,9 +1,7 @@
 # Building the IMAGE Browser Extension for Safari
 
 These instructions are for manually building and installing the the extension for Safari on either OSX or iOS.
-Note that builds are currently [automated via github actions](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions), including [building extensions](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions) for both iOS and OSX.
-For the iOS extension, this is only built automatically in order to catch build errors, but the resulting artifact is not installable by an end user onto an iPhone.
-To install the iOS extension, you will need to follow the below steps, and install it directly onto the target iPhone directly from within Xcode.
+To install the extension on either iOS or desktop Safari, you will need to follow the below steps, and install it directly onto the target iPhone or browser directly from within Xcode.
 
 ## Prerequisites
 Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites:
@@ -28,6 +26,7 @@ To build and run the IMAGE browser extension, follow these steps:
    ```bash
    npm run pack:prod
    ```
+   Note that this is available as an artifact from [automated via github actions](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions).
 
 3. **Convert to Safari App Extension:** To convert the extension into a Safari App Extension, run the following command, replacing `/path/to/extension/build` with the actual path to your extension build:
    ```bash
