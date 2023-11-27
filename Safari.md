@@ -14,7 +14,7 @@ Before you start building the IMAGE browser extension for Safari, ensure that yo
 - [**Node.js**](https://nodejs.org/en/)
 - [**npm**](https://www.npmjs.com/)
 
-## Building the Extension
+## Building the Extension (common to iOS and desktop Safari)
 To build and run the IMAGE browser extension, follow these steps:
 
 1. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies using the following commands
@@ -36,7 +36,7 @@ To build and run the IMAGE browser extension, follow these steps:
 
 4. **Open in Xcode:** Open the generated `IMAGE Extension.xcodeproj` file in Xcode.
 
-## Configuration for macOS
+## Configuration for macOS (not necessary for iOS)
 For macOS, you need to perform the following steps:
 
 1. **Enable Develop Menu in Safari:**
@@ -54,7 +54,7 @@ For macOS, you need to perform the following steps:
    - Go to Safari > Preferences > Extensions.
    - Check the box next to "IMAGE Extension" to enable it.
 
-## Configuration for iOS
+## Configuration for iOS (not necessary for desktop Safari)
 For iOS, follow these additional steps:
 
 1. **Connect iOS Device:**
@@ -91,9 +91,9 @@ While using the IMAGE browser extension on Safari, please be aware of the follow
 
 - The extension does not produce any sound when an IMAGE request is sent.
 - The feedback link is missing when an IMAGE result is received for maps and charts.
-- The extension will become unresponsive and require a manual restart everytime Safari is restarted.
 - On the Feedback page, selecting "(Optional) I consent to the IMAGE project saving this request and the responses associated with it under the conditions described above" may cause the "open form" button to not work as intended.
 - Connecting haptic devices is not supported.
+- iOS only: The extension will become unresponsive and require a manual restart everytime Safari is restarted.
 
 ## Issues with Submitting iOS Safari Extension to App Store:
 In addition to the above known issues, the following issues will need to be handled specifically for submitting the iOS version of the extension to the App Store, in order to make it widely available:
