@@ -478,21 +478,7 @@ export async function newProcessHapticRendering(rendering: ImageRendering, graph
 
     contentDiv.id = contentId;
     let btn = infoUtils.createButton(contentDiv, "btn", "Connect to Haply");
-
-    btn.addEventListener("click", async _ => {
-        // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
-
-        // only show the Arduino Zero
-        const filters = [
-            { usbVendorId: 0x2341, usbProductId: 0x804D }
-        ];
-
-        let hapticPort = await navigator.serial.requestPort({filters});
-
-        worker.postMessage("test");
-
-    });
-
+    const worker = new Worker(browser.runtime.getURL("./hAPI/four_dots_worker.js"), { type: "module"});
     div.append(contentDiv);
 
     // creating canvas
@@ -540,6 +526,8 @@ export async function newProcessHapticRendering(rendering: ImageRendering, graph
 
     // Draw haptic Swatches
     var coords = [ [100, 100], [700,100], [700,400] , [100,400]];
+    // var coords = [ [700,100]];
+
     var hapticCoords = [[-0.02, 0.06],[0.02,0.06],[-0.02, 0.10],[0.02,0.10]];
 
 
@@ -562,25 +550,40 @@ export async function newProcessHapticRendering(rendering: ImageRendering, graph
     const img = new Image();
 
 
-    const worker = new Worker(browser.runtime.getURL("./hAPI/four_dots_worker.js"), { type: "module"});
 
     let num = 0;
-    worker.addEventListener("message", function (msg) {
-        if(!num){
-            console.log(msg.data);
-            num++;
-        }
-        //console.log("message received from worker", msg);
-        //retrieve data from worker.js needed for update_animation()
-        //angles.x = msg.data[0];
-        //angles.y = msg.data[1];
-        posEE.x = msg.data[2];
-        posEE.y = msg.data[3];
-        window.requestAnimationFrame(drawNew);
+    btn.addEventListener("click", async _ => {
+        //const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
 
-        // if(firstCall){
-        //     window.requestAnimationFrame(drawNew);
-        //     firstCall = false;
-        // }
-      });
+        // only show the Arduino Zero
+        const filters = [
+            { usbVendorId: 0x2341, usbProductId: 0x804D }
+        ];
+
+        let hapticPort = await navigator.serial.requestPort({filters});
+
+        worker.postMessage("test");
+        worker.addEventListener("message", function (msg) {
+            if(!num){
+                console.log(msg.data);
+                num++;
+            }
+            //console.log("message received from worker", msg);
+            //retrieve data from worker.js needed for update_animation()
+            //angles.x = msg.data[0];
+            //angles.y = msg.data[1];
+            posEE.x = msg.data[2];
+            posEE.y = msg.data[3];
+            window.requestAnimationFrame(drawNew);
+    
+            // if(firstCall){
+            //     window.requestAnimationFrame(drawNew);
+            //     firstCall = false;
+            // }
+          });
+
+    });
+
+
+    
 }

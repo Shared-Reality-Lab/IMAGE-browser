@@ -61,11 +61,11 @@ var swatchRadius = 0.01
 // var swatch4 = new HapticSwatch(0.02,0.10, swatchRadius, {k:400, mu:0, maxAL: 0, maxAH: 0 });
 
 //point for (100,100)
-var swatch1 = new HapticSwatch(0.0806,0.0809, swatchRadius, {k:0, mu:0, maxAL: 0, maxAH: 10 });
+var swatch1 = new HapticSwatch(0.0806,0.0809, swatchRadius, {k:0, mu:0, maxAL: 5, maxAH: 10 });
 //point for (700,100)
 var swatch2 = new HapticSwatch(-0.0193, 0.0809, swatchRadius, {k:0, mu:0.7, maxAL: 0, maxAH: 0 });
 // point for (700,400)
-var swatch3 = new HapticSwatch(-0.0193 ,0.1212, swatchRadius, {k:0, mu:0, maxAL: 10, maxAH: 0 });
+var swatch3 = new HapticSwatch(-0.0193 ,0.1212, swatchRadius, {k:0, mu:0, maxAL: 10, maxAH: 5 });
 // point for (100,400)
 var swatch4 = new HapticSwatch(0.086, 0.1212, swatchRadius, {k:400, mu:0, maxAL: 0, maxAH: 0 });
 
@@ -184,24 +184,28 @@ self.addEventListener("message", async function (e) {
         // Spring Force
         rDiff.setMag(swatch.radius - rDiff.mag());
         // add to total force
-        force.set(fEE.add(rDiff.multiply(swatch.k)));
+        force.set(force.add(rDiff.multiply(swatch.k)));
         var vTh = 0.1;
         var mass = 0.25; // kg
         var fnorm = mass * 9.81;
         // Friction
         var b = fnorm * swatch.mu / vTh;
         if(speed < vTh){
-          force.set(fEE.add(((velEE.clone()).multiply(-b))));
+          //console.log("speed less")
+          force.set(force.add(((velEE.clone()).multiply(-b))));
         } else {
+          //console.log("speed more")
           var normalizedVel = (velEE.clone()).normalize();
-          force.set(fEE.add(normalizedVel.multiply(-swatch.mu * fnorm)));
+          force.set(force.add(normalizedVel.multiply(-swatch.mu * fnorm)));
         }
         // // Texture
         var maxV = vTh;
         // fText Magnitude
         var fTextMagnitude = (Math.min(swatch.maxAH, speed * swatch.maxAH / maxV) * Math.sin(textureConst * 150 * samp)) +
                              (Math.min(swatch.maxAL, speed * swatch.maxAL / maxV) * Math.sin(textureConst * 25 * samp))
-        fText.set((velEE.clone()).rotateby90Deg().setMag(fTextMagnitude));
+        let vEEClone = (velEE.clone()).rotateby90Deg();
+        let fTextForce = vEEClone.setMag(fTextMagnitude);
+        fText.set(fTextForce);
         force.set(force.add(fText));
         
       } else {

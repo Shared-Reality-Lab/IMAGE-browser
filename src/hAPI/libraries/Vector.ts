@@ -111,7 +111,8 @@ class Vector {
 
   // /* Rotate a 2D vector by 90 degrees*/
   rotateby90Deg (){
-    return new Vector(-this.y, this.x,);
+    //console.log("rotate called");
+    return new Vector(-this.y, this.x);
   }
   
   // // Set magnitude - code used from p5js
