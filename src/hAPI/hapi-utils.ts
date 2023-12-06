@@ -12,8 +12,8 @@ import { BreakKey } from "./worker";
 import { getAllStorageSyncData } from "../utils";
 
 // canvas dimensions for haptic rendering
-const canvasWidth = 800;
-const canvasHeight = 500;
+const canvasWidth = 1200;
+const canvasHeight = 1200;
 
 const pixelsPerMeter = 6000;
 
@@ -414,4 +414,173 @@ export async function processHapticsRendering(rendering: ImageRendering, graphic
         sourceNode.stop();
         audioData.mode = AudioMode.Finished;
     }
+}
+let num = 0;
+
+function updateAnimationNew(posEE: Vector,
+    endEffector: canvasCircle,
+    deviceOrigin: Vector,
+    context: CanvasRenderingContext2D){
+        let xE = pixelsPerMeter * (-posEE.x + 0.014);
+        let yE = pixelsPerMeter * ((posEE.y / 0.805) - 0.0311);
+    
+        // set position of virtual avatar in canvas
+    endEffector.x = deviceOrigin.x + xE + 100;
+    endEffector.y = deviceOrigin.y + yE - 367;
+
+    if(!num){
+        console.log("First Call");
+        console.log("posEE", posEE);
+        console.log("xE",xE);
+        console.log("yE",yE);
+        console.log("deviceOrigin", deviceOrigin);
+        console.log("endEffector", endEffector);
+        num++;
+    }
+    // drawing bounding boxes and centroids
+    // drawBoundaries(drawingInfo, segments, objects, ctx);
+    // border.draw();
+
+    //scaling end effector position to canvas
+    // let ppm = 6000;
+    // let xE = (ppm * posEE.x);
+    // let yE = (ppm * posEE.y);
+
+    // // set position of virtual avatar in canvas
+    // endEffector.x = deviceOrigin.x + xE + 200;
+    // endEffector.y = deviceOrigin.y + yE;
+    endEffector.draw();
+
+    // var coords = [ [100, 100], [700,100], [700,400] , [100,400]];
+    // context.beginPath();
+    // for(var i = 0; i < coords.length; i++){
+    //     context.fillStyle = 'black';
+    //     context.moveTo(coords[i][0], coords[i][1]);
+    //     context.arc(coords[i][0], coords[i][1], 50, 0, Math.PI * 2, true);
+    // }
+   
+}
+
+export async function newProcessHapticRendering(rendering: ImageRendering, graphic_url: string, container: HTMLElement, contentId : string){
+    let endEffector: canvasCircle;
+    let border: canvasRectangle;
+    // end effector x/y coordinates
+    let posEE : Vector = { x: canvasWidth/2, y: canvasHeight};
+    let deviceOrigin: Vector = { x: 800/2, y: 0};
+    // virtual end effector avatar offset
+    let firstCall: boolean = true;
+    let div = document.createElement("div");
+    div.classList.add("row");
+    container.append(div);
+    let contentDiv = document.createElement("div");
+    contentDiv.classList.add("collapse");
+    contentDiv.classList.add("rendering-content");
+
+    contentDiv.id = contentId;
+    let btn = infoUtils.createButton(contentDiv, "btn", "Connect to Haply");
+
+    btn.addEventListener("click", async _ => {
+        // const worker = new Worker(browser.runtime.getURL("./info/worker.js"), { type: "module" });
+
+        // only show the Arduino Zero
+        const filters = [
+            { usbVendorId: 0x2341, usbProductId: 0x804D }
+        ];
+
+        let hapticPort = await navigator.serial.requestPort({filters});
+
+        worker.postMessage("test");
+
+    });
+
+    div.append(contentDiv);
+
+    // creating canvas
+    const canvas = createCanvas(contentDiv, canvasWidth, canvasHeight);
+    const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+    if (!context || !(context instanceof CanvasRenderingContext2D)) {
+        throw new Error('Failed to get 2D context');
+    }
+
+    canvas.addEventListener("mousedown", function(event) 
+    {
+            let rect = canvas.getBoundingClientRect(); 
+            let x = event.clientX - rect.left; 
+            let y = event.clientY - rect.top; 
+            console.log("Coordinate x: " + x,  
+                        "Coordinate y: " + y); 
+        
+    }); 
+    // world resolution properties
+    const worldPixelWidth = 800;
+    deviceOrigin = {
+        x: worldPixelWidth / 2,
+        y: 0
+    };
+
+    // draw end effector
+    endEffector = {
+        x: canvasWidth / 2,
+        y: canvasHeight / 2,
+        vx: 5,
+        vy: 2,
+        radius: 8,
+        color: 'brown',
+        draw: function () {
+            //console.log("End Effector draw called", this.x, this.y);
+            context.beginPath();
+            context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+            context.closePath();
+            context.fillStyle = this.color;
+            context.fill();
+        }
+
+    };
+    //endEffector.draw();
+
+    // Draw haptic Swatches
+    var coords = [ [100, 100], [700,100], [700,400] , [100,400]];
+    var hapticCoords = [[-0.02, 0.06],[0.02,0.06],[-0.02, 0.10],[0.02,0.10]];
+
+
+
+    context.beginPath();
+    for(var i = 0; i < coords.length; i++){
+        context.fillStyle = 'black';
+        context.moveTo(coords[i][0], coords[i][1]);
+        context.arc(coords[i][0], coords[i][1], 50, 0, Math.PI * 2, true);
+    }
+
+    function drawNew() {
+        //context.clearRect(0, 0, canvas.width, canvas.height);
+        // ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        updateAnimationNew(posEE, endEffector, deviceOrigin, context);
+        window.requestAnimationFrame(drawNew);
+    }
+
+    context.fill();
+    const img = new Image();
+
+
+    const worker = new Worker(browser.runtime.getURL("./hAPI/four_dots_worker.js"), { type: "module"});
+
+    let num = 0;
+    worker.addEventListener("message", function (msg) {
+        if(!num){
+            console.log(msg.data);
+            num++;
+        }
+        //console.log("message received from worker", msg);
+        //retrieve data from worker.js needed for update_animation()
+        //angles.x = msg.data[0];
+        //angles.y = msg.data[1];
+        posEE.x = msg.data[2];
+        posEE.y = msg.data[3];
+        window.requestAnimationFrame(drawNew);
+
+        // if(firstCall){
+        //     window.requestAnimationFrame(drawNew);
+        //     firstCall = false;
+        // }
+      });
 }

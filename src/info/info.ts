@@ -193,7 +193,8 @@ port.onMessage.addListener(async (message) => {
         }
 
         if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
-            hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
+            hapiUtils.newProcessHapticRendering(rendering, graphic_url, container, contentId);
+            // hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
         }
 
         if(rendering["type_id"] === RENDERERS.svgLayers){

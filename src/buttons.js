@@ -37,7 +37,6 @@ function processCharts() {
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
         let chartButton = document.createElement("button");
-        chartButton.type = "button";
         // Set button text based on language (this is a workaround)
         let chartButtonText;
         if (navigator.language === 'fr')
@@ -79,14 +78,7 @@ function processGraphics() {
   let images = document.getElementsByTagName("img");
   /** add a button below each image - visible to screen reader only */
   for (let image of images) {
-
-    // ignore detected images with no src attribute, e.g., on Overleaf
-    if (!image.hasAttribute("src")) {
-      continue;
-    }
-
     let button = document.createElement("button");
-    button.type = "button";
     button.innerText = "Interpret graphic with IMAGE";
     /* Make the button hidden depending on the config */
     if (!buttons) {

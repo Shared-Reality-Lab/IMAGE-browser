@@ -58,6 +58,7 @@
             "firstLaunch/*",
             "maps/maps-utils.ts",
             "hAPI/hapi-utils.ts",
+            "hAPI/four_dots_worker.js",
             "hAPI/worker.ts",
             "errors/*.html",
             "progressBar/progressBar.html",

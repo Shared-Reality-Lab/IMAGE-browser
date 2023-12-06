@@ -103,6 +103,22 @@ class Vector {
     this.y = y || 0;
     return this;
   }
+
+  // Multiply a vector by a scalar
+  mult (n:number){
+    return new Vector(n * this.x, n * this.y);
+  };
+
+  // /* Rotate a 2D vector by 90 degrees*/
+  rotateby90Deg (){
+    return new Vector(-this.y, this.x,);
+  }
+  
+  // // Set magnitude - code used from p5js
+  // // https://github.com/processing/p5.js/blob/main/src/math/p5.Vector.js#L1521
+  setMag (n:number){
+    return this.normalize().mult(n);
+  }
   init(x: number, y: number) {
     this.x = x; this.y = y;
     return this;
