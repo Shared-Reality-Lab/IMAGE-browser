@@ -61,11 +61,11 @@ var swatchRadius = 0.01
 // var swatch4 = new HapticSwatch(0.02,0.10, swatchRadius, {k:400, mu:0, maxAL: 0, maxAH: 0 });
 
 //point for (100,100)
-var swatch1 = new HapticSwatch(0.0806,0.0809, swatchRadius, {k:0, mu:0, maxAL: 5, maxAH: 10 });
+var swatch1 = new HapticSwatch(0.0806,0.0809, swatchRadius, {k:0, mu:0, maxAL: 0, maxAH: 10 });
 //point for (700,100)
 var swatch2 = new HapticSwatch(-0.0193, 0.0809, swatchRadius, {k:0, mu:0.7, maxAL: 0, maxAH: 0 });
 // point for (700,400)
-var swatch3 = new HapticSwatch(-0.0193 ,0.1212, swatchRadius, {k:0, mu:0, maxAL: 10, maxAH: 5 });
+var swatch3 = new HapticSwatch(-0.0193 ,0.1212, swatchRadius, {k:0, mu:0, maxAL: 10, maxAH: 0 });
 // point for (100,400)
 var swatch4 = new HapticSwatch(0.086, 0.1212, swatchRadius, {k:400, mu:0, maxAL: 0, maxAH: 0 });
 
@@ -103,8 +103,8 @@ var haplyBoard;
 var speed = 0;
 var maxSpeed = 0;
 
-var targetRate = 1000;
-var textureConst = 2*Math.PI;
+var targetRate = 2000;
+var textureConst = (2*Math.PI)/targetRate;
 var samp = 0;
 
 self.addEventListener("message", async function (e) {
@@ -203,9 +203,10 @@ self.addEventListener("message", async function (e) {
         // fText Magnitude
         var fTextMagnitude = (Math.min(swatch.maxAH, speed * swatch.maxAH / maxV) * Math.sin(textureConst * 150 * samp)) +
                              (Math.min(swatch.maxAL, speed * swatch.maxAL / maxV) * Math.sin(textureConst * 25 * samp))
-        let vEEClone = (velEE.clone()).rotateby90Deg();
-        let fTextForce = vEEClone.setMag(fTextMagnitude);
-        fText.set(fTextForce);
+        let vEEClone = velEE.clone();
+        vEEClone = vEEClone.rotate(Math.PI/2);
+        vEEClone.setMag(fTextMagnitude);
+        fText.set(vEEClone);
         force.set(force.add(fText));
         
       } else {

@@ -115,6 +115,16 @@ class Vector {
     return new Vector(-this.y, this.x);
   }
   
+  rotate(angle: number){
+    //console.log("rotate called", angle);
+    let existingHeading = Math.atan2(this.y, this.x);
+    let newHeading = existingHeading + angle;
+    //if (this.isPInst) newHeading = this._toRadians(newHeading);
+    const mag = this.mag();
+    this.x = Math.cos(newHeading) * mag;
+    this.y = Math.sin(newHeading) * mag;
+    return new Vector(this.x,this.y);
+  }
   // // Set magnitude - code used from p5js
   // // https://github.com/processing/p5.js/blob/main/src/math/p5.Vector.js#L1521
   setMag (n:number){

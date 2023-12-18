@@ -526,6 +526,8 @@ export async function newProcessHapticRendering(rendering: ImageRendering, graph
 
     // Draw haptic Swatches
     var coords = [ [100, 100], [700,100], [700,400] , [100,400]];
+    // var coords = [ [700,100], [100,400]];
+
     // var coords = [ [700,100]];
 
     var hapticCoords = [[-0.02, 0.06],[0.02,0.06],[-0.02, 0.10],[0.02,0.10]];
