@@ -1,44 +1,43 @@
-# Building the IMAGE Browser Extension for Safari
+# Building and running the IMAGE Browser Extension for Safari on iOS or macOS
 
 These instructions are for manually building and installing the the extension for Safari on either OSX or iOS.
-To install the extension on either iOS or desktop Safari, you will need to follow the below steps, and install it directly onto the target iPhone or browser directly from within Xcode.</p>
-You can also download the xcode project from the [automated github action page.](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions/workflows/ios-automate.yaml) 
+Eventually, we hope to have an end-user Safari extension that can be loaded via the App Store, but technical issues listed at the bottom of this page currently prevent this.
+For now, to install the extension on either iOS or desktop Safari, you will need to install it directly onto the target iPhone or macOS Safari browser directly from within Xcode, and for this, you need to convert the Chrome extension to an Xcode project.
+
+## Convert the Chrome Extension to obtain an Xcode project (common to iOS and macOS Safari)
+The easiest way to do this is to use the automatically built Xcode project that contains an already converted extension, available from the [automated github action page](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions/workflows/ios-automate.yaml).
 To do this, click on the latest run, and then click on the "Artifacts" tab. Download the "xcode-project" artifact, and then open the xcode project in Xcode. You can then follow the instructions below to install the extension on your device.
+Once you have the Xcode project downloaded, you can skip to the next section.
 
-## Prerequisites
-Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites:
+If you instead want to build the Xcode project from scratch:
 
-- **macOS**
-- **Xcode**
-- **Safari**
+1. Before you start building the IMAGE browser extension for Safari, ensure that you have the following prerequisites:
 - [**Node.js**](https://nodejs.org/en/)
 - [**npm**](https://www.npmjs.com/)
 
-## Building the Extension (common to iOS and desktop Safari)
-To build and run the IMAGE browser extension, follow these steps:
-
-1. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies using the following commands
+2. **Clone the Repository:** Start by cloning the repository and installing the necessary dependencies using the following commands
    ```bash
    git clone https://github.com/Shared-Reality-Lab/IMAGE-browser.git
    cd IMAGE-browser
    npm install
    ```
 
-2. **Build the Extension:** Use the following command to build the extension in the root directory of the repository:
+3. **Build the Extension:** Use the following command to build the extension in the root directory of the repository:
    ```bash
    npm run pack:prod
    ```
 
-3. **Convert to Safari App Extension:** To convert the extension into a Safari App Extension, run the following command, replacing `/path/to/extension/build` with the actual path to your extension build:
+4. **Convert to Safari App Extension:** To convert the extension into a Safari App Extension, run the following command, replacing `/path/to/extension/build` with the actual path to your extension build:
    ```bash
    xcrun safari-web-extension-converter /path/to/extension/build
    ```
-   Note that this is available as an artifact from [automated via github actions](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions/workflows/ios-automate.yaml).
+   
 
-4. **Open in Xcode:** Open the generated `IMAGE Extension.xcodeproj` file in Xcode.
+## Load the Xcode project and run the extension
+Whether you obtained it by downloading it from the [automated github action page](https://github.com/Shared-Reality-Lab/IMAGE-browser/actions/workflows/ios-automate.yaml), or built it yourself using the above steps, open the generated `IMAGE Extension.xcodeproj` file in Xcode.
+You can now install it in either macOS Safari.
 
-## Configuration for macOS (not necessary for iOS)
-For macOS, you need to perform the following steps:
+### Configuration for macOS Safari (not necessary for iOS Safari)
 
 1. **Enable Develop Menu in Safari:**
    - Go to Safari > Preferences > Advanced.
@@ -55,8 +54,7 @@ For macOS, you need to perform the following steps:
    - Go to Safari > Preferences > Extensions.
    - Check the box next to "IMAGE Extension" to enable it.
 
-## Configuration for iOS (not necessary for desktop Safari)
-For iOS, follow these additional steps:
+### Configuration for iOS Safari (not necessary for macOS Safari)
 
 1. **Connect iOS Device:**
    - Connect your iOS device to your Mac.
