@@ -1,4 +1,4 @@
-name: Convert to Safari Extension and Save Xcode Project
+name: Xcode Project Artifact
 on:
   push:
     branches:
