@@ -2,7 +2,7 @@ name: Xcode Project Artifact
 on:
   push:
     branches:
-      - ios-automation
+      - main
 
 jobs:
   build:
