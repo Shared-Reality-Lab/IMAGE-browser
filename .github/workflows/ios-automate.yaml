@@ -2,7 +2,7 @@ name: Convert to Safari Extension and Save Xcode Project
 on:
   push:
     branches:
-      - main
+      - ios-automation
 
 jobs:
   build:
@@ -22,3 +22,12 @@ jobs:
         
       - name: Build Chrome extension
         run: npm run pack:test
+
+      - name: Convert to Safari extension
+        run: xcrun safari-web-extension-converter ./build-chrome
+      
+      - name: Upload Xcode project
+        uses: actions/upload-artifact@v2
+        with:
+          name: xcode-project
+          path: "IMAGE Extension (Test)"
