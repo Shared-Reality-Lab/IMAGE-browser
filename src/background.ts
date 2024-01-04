@@ -361,6 +361,7 @@ async function updateDebugContextMenu() {
 }
 
 function storeConnection(p: Runtime.Port) {
+  //console.debug("store Connection");
   let id = p.sender?.tab?.id;
   if (id) {
     ports[id] = p;
@@ -371,6 +372,7 @@ function storeConnection(p: Runtime.Port) {
       }
     });
   }
+  //console.debug("Store Connection ports", ports);
 }
 
 /*Enable the context menu options*/
@@ -491,8 +493,9 @@ browser.commands.onCommand.addListener((command) => {
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
-  console.debug(info);
-  if (tab?.id) {
+  //console.debug("Tab", tab);
+  //console.debug("ports", ports);
+  if (tab?.id && ports[tab.id]) {
     // Request image from page
     if (info.menuItemId === "mwe-item") {
       ports[tab.id].postMessage({
@@ -512,6 +515,12 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     }
   } else {
     console.error("No tab passed to context menu listener!");
+    windowsPanel ? browser.windows.create({
+      type: "panel",
+      url: "errors/http_error.html"
+    }) : browser.tabs.create({
+      url: "errors/http_error.html",
+    });
   }
 });
 
