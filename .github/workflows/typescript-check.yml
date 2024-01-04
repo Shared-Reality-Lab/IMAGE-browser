@@ -56,8 +56,8 @@ jobs:
     needs: [bump-version, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '16'
       - name: Install dependencies
@@ -74,7 +74,7 @@ jobs:
             mv build-chrome/manifest.json build-chrome/temp.json && jq '.version = "${{needs.bump-version.outputs.new-version}}"' build-chrome/temp.json > build-chrome/manifest.json && rm build-chrome/temp.json
       
       - name: Save as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: extension
           path: |
