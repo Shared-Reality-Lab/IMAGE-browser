@@ -82,10 +82,12 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRe
     let src = map.getAttribute("src");
     let q, lat, lon, zoom;
     let maptype = "roadmap";
-    if (src?.includes("&q=")) { // assume src is not null and then look for a query string
-        let i1 = src.indexOf("&q=") + 3;
+    console.log(src);
+    if (src?.includes("&q=") || src?.includes("?q=")) { // assume src is not null and then look for a query string
+        let i1 = (src?.includes("&q=")) ? (src.indexOf("&q=") + 3) : (src.indexOf("?q=") + 3);
         let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
         q = src.substring(i1, i2);
+        console.log(q);
     }
     if (src?.includes("&center=")) { // try to find center of map
         let i1 = src.indexOf("&center=") + 8;
