@@ -89,12 +89,19 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRe
         q = src.substring(i1, i2);
         console.log(q);
     }
-    if (src?.includes("&center=")) { // try to find center of map
+    if (src?.includes("&center=")) { // try to find center of map if center param is given
         let i1 = src.indexOf("&center=") + 8;
         let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
         let center = src.substring(i1, i2);
         lat = center.split(",")[0];
         lon = center.split(",")[1];
+    }
+    if (src?.includes("&markers=")) { // try to find center of map if markers param is given
+        let i1 = src.indexOf("&markers=") + 9;
+        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
+        let markers = decodeURIComponent(src.substring(i1, i2));
+        lat = markers.split(",")[0];
+        lon = markers.split(",")[1];
     }
     if (src?.includes("&zoom=")) { // try to find zoom of map
         let i1 = src.indexOf("&zoom=") + 6;
