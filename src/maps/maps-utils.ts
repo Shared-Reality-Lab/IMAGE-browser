@@ -6,7 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 export function processMap(port: browser.Runtime.Port, map: any, origin: string, extVersion?: string, ) {
     // domains list at www.google.com/supported_domains, but this is too long to manually put
     if (map.hasAttribute("src") && 
-        ((origin == "iframe" && (/google.[\w\.]+\/maps/.test(map.src)) || (origin == "staticImage" && (/google.[\w\.]+\/maps\/api/.test(map.src)))))) {
+    //    
+    ((origin == "iframe" && ((/google.[\w\.]+\/maps\/embed\/v1/.test(map.src) || (/google.[\w\.]+\/maps\?/.test(map.src))))
+         || (origin == "staticImage" && (/google.[\w\.]+\/maps\/api/.test(map.src)))))) {
 
         map.setAttribute("tabindex", "0");
         let mapButton = document.createElement("button");
@@ -81,54 +83,44 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRe
     const serializer = new XMLSerializer();
     let src = map.getAttribute("src");
     let q, lat, lon, zoom;
-    let maptype = "roadmap";
+    //let maptype = "roadmap";
     console.log(src);
-    if (src?.includes("&q=") || src?.includes("?q=")) { // assume src is not null and then look for a query string
-        let i1 = (src?.includes("&q=")) ? (src.indexOf("&q=") + 3) : (src.indexOf("?q=") + 3);
-        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1); // query either goes to the end or there is another header
-        q = src.substring(i1, i2);
-        console.log(q);
+    if(src){
+        const mapUrl = new URL(src);
+        const searchParams = mapUrl.searchParams;
+        /** from the map source extract following params */
+        q = searchParams.get("q");
+        let latLongStr = searchParams.get("center") || searchParams.get("markers");
+        // let zoom = searchParams.get("zoom");
+        // let mapType = searchParams.get("mapType");
+        if(latLongStr){
+            lat = latLongStr.split(",")[0];
+            lon = latLongStr.split(",")[1];
+        }
+        if (lat && lon) { // only send the resource request if we have a lat and lon
+            console.debug("Sending map resource request");
+            console.debug("lat long", lat, lon);
+            port.postMessage({
+                "type": "mapResource",
+                "context": map ? serializer.serializeToString(map) : null,
+                "coordinates": [parseFloat(lat), parseFloat(lon)],
+                "toRender": toRender
+            });
+        } else if (q) { // if we don't have a lat and lon, but we have a query, send a search request
+            console.debug("Sending map search request");
+            console.debug("q", q);
+            port.postMessage({
+                "type": "mapSearch",
+                "context": map ? serializer.serializeToString(map) : null,
+                "placeID": q,
+                "toRender": toRender
+            });
+        }
+    } else{
+        console.debug("Map Source empty!");
     }
-    if (src?.includes("&center=")) { // try to find center of map if center param is given
-        let i1 = src.indexOf("&center=") + 8;
-        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-        let center = src.substring(i1, i2);
-        lat = center.split(",")[0];
-        lon = center.split(",")[1];
     }
-    if (src?.includes("&markers=")) { // try to find center of map if markers param is given
-        let i1 = src.indexOf("&markers=") + 9;
-        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-        let markers = decodeURIComponent(src.substring(i1, i2));
-        lat = markers.split(",")[0];
-        lon = markers.split(",")[1];
-    }
-    if (src?.includes("&zoom=")) { // try to find zoom of map
-        let i1 = src.indexOf("&zoom=") + 6;
-        let i2 = src.indexOf("&", i1) == -1 ? src.length : src.indexOf("&", i1);
-        zoom = src.substring(i1, i2);
-    }
-    if (src?.includes("&maptype=satellite")) { // only important map type right now is satellite
-        maptype = "satellite";
-    }
-    if (lat && lon) { // only send the resource request if we have a lat and lon
-        console.debug("Sending map resource request");
-        port.postMessage({
-            "type": "mapResource",
-            "context": map ? serializer.serializeToString(map) : null,
-            "coordinates": [parseFloat(lat), parseFloat(lon)],
-            "toRender": toRender
-        });
-    } else if (q) { // if we don't have a lat and lon, but we have a query, send a search request
-        console.debug("Sending map search request");
-        port.postMessage({
-            "type": "mapSearch",
-            "context": map ? serializer.serializeToString(map) : null,
-            "placeID": q,
-            "toRender": toRender
-        });
-    }
-}
+
 
 export function processMaps(document: Document, port: browser.Runtime.Port,  extVersion?: string) {
     Array.from(document.getElementsByTagName("iframe")).forEach((map) => processMap(port, map, "iframe", extVersion));
