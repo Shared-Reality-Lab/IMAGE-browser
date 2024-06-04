@@ -81,7 +81,9 @@ function processGraphics() {
   for (let image of images) {
 
     // ignore detected images with no src attribute, e.g., on Overleaf
-    if (!image.hasAttribute("src")) {
+    // ignore images in radio button and select dropdown
+    if (!image.hasAttribute("src")
+        || (image.parentElement && (image.parentElement.nodeName.toLowerCase() == "li" || image.parentElement.nodeName.toLowerCase() == "label"))) {
       continue;
     }
 
