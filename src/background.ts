@@ -320,12 +320,12 @@ async function updateDebugContextMenu() {
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: "",
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       }, onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: "",
+        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
         contexts: ["image"]
       }, onCreated);
     }
