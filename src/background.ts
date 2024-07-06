@@ -78,7 +78,7 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
 }
 
 async function handleMessage(p: Runtime.Port, message: any) {
-  console.debug("Handling message");
+  console.debug("Handling message", message);
   let query: IMAGERequest | undefined;
   graphicUrl = message["sourceURL"];
   switch (message["type"]) {
@@ -366,7 +366,16 @@ function storeConnection(p: Runtime.Port) {
   if (id) {
     ports[id] = p;
     ports[id].onMessage.addListener(handleMessage.bind(null, p));
+    const pingInterval = setInterval((id) => {
+      //console.debug("Ping to port with Id "+ id);
+      if(ports[id]){
+        ports[id].postMessage({
+          status: "ping",
+        }); 
+      }
+    }, 30000, id);
     ports[id].onDisconnect.addListener((p: Runtime.Port) => {
+      clearInterval(pingInterval);
       if (id) {
         delete ports[id];
       }

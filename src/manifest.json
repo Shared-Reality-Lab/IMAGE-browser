@@ -11,8 +11,7 @@
     },
 
     "action": {
-        "default_icon": "image-icon-128.png",
-        "default_popup": "options/options.html"
+        "default_icon": "image-icon-128.png"
     },
 
     "options_ui": {

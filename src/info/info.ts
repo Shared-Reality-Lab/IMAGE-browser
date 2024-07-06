@@ -45,9 +45,11 @@ let port = browser.runtime.connect();
 window.onload = ()=>{
     let resultArriveAudio = new Audio('../audio/IMAGE-ResultsArrived.mp3');
     resultArriveAudio.play();
+    setTimeout(queryLocalisation, 0);
 }
 
 port.onMessage.addListener(async (message) => {
+    if(message && message.status == "ping") return;
     if (message) {
         renderings = message["response"];
         request = message["request"];
@@ -105,7 +107,7 @@ port.onMessage.addListener(async (message) => {
             download.setAttribute("href", rendering["data"]["audio"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
             download.classList.add("localisation");
-            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            download.textContent = browser.i18n.getMessage("downloadAudioFile");
             contentDiv.append(download);
             if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                 utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
@@ -122,7 +124,7 @@ port.onMessage.addListener(async (message) => {
             const fullRenderingButton = document.createElement("button");
             fullRenderingButton.id = "segmentAudioFullRendering";
             fullRenderingButton.classList.add("btn","btn-secondary", "localisation");
-            // fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
+            fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
             fullRenderingButton.addEventListener("click", function(){
                 playPauseAudio(-1);
             });
@@ -183,7 +185,7 @@ port.onMessage.addListener(async (message) => {
             const download = document.createElement("a");
             download.setAttribute("href", rendering["data"]["audioFile"] as string);
             download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
-            // download.textContent = browser.i18n.getMessage("downloadAudioFile");
+            download.textContent = browser.i18n.getMessage("downloadAudioFile");
             download.id = "downloadAudioFile";
             download.classList.add("localisation");
             contentDiv.append(download);
@@ -266,7 +268,7 @@ port.onMessage.addListener(async (message) => {
     }
 
     // Load localised labels for the title, footer, buttons, etc.
-    queryLocalisation();
+    //queryLocalisation();
 });
 
 // window.addEventListener("beforeunload", function(e){

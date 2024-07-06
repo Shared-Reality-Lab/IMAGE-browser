@@ -65,21 +65,22 @@ window.addEventListener("message", function (event) {
 
 document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
-    console.debug(selectedElement.id);
+    //console.debug(selectedElement.id);
 });
 port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
     let imageElement: HTMLImageElement;
+    if(message && message.status == "ping" ) return;
     if (selectedElement instanceof HTMLImageElement) {
         imageElement = selectedElement;
     } else {
         imageElement = selectedElement?.querySelector("img") as HTMLImageElement;
     }
-    console.debug(imageElement.currentSrc);
-    console.debug(port);
-    console.debug(message);
+    //console.debug(imageElement.currentSrc);
+    //console.debug(port);
+    //console.debug(message);
     const scheme = imageElement.currentSrc.split(":")[0];
-    console.debug("message received", message);
+    //console.debug("message received", message);
     let toRender = "";
     if (message["type"] === "resourceRequest") {
         toRender = "full";
