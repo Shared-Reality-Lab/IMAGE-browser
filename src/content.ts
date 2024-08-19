@@ -189,3 +189,24 @@ document.onreadystatechange = function () {
         }
     }, 1500)
 }
+
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && (event.key === 'b' || event.key == 'B')) {
+        // console.log('Hotkey pressed');
+        // console.log('Active Element', document.activeElement);
+        // console.log(document.activeElement?.tagName);
+        if(document.activeElement && document.activeElement.tagName == "IMG"){
+            let selectedElement = document.activeElement as HTMLElement;
+            let imageElement = selectedElement as HTMLImageElement;
+            let toRender = "full";
+            port.postMessage({
+                "type": "checkImageSize",
+                "context": selectedElement ? getContext(selectedElement) : null,
+                "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+                "url": window.location.href,
+                "sourceURL": imageElement.currentSrc,
+                "toRender": toRender
+            });
+        }
+    }
+});
