@@ -36,6 +36,7 @@ const haply2diy3genSetting =  <HTMLInputElement>(document.getElementById("haply-
 const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
 const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
+const displayInvisibleButtons = <HTMLInputElement>(document.getElementById("toggle-checkbox"));
 
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
@@ -95,7 +96,8 @@ function saveOptions() {
     haply2diy3gen: haply2diy3genSetting.checked,
     audio:audioRenderingsSetting.checked,
     text:textRenderingsSetting.checked,
-    language:languageSetting.value
+    language:languageSetting.value,
+    displayInvisibleButtons : displayInvisibleButtons.checked
   }),
     (function () {
       optionsCheck();
@@ -120,7 +122,8 @@ function restore_options() {
       haply2diy3gen: false,
       audio:true,
       text:true,
-      language: "auto"
+      language: "auto",
+      displayInvisibleButtons: true
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -134,7 +137,7 @@ function restore_options() {
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];
-
+        displayInvisibleButtons.checked = items["displayInvisibleButtons"];
         if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }

@@ -198,6 +198,10 @@
         "message": "Mode développeur",
         "description": "Étiquette pour le mode développeur"
     },
+    "buttonsToggle": {
+        "message": "Ajouter un bouton IMAGE invisible après chaque photo",
+        "description": "Header for toggle invisible button in extension preferences."
+    },
     "errorMessage": {
         "message": "Une erreur s'est produite lors de la connexion au serveur IMAGE. Veuillez réessayer plus tard. Si cette erreur persiste, veuillez contacter l'équipe IMAGE par courriel à ",
         "description": "Message d'erreur lorsque le serveur est inaccessible."
