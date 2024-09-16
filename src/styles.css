@@ -3,7 +3,7 @@
     margin-left: 5px;
 }
 
-.sr-only {
+/* .sr-only {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -12,8 +12,11 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
-}
+} */
 
+/* .display-none{
+    display: none;
+} */
 /** Safari */
 @media not all and (min-resolution: 0.001dpcm) {
     .sr-only{

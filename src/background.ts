@@ -296,12 +296,29 @@ browser.runtime.onMessage.addListener(msg => {
   if (msg.keepAlive) console.log('keepAlive');
 });
 
+
 async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
+  //console.log("Saved Items", items);
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
+  displayInvisibleButtons = items["displayInvisibleButtons"];
   let tabs = browser.tabs.query({})
+  //console.log("inside Background new code", displayInvisibleButtons)
 
+  // let tabs = browser.tabs.query({ active: true, currentWindow: true });
+  tabs.then(async function (tabs) {
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
+        let tabId = tabs[i].id || 0;  
+        ports[tabId].postMessage({
+          "type": "handleInvisibleButton",
+          "displayInvisibleButtons": displayInvisibleButtons
+        });
+      }
+    }
+  });
+  
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
@@ -415,6 +432,14 @@ function disableContextMenu() {
 function handleUpdated(tabId: any, changeInfo: any) {
   if (changeInfo.status == "complete") {
     enableContextMenu();
+    //console.log("Handle Updated function", displayInvisibleButtons);
+    // send message 
+    if(ports[tabId]){
+      ports[tabId].postMessage({
+        "type": "handleInvisibleButton",
+        "displayInvisibleButtons": displayInvisibleButtons
+      });
+    } 
   } else if (changeInfo.status == "unloaded" || changeInfo.status == "loading") {
     disableContextMenu();
   }
@@ -449,9 +474,12 @@ var showDebugOptions: Boolean;
 
 var previousToggleState: Boolean;
 
+var displayInvisibleButtons : Boolean;
+
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
+  displayInvisibleButtons = items["displayInvisibleButtons"];
   console.debug("debug value inside storage sync data", showDebugOptions);
   if (showDebugOptions) {
     browser.contextMenus.create({

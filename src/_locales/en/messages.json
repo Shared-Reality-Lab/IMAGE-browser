@@ -198,6 +198,10 @@
         "message": "Developer Mode",
         "description": "Header for developer mode options in extension preferences."
     },
+    "buttonsToggle": {
+        "message": "Add invisible IMAGE button after each photograph",
+        "description": "Étiquette pour basculer le bouton invisible dans les préférences de l'extension."
+    },
     "errorMessage": {
         "message": "An error occurred while trying to connect to the IMAGE server. Please try again later. If this error persists, please contact the IMAGE team by email at ",
         "description": "Error message when server is unreachable."

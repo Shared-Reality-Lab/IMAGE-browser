@@ -26,7 +26,8 @@ export function getAllStorageSyncData() {
     processItem: "",
     requestItem: "",
     mweItem: "",
-    language: "auto"
+    language: "auto",
+    displayInvisibleButtons: true
   });
 };
 
