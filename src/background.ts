@@ -28,6 +28,7 @@ let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window | browser.Tabs.Tab;
+let launchPad : browser.Windows.Window | browser.Tabs.Tab;
 var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
 //console.debug("Extension Version background page", extVersion);
@@ -517,16 +518,24 @@ browser.runtime.onInstalled.addListener(function (object) {
   }, onCreated);
 });
 
-browser.commands.onCommand.addListener((command) => {
+browser.commands.onCommand.addListener(async (command) => {
   console.debug(`Command: ${command}`);
-  windowsPanel ? browser.windows.create({
-    type: "panel",
-    url: "launchpad/launchpad.html",
-    width: 700,
-    height: 700,
-  }) : browser.tabs.create({
-    url: "launchpad/launchpad.html",
-  });
+  try{
+    if(launchPad != undefined){
+      await windowsPanel ? browser.windows.remove(launchPad.id!) : browser.tabs.remove(launchPad.id!); 
+    }
+    launchPad = windowsPanel ? await browser.windows.create({
+      type: "panel",
+      url: "launchpad/launchpad.html",
+      width: 700,
+      height: 700,
+    }) : await browser.tabs.create({
+      url: "launchpad/launchpad.html",
+    }); 
+  } catch(error){
+    console.error(error);
+  }
+  
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
