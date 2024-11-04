@@ -62,7 +62,7 @@ port.onMessage.addListener(async (message) => {
     let title = document.getElementById("renderingTitle");
     if (title) {
         //console.log("extVersion from info", process.env.NODE_ENV);
-        if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
+        if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT && title.textContent?.indexOf("(test)") ==-1){
             title.textContent += process.env.SUFFIX_TEXT
         }
     }

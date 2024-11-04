@@ -39,6 +39,12 @@
                 "default": "Alt+I"
             },
             "description": "Trigger IMAGE Launchpad"
+        },
+        "toggle-invisible-buttons": {
+            "suggested_key": {
+                "default": "Ctrl+Q"
+            },
+            "description": "Trigger IMAGE Launchpad"
         }
     },
     "content_scripts": [{

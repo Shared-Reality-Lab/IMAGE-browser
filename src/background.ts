@@ -298,7 +298,7 @@ browser.runtime.onMessage.addListener(msg => {
 });
 
 
-async function updateDebugContextMenu() {
+async function updateDebugContextMenu(flow?: string) {
   let items = await getAllStorageSyncData();
   //console.log("Saved Items", items);
   showDebugOptions = items["developerMode"];
@@ -311,11 +311,14 @@ async function updateDebugContextMenu() {
   tabs.then(async function (tabs) {
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
-        let tabId = tabs[i].id || 0;  
-        ports[tabId].postMessage({
-          "type": "handleInvisibleButton",
-          "displayInvisibleButtons": displayInvisibleButtons
-        });
+        let tabId = tabs[i].id || 0;
+        if(ports[tabId]){
+          ports[tabId].postMessage({
+            "type": "handleInvisibleButton",
+            "displayInvisibleButtons": displayInvisibleButtons,
+            "flow": flow
+          });
+        }  
       }
     }
   });
@@ -520,22 +523,35 @@ browser.runtime.onInstalled.addListener(function (object) {
 
 browser.commands.onCommand.addListener(async (command) => {
   console.debug(`Command: ${command}`);
-  try{
-    if(launchPad != undefined){
-      await windowsPanel ? browser.windows.remove(launchPad.id!) : browser.tabs.remove(launchPad.id!); 
-    }
-    launchPad = windowsPanel ? await browser.windows.create({
-      type: "panel",
-      url: "launchpad/launchpad.html",
-      width: 700,
-      height: 700,
-    }) : await browser.tabs.create({
-      url: "launchpad/launchpad.html",
-    }); 
-  } catch(error){
-    console.error(error);
+  switch(command){
+    case "run-launchpad":
+      try{
+        if(launchPad != undefined){
+          await windowsPanel ? browser.windows.remove(launchPad.id!) : browser.tabs.remove(launchPad.id!); 
+        }
+        launchPad = windowsPanel ? await browser.windows.create({
+          type: "panel",
+          url: "launchpad/launchpad.html",
+          width: 700,
+          height: 700,
+        }) : await browser.tabs.create({
+          url: "launchpad/launchpad.html",
+        }); 
+      } catch(error){
+        console.error(error);
+      }
+      break;
+    case "toggle-invisible-buttons":
+      console.log("Button Toggle Command");
+      const storageData = await getAllStorageSyncData();
+      const existingValue = storageData["displayInvisibleButtons"];
+      console.log("Exisiting Value " +  existingValue);
+      await browser.storage.sync.set({displayInvisibleButtons: !existingValue});
+      const newStorageData = await getAllStorageSyncData();
+      const newValue = storageData["displayInvisibleButtons"];
+      console.log("New Value "+ newValue);
+      await updateDebugContextMenu("toggleButtonCommand");
   }
-  
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {

@@ -104,6 +104,10 @@ port.onMessage.addListener(async message => {
         } else {
             hideInvisibleButtons();
         }
+        if(message["flow"] == "toggleButtonCommand"){
+            const displayButtonMessage = message["displayInvisibleButtons"] ? "Invisible Buttons Display On" : "Invisible Buttons Display Off";
+            alert(displayButtonMessage);
+        }
         //console.log("message received inside content script", message["displayInvisibleButtons"]);
         return;
     }
