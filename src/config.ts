@@ -12,7 +12,8 @@ export const RENDERERS = Object.freeze({
     simpleAudio: "ca.mcgill.a11y.image.renderer.SimpleAudio",
     photoAudioHaptics: "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
     simpleHaptics: "ca.mcgill.a11y.image.renderer.SimpleHaptics",
-    svgLayers: "ca.mcgill.a11y.image.renderer.SVGLayers"
+    svgLayers: "ca.mcgill.a11y.image.renderer.SVGLayers",
+    tactileSvg: "ca.mcgill.a11y.image.renderer.TactileSVG"
 });
 
 /** Capabilities supported by Extension */

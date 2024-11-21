@@ -18,6 +18,7 @@ import imageCompression from "browser-image-compression";
 import browser from "webextension-polyfill";
 import { processMAPImages, processMaps } from './maps/maps-utils';
 import { getContext } from "./utils";
+import { readFileSync } from "fs"
 
 var selectedElement: HTMLElement | null = null;
 
@@ -127,6 +128,16 @@ port.onMessage.addListener(async message => {
     if (message["type"] === "onlyRequest") {
         toRender = "none"
     }
+    if(message["type"] === "tactileAuthoringTool"){
+        toRender = "full";
+        message["redirectToTAT"] = true;
+        message["sendToMonarch"] = false; 
+    }
+    if(message["type"] === "sendToMonarch"){
+        toRender = "full";
+        message["redirectToTAT"] = true;
+        message["sendToMonarch"] = true; 
+    }
     if (message["type"] === "compressImage") {
         console.debug("compressing inside content script");
         //let blobFile = new File([new Blob(message["graphicBlobStr"])], "buffer.jpg", {type: message["blobType"]});
@@ -159,7 +170,9 @@ port.onMessage.addListener(async message => {
             "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
             "url": window.location.href,
             "sourceURL": imageElement.currentSrc,
-            "toRender": toRender
+            "toRender": toRender,
+            "redirectToTAT": message["redirectToTAT"],
+            "sendToMonarch" : message["sendToMonarch"]
         });
     } else if (scheme === "file") {
         console.debug("File!");

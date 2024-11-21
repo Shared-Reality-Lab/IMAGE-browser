@@ -32,7 +32,11 @@ window.onload = () => {
             url: TUTORIAL_PAGE
         });
     });
-    
+    document.getElementById("tactileAuthoringTool")?.addEventListener("click",() => {
+        browser.tabs.create({
+            url: "http://localhost:8000/src/editor/index.html"
+        });
+    });
     document.getElementById("localFileLaunchPad")?.addEventListener("click", () =>{
         let fileInput = <HTMLInputElement>document.getElementById("selected-file");
         fileInput.click();

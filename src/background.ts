@@ -22,7 +22,7 @@ import { IMAGERequest } from "./types/request.schema";
 import imageCompression from 'browser-image-compression';
 import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { SERVER_URL } from './config';
+import { RENDERERS, SERVER_URL } from './config';
 
 let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -78,11 +78,37 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
   } as IMAGERequest;
 }
 
+function saveToLocalStorage(svgData: string) {
+  console.log("executingFunction");
+  localStorage.setItem("key", "value");
+  localStorage.setItem("svgedit-default", svgData);
+}
+
+function monarchPopUp(id: string){
+  alert(`New channel created with code ${id}`);
+}
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message", message);
   let query: IMAGERequest | undefined;
   graphicUrl = message["sourceURL"];
   switch (message["type"]) {
+    // case "authoringToolLoadData":
+    //   console.log("Received TAT data in background script");
+    //   browser.storage.sync.set({
+    //     "svgData": message["svgData"]
+    //   });
+
+    //   let authoringTool = browser.tabs.create({
+    //     url: "http://localhost:8000/src/editor/index.html",
+    //   });
+    //   authoringTool.then((tab)=>{
+    //     browser.scripting.executeScript({
+    //       target: {tabId: tab.id || 0},
+    //       func: saveToLocalStorage,
+    //       args: [message["svgData"]]
+    //   });
+    //   }, (error)=>{console.log(error)});
+    //   break;
     case "info":
       const value = responseMap.get(message["request_uuid"]);
       p.postMessage(value);
@@ -201,22 +227,82 @@ async function handleMessage(p: Runtime.Port, message: any) {
             return;
           }
           if (json["renderings"].length > 0) {
-            if (query["request_uuid"] !== undefined) {
-              responseMap.set(query["request_uuid"],
-                { "response": json, "request": query, "server": serverUrl }
-              );
-              if (renderingsPanel !== undefined) {
-                try {
-                  await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
-                  renderingsPanel = await createPanel(query);
-                } catch {
-                  renderingsPanel = await createPanel(query);
-                }
+            console.log("Inside JSON Renderings");
+            console.log("message", message);
+            if(message["redirectToTAT"]){
+              console.log("Received TAT data in background script");
+              let tactileResponse = json.renderings.filter((rendering)=>(rendering.type_id == RENDERERS.tactileSvg))
+              let tactileSvgGraphic = tactileResponse[0].data.graphic as string;
+              console.log("Tactile Response", tactileSvgGraphic);
+              let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
+              let svgDom = atob(encodedSvg);
+              if (message["sendToMonarch"]) {
+                /** Make curl request to monarch */
+                const response = await fetch("https://monarch.unicorn.cim.mcgill.ca/create",
+                  {
+                    "method": "POST",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                      "data": tactileSvgGraphic,
+                      "layer": "None",
+                      "title": "Test Title"
+                    })
+                  });
+                json = await response.json();
+                console.log("response received", json);
+                let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
+                  browser.scripting.executeScript({
+                    target: {tabId: currentTab[0].id || 0},
+                    func: monarchPopUp,
+                    args: [json["id"]]
+                });
+
               } else {
-                renderingsPanel = await createPanel(query);
-              }
-              // How to handle if request_uuid was undefined??
+
+                  console.log("Data stored in storage", svgDom);
+                  // browser.storage.sync.set({
+                  //   "svgData": svgDom
+                  // });
+                  let tabs = await browser.tabs.query({ url: "http://localhost:8000/src/editor/index.html" });
+                  if(tabs){
+                    tabs.forEach((tab)=>{
+                      if(tab.id){browser.tabs.remove(tab.id)}
+                    })
+                  }
+                  let authoringTool = browser.tabs.create({
+                    url: "http://localhost:8000/src/editor/index.html"
+                  });
+                  authoringTool.then((tab)=>{
+                    browser.scripting.executeScript({
+                      target: {tabId: tab.id || 0},
+                      func: saveToLocalStorage,
+                      args: [svgDom]
+                  });
+                  }, (error)=>{console.log(error)});
+                }
+                
             }
+            else {
+              if (query["request_uuid"] !== undefined) {
+                responseMap.set(query["request_uuid"],
+                  { "response": json, "request": query, "server": serverUrl }
+                );
+                if (renderingsPanel !== undefined) {
+                  try {
+                    await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
+                    renderingsPanel = await createPanel(query);
+                  } catch {
+                    renderingsPanel = await createPanel(query);
+                  }
+                } else {
+                    renderingsPanel = await createPanel(query);
+                }
+                // How to handle if request_uuid was undefined??
+              }
+            }
+
           } else {
             await windowsPanel ? browser.windows.create({
               type: "panel",
@@ -516,7 +602,23 @@ browser.runtime.onInstalled.addListener(function (object) {
     title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
     contexts: ["image"]
   }, onCreated);
+
+  //Context menu option to display image in Authoring tool
+  browser.contextMenus.create({
+    id: "mwe-item-tat",
+    title: "Load in Tactile Authoring Tool",
+    contexts: ["image"]
+  }, onCreated);
+
+  //Context menu option to send to Monarch
+  browser.contextMenus.create({
+    id: "mwe-item-monarch",
+    title: "Send Graphic to Monarch",
+    contexts: ["image"]
+  }, onCreated);
 });
+
+
 
 browser.commands.onCommand.addListener(async (command) => {
   console.debug(`Command: ${command}`);
@@ -548,7 +650,20 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         "type": "resourceRequest",
         "tabId": tab.id,
       });
-    } else if (info.menuItemId === "preprocess-only") {
+    }
+    else if (info.menuItemId === "mwe-item-tat") {
+      ports[tab.id].postMessage({
+        "type": "tactileAuthoringTool",
+        "tabId": tab.id,
+      });
+    }
+    else if(info.menuItemId === "mwe-item-monarch"){
+      ports[tab.id].postMessage({
+        "type": "sendToMonarch",
+        "tabId": tab.id,
+      });
+    } 
+    else if (info.menuItemId === "preprocess-only") {
       ports[tab.id].postMessage({
         "type": "preprocessRequest",
         "tabId": tab.id

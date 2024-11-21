@@ -48,6 +48,7 @@ export async function getRenderers(): Promise<string[]> {
   }
   if (items['developerMode']) {
     renderers.push(RENDERERS.svgLayers);
+    renderers.push(RENDERERS.tactileSvg);
   }
   return renderers;
 }

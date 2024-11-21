@@ -182,6 +182,10 @@
         "message": "IMAGE options",
         "description": "Label for button to launch IMAGE options"
     },
+    "tactileAuthoringTool" : {
+        "message": "Launch Tactile Authoring Tool",
+        "description": "Label for button to launch Authoring tool"
+    },
     "popUpTitle": {
         "message": "IMAGE Extension",
         "description": "Header of popup window"
