@@ -78,14 +78,25 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
   } as IMAGERequest;
 }
 
-function saveToLocalStorage(svgData: string) {
+interface TatStorageData  {
+  secretKey: string,
+  graphicTitle: string,
+  channelId: string,
+  graphicBlob?: string
+}
+function saveToLocalStorage(svgData: string, tatStorageData: TatStorageData) {
   console.log("executingFunction");
-  localStorage.setItem("key", "value");
+  //localStorage.setItem("key", "value");
   localStorage.setItem("svgedit-default", svgData);
+  localStorage.setItem("tat-storage-data", JSON.stringify(tatStorageData))
 }
 
-function monarchPopUp(id: string){
-  alert(`New channel created with code ${id}`);
+function monarchPopUp(id: string, flowType: string){
+  if(flowType == "create"){
+    alert(`New channel created with code ${id}`);
+  } else {
+    alert(`Graphic in channel ${id} has been updated!`)
+  }
 }
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message", message);
@@ -233,52 +244,79 @@ async function handleMessage(p: Runtime.Port, message: any) {
               console.log("Received TAT data in background script");
               let tactileResponse = json.renderings.filter((rendering)=>(rendering.type_id == RENDERERS.tactileSvg))
               let tactileSvgGraphic = tactileResponse[0].data.graphic as string;
-              console.log("Tactile Response", tactileSvgGraphic);
+              //console.log("Tactile Response", tactileSvgGraphic);
               let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
               let svgDom = atob(encodedSvg);
+              let reqTitle = items["monarchTitle"];
+              let reqSecretKey = items["monarchSecretKey"];
+              let reqChannelId = items["monarchChannelId"];
+              const flowType = reqChannelId ? "update" : "create";
+              let monarchFetchUrl = flowType == "update" ?
+               `https://monarch.unicorn.cim.mcgill.ca/update/${reqChannelId}` :
+                "https://monarch.unicorn.cim.mcgill.ca/create";
+              const reqData = await encryptData(tactileSvgGraphic, items["monarchEncryptionKey"]);
+              const reqBody = {
+                "data": reqData, 
+                "layer": "None", 
+                "title": reqTitle,
+                "secret" : reqSecretKey
+              };
               if (message["sendToMonarch"]) {
-                /** Make curl request to monarch */
-                const response = await fetch("https://monarch.unicorn.cim.mcgill.ca/create",
+                /** Send Graphic to Monarch flow - Make curl request to monarch */
+                const response = await fetch(monarchFetchUrl,
                   {
                     "method": "POST",
                     "headers": {
                       "Content-Type": "application/json"
                     },
-                    "body": JSON.stringify({
-                      "data": tactileSvgGraphic,
-                      "layer": "None",
-                      "title": "Test Title"
-                    })
+                    "body": JSON.stringify(reqBody)
                   });
-                json = await response.json();
-                console.log("response received", json);
+
+                let responseJSON = {
+                  "id": reqChannelId || "",
+                  "secret": ""
+                };
+                //console.log("header", response.headers.get("Content-Type"));
+                if(flowType == "create"){
+                  responseJSON = await response.json();
+                  browser.storage.sync.set({
+                    "monarchChannelId": responseJSON["id"],
+                    "monarchSecretKey": responseJSON["secret"]
+                  });
+                }
+                //console.log("response received", responseJSON);
                 let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
                   browser.scripting.executeScript({
                     target: {tabId: currentTab[0].id || 0},
                     func: monarchPopUp,
-                    args: [json["id"]]
+                    args: [responseJSON["id"], flowType]
                 });
 
               } else {
-
-                  console.log("Data stored in storage", svgDom);
-                  // browser.storage.sync.set({
-                  //   "svgData": svgDom
-                  // });
-                  let tabs = await browser.tabs.query({ url: "http://localhost:8000/src/editor/index.html" });
+                  /** Handle "Load in Tactile Authoring Tool" flow */
+                  const tatStorageData : TatStorageData = {
+                    channelId: items["monarchChannelId"],
+                    graphicTitle: items["monarchTitle"],
+                    secretKey: items["monarchSecretKey"],
+                    graphicBlob: query["graphic"]
+                  }
+                  //console.log("Data stored in storage", tatStorageData);
+                  //console.log("Svg Dom Value", svgDom);
+                  let tabs = await browser.tabs.query({ url: "https://tat.unicorn.cim.mcgill.ca/" });
                   if(tabs){
                     tabs.forEach((tab)=>{
                       if(tab.id){browser.tabs.remove(tab.id)}
                     })
                   }
                   let authoringTool = browser.tabs.create({
-                    url: "http://localhost:8000/src/editor/index.html"
+                    url: "https://tat.unicorn.cim.mcgill.ca/"
                   });
+
                   authoringTool.then((tab)=>{
                     browser.scripting.executeScript({
                       target: {tabId: tab.id || 0},
                       func: saveToLocalStorage,
-                      args: [svgDom]
+                      args: [svgDom, tatStorageData]
                   });
                   }, (error)=>{console.log(error)});
                 }
@@ -696,3 +734,53 @@ function createPanel(query: IMAGERequest) {
   });
   return window;
 }
+
+async function encryptData(svgString: string, encryptionKey: string) {
+    //console.log("inside encryptData using encryption key ", encryptionKey);
+    const password = encryptionKey;
+    // Convert text and password to Uint8Array
+    const encoder = new TextEncoder();
+    const data = encoder.encode(svgString);
+    const passwordBuffer = encoder.encode(password);
+    // Derive a cryptographic key from the password using PBKDF2
+    const salt = crypto.getRandomValues(new Uint8Array(16)); // Use a salt for key derivation
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      passwordBuffer,
+      { name: "PBKDF2" },
+      false,
+      ["deriveKey"]
+    );
+    const aesKey = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-CBC", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+    // Generate a random IV for encryption
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    // Encrypt the data
+    const encryptedData = await crypto.subtle.encrypt(
+      { name: "AES-CBC", iv },
+      aesKey,
+      data
+    );
+    // console.warn("Encrypted Data (Uint8Array):", new Uint8Array(encryptedData));
+    // console.warn("IV (Uint8Array):", new Uint8Array(iv));
+    // Convert encrypted data to Base64 for transmission
+    svgString = btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
+    const ivBase64 = btoa(String.fromCharCode(...iv));
+    const saltBase64 = btoa(String.fromCharCode(...salt));
+    
+    //console.warn(ivBase64)
+    //console.warn(saltBase64)
+    //console.log("encrypted svg", svgString);
+    return svgString
+}
+

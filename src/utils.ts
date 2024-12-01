@@ -27,7 +27,11 @@ export function getAllStorageSyncData() {
     requestItem: "",
     mweItem: "",
     language: "auto",
-    displayInvisibleButtons: true
+    displayInvisibleButtons: true,
+    monarchTitle: "",
+    monarchChannelId: "",
+    monarchEncryptionKey: "",
+    monarchSecretKey: ""
   });
 };
 
