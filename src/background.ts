@@ -84,11 +84,22 @@ interface TatStorageData  {
   channelId: string,
   graphicBlob?: string
 }
-function saveToLocalStorage(svgData: string, tatStorageData: TatStorageData) {
+function saveToLocalStorage(svgData: string, tatStorageData: TatStorageData, existingTab?: browser.Tabs.Tab) {
   console.log("executingFunction");
   //localStorage.setItem("key", "value");
+  const oldValue = localStorage.getItem("svgedit-default");
   localStorage.setItem("svgedit-default", svgData);
   localStorage.setItem("tat-storage-data", JSON.stringify(tatStorageData))
+  if(existingTab){
+    dispatchEvent(new StorageEvent("storage", {
+      key: "svgedit-default",
+      storageArea: localStorage,
+      oldValue: oldValue,
+      newValue: svgData,
+      url: location.href,
+    }));
+    //location.reload();
+  }
 }
 
 function monarchPopUp(id: string, flowType: string){
@@ -250,11 +261,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
               let reqTitle = items["monarchTitle"];
               let reqSecretKey = items["monarchSecretKey"];
               let reqChannelId = items["monarchChannelId"];
+              let encryptionKey = items["monarchEncryptionKey"];
               const flowType = reqChannelId ? "update" : "create";
               let monarchFetchUrl = flowType == "update" ?
                `https://monarch.unicorn.cim.mcgill.ca/update/${reqChannelId}` :
                 "https://monarch.unicorn.cim.mcgill.ca/create";
-              const reqData = await encryptData(tactileSvgGraphic, items["monarchEncryptionKey"]);
+              const reqData = await encryptData(tactileSvgGraphic, encryptionKey);
               const reqBody = {
                 "data": reqData, 
                 "layer": "None", 
@@ -303,22 +315,41 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   //console.log("Data stored in storage", tatStorageData);
                   //console.log("Svg Dom Value", svgDom);
                   let tabs = await browser.tabs.query({ url: "https://tat.unicorn.cim.mcgill.ca/" });
-                  if(tabs){
-                    tabs.forEach((tab)=>{
-                      if(tab.id){browser.tabs.remove(tab.id)}
-                    })
+                  // if(tabs){
+                  //   tabs.forEach((tab)=>{
+                  //     if(tab.id){browser.tabs.remove(tab.id)}
+                  //   })
+                  // }
+                  /** encrypt data before storing in local storage */
+                  let encryptedSvgData = await encryptData(svgDom, encryptionKey);
+                  let encryptedTatData : TatStorageData = tatStorageData;
+                  for(let key of Object.keys(tatStorageData)){
+                    encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
                   }
-                  let authoringTool = browser.tabs.create({
-                    url: "https://tat.unicorn.cim.mcgill.ca/"
-                  });
-
-                  authoringTool.then((tab)=>{
+                  // let encryptedTatData = await Promise.all(Object.keys(tatStorageData).map(async (tatKey)=>{
+                  //   return await encryptData(tatStorageData[tatKey as keyof TatStorageData], encryptionKey);
+                  // }))
+                  if(tabs && tabs.length > 0 ){
+                    let existingTab = tabs[0];
                     browser.scripting.executeScript({
-                      target: {tabId: tab.id || 0},
+                      target: {tabId: existingTab.id || 0},
                       func: saveToLocalStorage,
-                      args: [svgDom, tatStorageData]
-                  });
-                  }, (error)=>{console.log(error)});
+                      args: [svgDom, encryptedTatData, existingTab]
+                    });
+                    browser.tabs.update(existingTab.id, {active: true});
+                  }
+                  else {
+                    let authoringTool = browser.tabs.create({
+                      url: "https://tat.unicorn.cim.mcgill.ca/"
+                    });
+                    authoringTool.then((tab)=>{
+                      browser.scripting.executeScript({
+                        target: {tabId: tab.id || 0},
+                        func: saveToLocalStorage,
+                        args: [svgDom, encryptedTatData]
+                    });
+                    }, (error)=>{console.log(error)});
+                  }
                 }
                 
             }
@@ -735,12 +766,12 @@ function createPanel(query: IMAGERequest) {
   return window;
 }
 
-async function encryptData(svgString: string, encryptionKey: string) {
+async function encryptData(stringToEncrypt?: string, encryptionKey?: string) {
     //console.log("inside encryptData using encryption key ", encryptionKey);
     const password = encryptionKey;
     // Convert text and password to Uint8Array
     const encoder = new TextEncoder();
-    const data = encoder.encode(svgString);
+    const data = encoder.encode(stringToEncrypt);
     const passwordBuffer = encoder.encode(password);
     // Derive a cryptographic key from the password using PBKDF2
     const salt = crypto.getRandomValues(new Uint8Array(16)); // Use a salt for key derivation
@@ -771,16 +802,27 @@ async function encryptData(svgString: string, encryptionKey: string) {
       aesKey,
       data
     );
-    // console.warn("Encrypted Data (Uint8Array):", new Uint8Array(encryptedData));
-    // console.warn("IV (Uint8Array):", new Uint8Array(iv));
-    // Convert encrypted data to Base64 for transmission
-    svgString = btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
-    const ivBase64 = btoa(String.fromCharCode(...iv));
-    const saltBase64 = btoa(String.fromCharCode(...salt));
-    
+    //svgString = btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
+    //const ivBase64 = btoa(String.fromCharCode(...iv));
+    //const saltBase64 = btoa(String.fromCharCode(...salt));
+
     //console.warn(ivBase64)
     //console.warn(saltBase64)
-    //console.log("encrypted svg", svgString);
-    return svgString
+    const encrypted = new Uint8Array(encryptedData)
+    const concatenatedArray = new Uint8Array(salt.length + iv.length + encrypted.length);
+    concatenatedArray.set(salt, 0);
+    concatenatedArray.set(iv, salt.length);
+    concatenatedArray.set(encrypted, (salt.length+ iv.length))
+    stringToEncrypt = btoa(Uint8ToString(concatenatedArray));
+    return stringToEncrypt
+}
+
+function Uint8ToString(u8a: any){
+  var CHUNK_SZ = 0x8000;
+  var c = [];
+  for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
+    c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+  }
+  return c.join("");
 }
 
