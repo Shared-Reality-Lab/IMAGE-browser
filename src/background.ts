@@ -334,7 +334,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                     browser.scripting.executeScript({
                       target: {tabId: existingTab.id || 0},
                       func: saveToLocalStorage,
-                      args: [svgDom, encryptedTatData, existingTab]
+                      args: [encryptedSvgData, encryptedTatData, existingTab]
                     });
                     browser.tabs.update(existingTab.id, {active: true});
                   }
@@ -346,7 +346,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                       browser.scripting.executeScript({
                         target: {tabId: tab.id || 0},
                         func: saveToLocalStorage,
-                        args: [svgDom, encryptedTatData]
+                        args: [encryptedSvgData, encryptedTatData]
                     });
                     }, (error)=>{console.log(error)});
                   }
