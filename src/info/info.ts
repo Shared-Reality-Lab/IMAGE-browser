@@ -70,7 +70,11 @@ port.onMessage.addListener(async (message) => {
     let label = browser.i18n.getMessage("renderingLabel");
 
     let count = 1;
+<<<<<<< HEAD
     if (renderings) {
+=======
+    if(renderings){
+>>>>>>> b0ae8da4c5d10b979bf8f430dee9c84a3c24efff
         for (let rendering of renderings["renderings"]) {
             let container = document.createElement("section");
             container.classList.add("container");
@@ -87,7 +91,11 @@ port.onMessage.addListener(async (message) => {
             labelButton.textContent = label + " " + count + ": " + rendering["description"];
             headerElement.append(labelButton);
             container.append(headerElement);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b0ae8da4c5d10b979bf8f430dee9c84a3c24efff
             if (rendering["type_id"] === RENDERERS.text) {
                 let contentDiv = utils.addRenderingContent(container, contentId);
                 const text = rendering["data"]["text"] as string;
@@ -115,7 +123,7 @@ port.onMessage.addListener(async (message) => {
                 }
             }
             else if (rendering["type_id"] === RENDERERS.segmentAudio) {
-                let currentAudioIndex: number = -2;
+                let currentAudioIndex : number = -2;
                 let contentDiv = utils.addRenderingContent(container, contentId);
                 const selectDiv = document.createElement("div");
                 selectDiv.classList.add("form-floating");
@@ -124,14 +132,14 @@ port.onMessage.addListener(async (message) => {
                 const fullRenderingHeader = document.createElement("li");
                 const fullRenderingButton = document.createElement("button");
                 fullRenderingButton.id = "segmentAudioFullRendering";
-                fullRenderingButton.classList.add("btn", "btn-secondary", "localisation");
+                fullRenderingButton.classList.add("btn","btn-secondary", "localisation");
                 fullRenderingButton.textContent = browser.i18n.getMessage("segmentAudioFullRendering")
-                fullRenderingButton.addEventListener("click", function () {
+                fullRenderingButton.addEventListener("click", function(){
                     playPauseAudio(-1);
                 });
                 fullRenderingHeader.append(fullRenderingButton);
                 renderingsList.append(fullRenderingHeader);
-
+    
                 const audioInfo = rendering["data"]["audioInfo"] as { "name": string, "offset": number, "duration": number }[];
                 // Set up audio controls
                 const audioCtx = new window.AudioContext();
@@ -140,49 +148,49 @@ port.onMessage.addListener(async (message) => {
                 }).then(buffer => {
                     return audioCtx.decodeAudioData(buffer);
                 }).catch(e => { console.error(e); throw e; });
-
+    
                 let currentOffset: number | undefined;
                 let currentDuration: number | undefined;
                 let sourceNode: AudioBufferSourceNode | undefined;
-
-                function playPauseAudio(index: number, audioInfo?: any) {
-                    if (index == currentAudioIndex && sourceNode) {
-                        /** Do not create a new audio context, just pause/play the current audio*/
-                        (sourceNode.playbackRate.value == 0) ? (sourceNode.playbackRate.value = 1) : (sourceNode.playbackRate.value = 0);
-                        currentAudioIndex = index;
+    
+                function playPauseAudio(index: number, audioInfo?: any){
+                    if (index == currentAudioIndex && sourceNode){
+                      /** Do not create a new audio context, just pause/play the current audio*/
+                      (sourceNode.playbackRate.value == 0)?(sourceNode.playbackRate.value = 1): (sourceNode.playbackRate.value = 0);
+                      currentAudioIndex = index;
                     }
                     else {
-                        if (sourceNode) {
+                        if (sourceNode){
                             sourceNode.stop();
                         }
-                        setTimeout(function () {
+                        setTimeout(function(){
                             currentAudioIndex = index;
                             const data = audioInfo;
-                            currentOffset = data ? data["offset"] as number : undefined;
-                            currentDuration = data ? data["duration"] as number : undefined;
+                            currentOffset = data ? data["offset"] as number:undefined;
+                            currentDuration = data ? data["duration"] as number: undefined;
                             sourceNode = audioCtx.createBufferSource();
-                            sourceNode.addEventListener("ended", () => { sourceNode = undefined; });
+                            sourceNode.addEventListener("ended", () => { sourceNode = undefined;});
                             sourceNode.buffer = audioBuffer;
                             sourceNode.connect(audioCtx.destination);
                             sourceNode.start(0, currentOffset, currentDuration);
-                        }, 100);
+                        },100);
                     }
                 }
-
+    
                 for (let idx = 0; idx < audioInfo.length; idx++) {
                     const val = audioInfo[idx];
                     const headerElement = document.createElement("li");
                     const buttonElement = document.createElement("button");
-                    buttonElement.classList.add("btn", "btn-secondary");
+                    buttonElement.classList.add("btn","btn-secondary");
                     buttonElement.textContent = val["name"]
                     headerElement.append(buttonElement);
-                    buttonElement.addEventListener("click", function () {
-                        playPauseAudio(idx, audioInfo[idx])
+                    buttonElement.addEventListener("click",function(){
+                        playPauseAudio(idx,audioInfo[idx])
                     });
                     renderingsList.append(headerElement);
                 }
                 selectDiv.append(renderingsList);
-
+    
                 const download = document.createElement("a");
                 download.setAttribute("href", rendering["data"]["audioFile"] as string);
                 download.setAttribute("download", "rendering-" + count + "-" + request_uuid);
@@ -194,12 +202,12 @@ port.onMessage.addListener(async (message) => {
                     utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
                 }
             }
-
+    
             if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
                 hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
             }
-
-            if (rendering["type_id"] === RENDERERS.svgLayers) {
+    
+            if(rendering["type_id"] === RENDERERS.svgLayers){
                 let contentDiv = utils.addRenderingContent(container, contentId);
                 const imgContainer = document.createElement("div");
                 imgContainer.classList.add("info-img-container");
@@ -207,16 +215,16 @@ port.onMessage.addListener(async (message) => {
                 const renderImg = document.createElement("img");
                 renderImg.id = "render-img";
                 renderImg.classList.add("render-img");
-                if (request && request.graphic) {
+                if(request && request.graphic){
                     renderImg.src = request.graphic;
                 }
-
+    
                 const svgContainer = document.createElement("div");
                 svgContainer.classList.add("svg-container");
-
+                
                 // append renderImg and svgImg to imgContainer
                 imgContainer.append(renderImg);
-
+                
                 const selectContainer = document.createElement("div");
                 selectContainer.style.display = "flex";
                 selectContainer.style.width = "50%";
@@ -229,22 +237,22 @@ port.onMessage.addListener(async (message) => {
                 select.setAttribute("id", "svg-layer");
                 select.style.margin = "0 1rem 1rem 1rem";
                 let layers: any = rendering['data']['layers'];
-                for (let layer of layers) {
+                for (let layer of layers){
                     let option = document.createElement("option");
-                    option.setAttribute("value", layer["svg"]);
+                    option.setAttribute("value",layer["svg"]);
                     option.textContent = layer["label"];
                     select.append(option);
                 }
                 let svgData = layers[0]["svg"];
                 svgContainer.append(createSVG(svgData));
-
+    
                 // append container to image container
                 imgContainer.append(svgContainer);
-
-
-                select.addEventListener("change", (event) => {
+    
+    
+                select.addEventListener("change", (event)=>{
                     const target = event.target as HTMLInputElement;
-                    if (svgContainer.lastChild) {
+                    if(svgContainer.lastChild){
                         svgContainer.removeChild(svgContainer.lastChild);
                     }
                     svgContainer.appendChild(createSVG(target.value));
@@ -254,12 +262,12 @@ port.onMessage.addListener(async (message) => {
                 contentDiv.append(selectContainer);
                 contentDiv.append(imgContainer);
             }
-
+    
             document.getElementById("renderings-container")!.appendChild(container)
             count++;
         }
     }
-
+    
     //Array.from(document.getElementsByTagName("audio")).map(i => new Plyr(i));
 
     const feedbackAnchor = document.getElementById("feedbackFormLink") as HTMLAnchorElement;
