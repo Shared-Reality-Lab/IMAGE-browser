@@ -70,11 +70,8 @@ port.onMessage.addListener(async (message) => {
     let label = browser.i18n.getMessage("renderingLabel");
 
     let count = 1;
-<<<<<<< HEAD
     if (renderings) {
-=======
     if(renderings){
->>>>>>> b0ae8da4c5d10b979bf8f430dee9c84a3c24efff
         for (let rendering of renderings["renderings"]) {
             let container = document.createElement("section");
             container.classList.add("container");
@@ -91,11 +88,8 @@ port.onMessage.addListener(async (message) => {
             labelButton.textContent = label + " " + count + ": " + rendering["description"];
             headerElement.append(labelButton);
             container.append(headerElement);
-<<<<<<< HEAD
 
-=======
     
->>>>>>> b0ae8da4c5d10b979bf8f430dee9c84a3c24efff
             if (rendering["type_id"] === RENDERERS.text) {
                 let contentDiv = utils.addRenderingContent(container, contentId);
                 const text = rendering["data"]["text"] as string;
