@@ -26,12 +26,13 @@ var extVersion = process.env.NODE_ENV || "";
 let showInvisibleButtons = true;
 //console.debug("Extension Version", extVersion);
 
-// var versionDiv = document.createElement("div");
-// versionDiv.id = "version-div";
-// versionDiv.setAttribute("ext-version", extVersion);
+// version - required for highcharts
+var versionDiv = document.createElement("div");
+versionDiv.id = "version-div";
+versionDiv.setAttribute("ext-version", extVersion);
+(document.head || document.documentElement).appendChild(versionDiv);
 
 var styleDiv = document.createElement("style");
-//versionDiv.id = "version-div";
 styleDiv.textContent = ".sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;}";
 styleDiv.textContent += ".display-none{ display: none; !important}";
 (document.head || document.documentElement).appendChild(styleDiv);
