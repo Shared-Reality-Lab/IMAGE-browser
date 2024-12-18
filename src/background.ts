@@ -294,7 +294,7 @@ async function createOffscreen() {
 browser.runtime.onStartup.addListener(() => { createOffscreen(); });
 // a message from an offscreen document every 50 second resets the inactivity timer
 browser.runtime.onMessage.addListener(msg => {
-  if (msg.keepAlive) console.log('keepAlive');
+  if (msg.keepAlive) console.debug('keepAlive');
 });
 
 
@@ -308,7 +308,7 @@ async function updateDebugContextMenu() {
   //console.log("inside Background new code", displayInvisibleButtons)
 
   // let tabs = browser.tabs.query({ active: true, currentWindow: true });
-  tabs.then(async function (tabs) {
+  tabs.then(function (tabs) {
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
         let tabId = tabs[i].id || 0;  
@@ -432,10 +432,11 @@ function disableContextMenu() {
 /*Handle the context menu items based on the status of the DOM*/
 function handleUpdated(tabId: any, changeInfo: any) {
   if (changeInfo.status == "complete") {
+    // console.log("handleUpdated called");
     enableContextMenu();
     //console.log("Handle Updated function", displayInvisibleButtons);
     // send message 
-    if(ports[tabId]){
+    if(ports[tabId] && !ports[tabId].sender?.url?.startsWith("chrome://") && !ports[tabId].sender?.url?.startsWith("chrome-extension://")){
       ports[tabId].postMessage({
         "type": "handleInvisibleButton",
         "displayInvisibleButtons": displayInvisibleButtons

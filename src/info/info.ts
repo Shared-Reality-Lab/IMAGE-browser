@@ -46,25 +46,25 @@ window.onload = () => {
     let resultArriveAudio = new Audio('../audio/IMAGE-ResultsArrived.mp3');
     resultArriveAudio.play();
     setTimeout(queryLocalisation, 0);
+    setTimeout(()=>{
+        let title = document.getElementById("renderingTitle");
+        if (title) {
+            if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT) {
+                title.textContent += process.env.SUFFIX_TEXT
+            }
+        }
+    }, 1)
 }
 
 port.onMessage.addListener(async (message) => {
-    if (message && message.status == "ping") return;
+    //console.log("Message Received", message);
+    if (message && (message.status == "ping")) return;
     if (message) {
         renderings = message["response"];
         request = message["request"];
         serverUrl = message["server"];
     } else {
         renderings = { "request_uuid": request_uuid, "timestamp": 0, "renderings": [] };
-    }
-
-    // Update renderings label
-    let title = document.getElementById("renderingTitle");
-    if (title) {
-        //console.log("extVersion from info", process.env.NODE_ENV);
-        if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT) {
-            title.textContent += process.env.SUFFIX_TEXT
-        }
     }
 
     let label = browser.i18n.getMessage("renderingLabel");
