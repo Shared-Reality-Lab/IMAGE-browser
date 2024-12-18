@@ -90,6 +90,7 @@ function processGraphics() {
     let button = document.createElement("button");
     button.type = "button";
     button.innerText = "Interpret graphic with IMAGE";
+    button.classList.add("sr-button");
     /* Make the button hidden depending on the config */
     if (!buttons) {
       button.classList.add("sr-only");
@@ -106,14 +107,14 @@ function processGraphics() {
     })
     // add inline css for sr-only class to handle print display
     // this is because some sites do not apply external stylesheet when using window.print and buttons were visible in PDF 
-    button.style.position = "absolute";
-    button.style.width= "1px";
-    button.style.height = "1px";
-    button.style.padding = "0px";
-    button.style.margin = "-1px";
-    button.style.overflow = "hidden";
-    button.style.clip = "rect(0, 0, 0, 0)";
-    button.style.border = "0";
+    // button.style.position = "absolute";
+    // button.style.width= "1px";
+    // button.style.height = "1px";
+    // button.style.padding = "0px";
+    // button.style.margin = "-1px";
+    // button.style.overflow = "hidden";
+    // button.style.clip = "rect(0, 0, 0, 0)";
+    // button.style.border = "0";
 
     image.parentNode.insertBefore(button, image.nextSibling);
   }

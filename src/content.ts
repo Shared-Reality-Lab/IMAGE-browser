@@ -23,12 +23,19 @@ var selectedElement: HTMLElement | null = null;
 
 let port = browser.runtime.connect();
 var extVersion = process.env.NODE_ENV || "";
+let showInvisibleButtons = true;
 //console.debug("Extension Version", extVersion);
 
+// version - required for highcharts
 var versionDiv = document.createElement("div");
 versionDiv.id = "version-div";
 versionDiv.setAttribute("ext-version", extVersion);
 (document.head || document.documentElement).appendChild(versionDiv);
+
+var styleDiv = document.createElement("style");
+styleDiv.textContent = ".sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;}";
+styleDiv.textContent += ".display-none{ display: none; !important}";
+(document.head || document.documentElement).appendChild(styleDiv);
 
 var script = document.createElement('script');
 script.src = browser.runtime.getURL('buttons.js');
@@ -67,10 +74,40 @@ document.addEventListener("contextmenu", (evt: Event) => {
     selectedElement = evt.target as HTMLElement;
     //console.debug(selectedElement.id);
 });
+function displayInvisibleButtons(){
+    //console.log("DisplayInvisibleButtons");
+    showInvisibleButtons = true;
+    document.querySelectorAll(".sr-button").forEach((element)=>{
+        var button = element as HTMLButtonElement
+        button.classList.add("sr-only");
+        button.classList.remove("display-none");
+        //button.style.display = "none";
+    })
+}
+
+function hideInvisibleButtons(){
+    //console.log("hideInvisibleButtons");
+    showInvisibleButtons = false;
+    document.querySelectorAll(".sr-button").forEach((element)=>{
+        var button = element as HTMLButtonElement
+        button.classList.remove("sr-only");
+        button.classList.add("display-none");
+    })
+}
+
 port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
     let imageElement: HTMLImageElement;
     if(message && message.status == "ping" ) return;
+    if(message["type"] === "handleInvisibleButton"){
+        if(message["displayInvisibleButtons"]){
+            displayInvisibleButtons();
+        } else {
+            hideInvisibleButtons();
+        }
+        //console.log("message received inside content script", message["displayInvisibleButtons"]);
+        return;
+    }
     if (selectedElement instanceof HTMLImageElement) {
         imageElement = selectedElement;
     } else {
@@ -186,6 +223,11 @@ document.onreadystatechange = function () {
             // Process maps on page
             processMaps(document, port, extVersion);
             processMAPImages(document, port, extVersion);
+            if (showInvisibleButtons){
+                displayInvisibleButtons();
+            } else {
+                hideInvisibleButtons();
+            }
         }
     }, 1500)
 }

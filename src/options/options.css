@@ -46,8 +46,12 @@ button:hover {
   overflow:auto;
 }
 
-#developer-mode{
+#developer-mode, #sr-button-toggle{
   display: flex;
+}
+
+#sr-button-toggle {
+  margin-top: 1rem;
 }
 
 #developer-mode-text{
@@ -60,6 +64,11 @@ button:hover {
   margin-top: 17px;
   left: 10px;
 }
+
+#toggle-button {
+  left: 10px;
+}
+
 .toggle-container {
   position:relative;
   display: inline-block;
@@ -193,7 +202,7 @@ line-height: 20pt;
   gap: 1vw;
 }
 
-#languageSelectionLabel {
+#languageSelectionLabel , #buttonsToggle{
 color: black;
 font-size: medium;
 font-weight: 400;

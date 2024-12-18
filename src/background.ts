@@ -28,6 +28,7 @@ let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window | browser.Tabs.Tab;
+let launchPad : browser.Windows.Window | browser.Tabs.Tab;
 var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
 //console.debug("Extension Version background page", extVersion);
@@ -293,15 +294,32 @@ async function createOffscreen() {
 browser.runtime.onStartup.addListener(() => { createOffscreen(); });
 // a message from an offscreen document every 50 second resets the inactivity timer
 browser.runtime.onMessage.addListener(msg => {
-  if (msg.keepAlive) console.log('keepAlive');
+  if (msg.keepAlive) console.debug('keepAlive');
 });
+
 
 async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
+  //console.log("Saved Items", items);
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
+  displayInvisibleButtons = items["displayInvisibleButtons"];
   let tabs = browser.tabs.query({})
+  //console.log("inside Background new code", displayInvisibleButtons)
 
+  // let tabs = browser.tabs.query({ active: true, currentWindow: true });
+  tabs.then(function (tabs) {
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
+        let tabId = tabs[i].id || 0;  
+        ports[tabId].postMessage({
+          "type": "handleInvisibleButton",
+          "displayInvisibleButtons": displayInvisibleButtons
+        });
+      }
+    }
+  });
+  
   if (showDebugOptions) {
     tabs.then(function (tabs) {
       for (var i = 0; i < tabs.length; i++) {
@@ -414,7 +432,16 @@ function disableContextMenu() {
 /*Handle the context menu items based on the status of the DOM*/
 function handleUpdated(tabId: any, changeInfo: any) {
   if (changeInfo.status == "complete") {
+    // console.log("handleUpdated called");
     enableContextMenu();
+    //console.log("Handle Updated function", displayInvisibleButtons);
+    // send message 
+    if(ports[tabId] && !ports[tabId].sender?.url?.startsWith("chrome://") && !ports[tabId].sender?.url?.startsWith("chrome-extension://")){
+      ports[tabId].postMessage({
+        "type": "handleInvisibleButton",
+        "displayInvisibleButtons": displayInvisibleButtons
+      });
+    } 
   } else if (changeInfo.status == "unloaded" || changeInfo.status == "loading") {
     disableContextMenu();
   }
@@ -449,9 +476,12 @@ var showDebugOptions: Boolean;
 
 var previousToggleState: Boolean;
 
+var displayInvisibleButtons : Boolean;
+
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   previousToggleState = items["previousToggleState"];
+  displayInvisibleButtons = items["displayInvisibleButtons"];
   console.debug("debug value inside storage sync data", showDebugOptions);
   if (showDebugOptions) {
     browser.contextMenus.create({
@@ -489,16 +519,24 @@ browser.runtime.onInstalled.addListener(function (object) {
   }, onCreated);
 });
 
-browser.commands.onCommand.addListener((command) => {
+browser.commands.onCommand.addListener(async (command) => {
   console.debug(`Command: ${command}`);
-  windowsPanel ? browser.windows.create({
-    type: "panel",
-    url: "launchpad/launchpad.html",
-    width: 700,
-    height: 700,
-  }) : browser.tabs.create({
-    url: "launchpad/launchpad.html",
-  });
+  try{
+    if(launchPad != undefined){
+      await windowsPanel ? browser.windows.remove(launchPad.id!) : browser.tabs.remove(launchPad.id!); 
+    }
+    launchPad = windowsPanel ? await browser.windows.create({
+      type: "panel",
+      url: "launchpad/launchpad.html",
+      width: 700,
+      height: 700,
+    }) : await browser.tabs.create({
+      url: "launchpad/launchpad.html",
+    }); 
+  } catch(error){
+    console.error(error);
+  }
+  
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
