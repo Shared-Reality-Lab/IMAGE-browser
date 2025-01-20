@@ -15,7 +15,7 @@ export function processMap(port: browser.Runtime.Port, map: any, origin: string,
 
         mapButton.innerText = browser.i18n.getMessage("getMapRendering");
         //console.log("ext version from map", extVersion);
-        if (extVersion === "test") {
+        if (extVersion === "development") {
             mapButton.innerText += process.env.SUFFIX_TEXT;
         }
         let preprocessorMapButton = document.createElement("button");

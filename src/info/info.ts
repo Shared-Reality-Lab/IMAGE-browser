@@ -17,7 +17,7 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 //import Plyr from "plyr";
-import "./info.scss";
+import "./info.css";
 import browser from "webextension-polyfill";
 import hash from "object-hash";
 import { v4 as uuidv4 } from 'uuid';
@@ -49,7 +49,7 @@ window.onload = () => {
     setTimeout(()=>{
         let title = document.getElementById("renderingTitle");
         if (title) {
-            if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT) {
+            if (process.env.NODE_ENV == "development" && process.env.SUFFIX_TEXT) {
                 title.textContent += process.env.SUFFIX_TEXT
             }
         }

@@ -54,7 +54,7 @@ function getSeriesData(series) {
         if (point.accessibility && point.accessibility.description){
             pointInfo.altText = point.accessibility.description;
         }
-        pointKeys = ['x', 'y', 'z', 'open', 'high', 'low', 'close', 'value', 'percentage','name', "text"];
+        let pointKeys = ['x', 'y', 'z', 'open', 'high', 'low', 'close', 'value', 'percentage','name', "text"];
         pointKeys.forEach(key => {
             if (point[key] !== undefined) {
                 pointInfo[key] = (key == "text")?sanitizeHTMLString(point[key]):point[key];

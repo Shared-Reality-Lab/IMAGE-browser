@@ -31,8 +31,8 @@ function processCharts() {
     for (let chart of window.Highcharts.charts) {
       if (chart) {
         chart.reflow = false;
-        divId = chart.renderTo.id;
-        containerDivId = chart.container.id;
+        let divId = chart.renderTo.id;
+        let containerDivId = chart.container.id;
         document.getElementById(containerDivId).style.height = "max-content";
         document.getElementById(divId).style.height = "max-content";
         divChartMap[divId] = chart
@@ -44,7 +44,7 @@ function processCharts() {
           chartButtonText = "Interpréter ce graphique avec IMAGE";
         else
           chartButtonText = "Interpret this chart with IMAGE";
-        if (extVersion === "test") {
+        if (extVersion === "development") {
           chartButtonText += " (test)"
         }
 
@@ -53,11 +53,11 @@ function processCharts() {
         chartButton.style.marginTop = "1rem";
         chartButton.setAttribute("data-chart-id", divId);
         chartButton.addEventListener("click", function (event) {
-          targetId = event.target.parentElement.id;
-          chartObj = divChartMap[targetId];
+          let targetId = event.target.parentElement.id;
+          let chartObj = divChartMap[targetId];
           let chartData = utils.getChartData(chart);
           console.debug(chartData);
-          messageObj = { "messageFrom": "imageCharts", "charts": chartData };
+          let messageObj = { "messageFrom": "imageCharts", "charts": chartData };
           window.postMessage(messageObj, "*");
         });
         document.getElementById(divId).style.overflow = "visible";

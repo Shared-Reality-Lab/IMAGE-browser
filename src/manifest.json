@@ -30,7 +30,7 @@
     "host_permissions" : ["<all_urls>"],
 
     "background": {
-        "service_worker": "background.ts",
+        "service_worker": "background.js",
         "type": "module"
     },
     "commands": {
@@ -43,22 +43,20 @@
     },
     "content_scripts": [{
         "matches": ["<all_urls>"],
-        "js": ["content.ts"],
+        "js": ["content.js"],
         "css": ["styles.css"]
     }],
 
     "web_accessible_resources": [{
         "resources": [ 
-            "info/*.ts",
-            "info/info.html",
+            "info/*",
             "feedback/*",
             "charts/*",
             "launchpad/*",
             "firstLaunch/*",
-            "maps/maps-utils.ts",
-            "hAPI/hapi-utils.ts",
-            "hAPI/worker.ts",
-            "errors/*.html",
+            "maps/*",
+            "hAPI/*.js",
+            "errors/*",
             "progressBar/progressBar.html",
             "audio/*",
             "offscreen.html",
