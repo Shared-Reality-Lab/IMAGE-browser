@@ -1,4 +1,4 @@
-# IMAGE-browser
+# IMAGE-browser 
 IMAGE browser extensions &amp; client-side code
 
 To install the latest development version of the extension you'll need to follow [these instructions](https://github.com/Shared-Reality-Lab/IMAGE-browser/wiki/Installing-Development-Extensions), using this [packaged extension file](https://nightly.link/Shared-Reality-Lab/IMAGE-browser/workflows/typescript-check/main/extension.zip).
