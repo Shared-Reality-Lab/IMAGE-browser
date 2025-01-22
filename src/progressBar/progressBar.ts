@@ -1,6 +1,6 @@
 import progressbar from "progressbar.js";
 import { queryLocalisation } from "../utils";
-
+import './progressBar.css'
 // Load localised title
 queryLocalisation();
 

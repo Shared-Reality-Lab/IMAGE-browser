@@ -1,5 +1,4 @@
-@import '../../node_modules/bootstrap/scss/bootstrap.scss';
-//@import '../../node_modules/plyr/src/sass/plyr.scss';
+@import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 
 .plyr--audio {
     display: flex;

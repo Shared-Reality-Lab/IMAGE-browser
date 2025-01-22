@@ -338,12 +338,12 @@ async function updateDebugContextMenu() {
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+        title: (extVersion == 'development') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
         contexts: ["image"]
       }, onCreated);
       browser.contextMenus.create({
         id: "request-only",
-        title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
+        title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
         contexts: ["image"]
       }, onCreated);
     }
@@ -384,7 +384,7 @@ function storeConnection(p: Runtime.Port) {
   if (id) {
     ports[id] = p;
     ports[id].onMessage.addListener(handleMessage.bind(null, p));
-    const pingInterval = setInterval((id) => {
+    const pingInterval = setInterval((id:any) => {
       //console.debug("Ping to port with Id "+ id);
       if(ports[id]){
         ports[id].postMessage({
@@ -406,16 +406,16 @@ function storeConnection(p: Runtime.Port) {
 function enableContextMenu() {
   browser.contextMenus.update("mwe-item", {
     enabled: true,
-    title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem")
+    title: (extVersion == 'development') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem")
   });
   if (showDebugOptions) {
     browser.contextMenus.update("preprocess-only", {
       enabled: true,
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'development') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
     })
     browser.contextMenus.update("request-only", {
       enabled: true,
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
+      title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
     });
   }
 }
@@ -486,12 +486,12 @@ getAllStorageSyncData().then((items) => {
   if (showDebugOptions) {
     browser.contextMenus.create({
       id: "preprocess-only",
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'development') ? (browser.i18n.getMessage("preprocessItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     }, onCreated);
     browser.contextMenus.create({
       id: "request-only",
-      title: (extVersion == 'test') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
+      title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     }, onCreated);
   }
@@ -514,7 +514,7 @@ browser.runtime.onInstalled.addListener(function (object) {
 
   browser.contextMenus.create({
     id: "mwe-item",
-    title: (extVersion == 'test') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
+    title: (extVersion == 'development') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
     contexts: ["image"]
   }, onCreated);
 });

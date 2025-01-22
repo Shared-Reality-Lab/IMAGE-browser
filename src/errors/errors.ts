@@ -15,7 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import { queryLocalisation } from "../utils";
-
+import './errors.css';
 queryLocalisation();
 
 const closeButton : Element | null = document.getElementById('closingButton');

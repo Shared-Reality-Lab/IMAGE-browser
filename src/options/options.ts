@@ -16,12 +16,12 @@
  */
 import  browser  from "webextension-polyfill";
 import { queryLocalisation } from "../utils";
-
+import './options.css';
 let port = browser.runtime.connect();
 let navigatorSerial = navigator.serial;
 
 var extVersion = process.env.NODE_ENV || "";
-//console.log("Extension Version options page", extVersion);
+console.log("Extension Version options page", extVersion);
 
 // load localized labels 
 queryLocalisation();
@@ -108,7 +108,7 @@ function saveOptions() {
 }
 
 function restore_options() {
-  let defaultDebugValue = (extVersion === "test")?true:false;
+  let defaultDebugValue = (extVersion === "development")?true:false;
   browser.storage.sync
     .get({
       //Default values
@@ -142,7 +142,7 @@ function restore_options() {
           developerSettings.style.display = "block"; 
         }
     });
-    if(extVersion === "test"){
+    if(extVersion === "development"){
       document.getElementById("renderingOptions")!.innerText += process.env.SUFFIX_TEXT;
       document.getElementById("advancedOptions")!.innerText += process.env.SUFFIX_TEXT;
       document.getElementById("developerMode")!.innerText += process.env.SUFFIX_TEXT;

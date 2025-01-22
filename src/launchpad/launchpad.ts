@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import 'bootstrap/dist/css/bootstrap.css';
-import "./launchpad.scss";
+import "./launchpad.css";
 import { TUTORIAL_PAGE } from "../config";
 import { queryLocalisation } from "../utils";
 
@@ -13,7 +13,7 @@ window.onload = () => {
     // Update renderings label
     let launchpadTitle = document.getElementById("popUpTitle");
     if (launchpadTitle) {
-        if (process.env.NODE_ENV == "test" && process.env.SUFFIX_TEXT){
+        if (process.env.NODE_ENV == "development" && process.env.SUFFIX_TEXT){
             launchpadTitle.textContent += process.env.SUFFIX_TEXT
         }
     }

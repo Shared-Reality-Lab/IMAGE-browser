@@ -10,7 +10,7 @@ export function getAllStorageSyncData() {
   } else {
     console.debug("desktop device");
   }
-  //let defaultDebugValue = (process.env.NODE_ENV === "test")?true:false;
+  //let defaultDebugValue = (process.env.NODE_ENV === "development")?true:false;
   return browser.storage.sync.get({
     //Default values
     inputUrl: "",
