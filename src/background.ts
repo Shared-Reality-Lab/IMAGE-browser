@@ -19,10 +19,11 @@ import { v4 as uuidv4 } from "uuid";
 import hash from "object-hash";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
-import imageCompression from 'browser-image-compression';
 import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { SERVER_URL } from './config';
+import { MONARCH_URL, RENDERERS, SERVER_URL, TAT_URL } from './config';
+import { encryptData, monarchPopUp, saveToLocalStorage } from "./monarch/utils";
+import { TatStorageData } from "./monarch/types";
 
 let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
@@ -201,21 +202,128 @@ async function handleMessage(p: Runtime.Port, message: any) {
             return;
           }
           if (json["renderings"].length > 0) {
-            if (query["request_uuid"] !== undefined) {
-              responseMap.set(query["request_uuid"],
-                { "response": json, "request": query, "server": serverUrl }
-              );
-              if (renderingsPanel !== undefined) {
-                try {
-                  await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
-                  renderingsPanel = await createPanel(query);
-                } catch {
+            console.log("Inside JSON Renderings");
+            console.log("message", message);
+            if (message["redirectToTAT"]) {
+              console.log("Received TAT data in background script");
+              let tactileResponse = json.renderings.filter((rendering) => (rendering.type_id == RENDERERS.tactileSvg))
+              let tactileSvgGraphic = tactileResponse[0].data.graphic as string;
+              //console.log("Tactile Response", tactileSvgGraphic);
+              let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
+              let svgDom = atob(encodedSvg);
+              let reqTitle = items["monarchTitle"];
+              let reqSecretKey = items["monarchSecretKey"];
+              let reqChannelId = items["monarchChannelId"];
+              let encryptionKey = items["monarchEncryptionKey"];
+              const flowType = reqChannelId ? "update" : "create";
+              let monarchFetchUrl = flowType == "update" ?
+                `${MONARCH_URL}/update/${reqChannelId}` :
+                `${MONARCH_URL}/create`;
+              //const reqData = await encryptData(tactileSvgGraphic, encryptionKey);
+              const reqData = await encryptData(svgDom, encryptionKey);
+              const reqBody = {
+                "data": reqData,
+                "layer": "None",
+                "title": reqTitle,
+                "secret": reqSecretKey
+              };
+              if (message["sendToMonarch"]) {
+                /** Send Graphic to Monarch flow - Make curl request to monarch */
+                const response = await fetch(monarchFetchUrl,
+                  {
+                    "method": "POST",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(reqBody)
+                  });
+
+                let responseJSON = {
+                  "id": reqChannelId || "",
+                  "secret": ""
+                };
+                //console.log("header", response.headers.get("Content-Type"));
+                if (flowType == "create") {
+                  responseJSON = await response.json();
+                  browser.storage.sync.set({
+                    "monarchChannelId": responseJSON["id"],
+                    "monarchSecretKey": responseJSON["secret"]
+                  });
+                }
+                //console.log("response received", responseJSON);
+                let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
+                browser.scripting.executeScript({
+                  target: { tabId: currentTab[0].id || 0 },
+                  func: monarchPopUp,
+                  args: [responseJSON["id"], flowType]
+                });
+
+              } else {
+                /** Handle "Load in Tactile Authoring Tool" flow */
+                const tatStorageData: TatStorageData = {
+                  channelId: items["monarchChannelId"],
+                  graphicTitle: items["monarchTitle"],
+                  secretKey: items["monarchSecretKey"],
+                  graphicBlob: query["graphic"]
+                }
+                //console.log("Data stored in storage", tatStorageData);
+                //console.log("Svg Dom Value", svgDom);
+                let tabs = await browser.tabs.query({ url: TAT_URL });
+                // if(tabs){
+                //   tabs.forEach((tab)=>{
+                //     if(tab.id){browser.tabs.remove(tab.id)}
+                //   })
+                // }
+                /** encrypt data before storing in local storage */
+                let encryptedSvgData = await encryptData(svgDom, encryptionKey);
+                let encryptedTatData: TatStorageData = tatStorageData;
+                for (let key of Object.keys(tatStorageData)) {
+                  encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
+                }
+                // let encryptedTatData = await Promise.all(Object.keys(tatStorageData).map(async (tatKey)=>{
+                //   return await encryptData(tatStorageData[tatKey as keyof TatStorageData], encryptionKey);
+                // }))
+                if (tabs && tabs.length > 0) {
+                  let existingTab = tabs[0];
+                  browser.scripting.executeScript({
+                    target: { tabId: existingTab.id || 0 },
+                    func: saveToLocalStorage,
+                    args: [encryptedSvgData, encryptedTatData, existingTab]
+                  });
+                  browser.tabs.update(existingTab.id, { active: true });
+                }
+                else {
+                  let authoringTool = browser.tabs.create({
+                    url: TAT_URL
+                  });
+                  authoringTool.then((tab) => {
+                    browser.scripting.executeScript({
+                      target: { tabId: tab.id || 0 },
+                      func: saveToLocalStorage,
+                      args: [encryptedSvgData, encryptedTatData]
+                    });
+                  }, (error) => { console.log(error) });
+                }
+              }
+
+            }
+            else {
+              if (query["request_uuid"] !== undefined) {
+                responseMap.set(query["request_uuid"],
+                  { "response": json, "request": query, "server": serverUrl }
+                );
+                if (renderingsPanel !== undefined) {
+                  try {
+                    await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
+                    renderingsPanel = await createPanel(query);
+                  } catch {
+                    renderingsPanel = await createPanel(query);
+                  }
+                } else {
                   renderingsPanel = await createPanel(query);
                 }
-              } else {
-                renderingsPanel = await createPanel(query);
+                // How to handle if request_uuid was undefined??
               }
-              // How to handle if request_uuid was undefined??
             }
           } else {
             await windowsPanel ? browser.windows.create({
@@ -335,6 +443,17 @@ async function updateDebugContextMenu() {
       }
     }, function () { });
 
+    browser.contextMenus.create({
+      id: "mwe-item-tat",
+      title: "Load in Tactile Authoring Tool",
+      contexts: ["image"]
+    }, onCreated);
+    browser.contextMenus.create({
+      id: "mwe-item-monarch",
+      title: "Send Graphic to Monarch",
+      contexts: ["image"]
+    }, onCreated);
+
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
         id: "preprocess-only",
@@ -357,6 +476,8 @@ async function updateDebugContextMenu() {
   else if (showDebugOptions === false && previousToggleState) {
     browser.contextMenus.remove("preprocess-only");
     browser.contextMenus.remove("request-only");
+    browser.contextMenus.remove("mwe-item-tat");
+    browser.contextMenus.remove("mwe-item-monarch");
     browser.storage.sync.set({ previousToggleState: false });
     browser.storage.sync.set({
       processItem: "",
@@ -417,6 +538,14 @@ function enableContextMenu() {
       enabled: true,
       title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
     });
+    browser.contextMenus.update("mwe-item-tat", {
+      enabled: true,
+      title: "Load in Tactile Authoring Tool",
+    });
+    browser.contextMenus.update("mwe-item-monarch", {
+      enabled: true,
+      title: "Send Graphic to Monarch",
+    });
   }
 }
 
@@ -426,6 +555,8 @@ function disableContextMenu() {
   if (showDebugOptions) {
     browser.contextMenus.update("preprocess-only", { enabled: false });
     browser.contextMenus.update("request-only", { enabled: false });
+    browser.contextMenus.update("mwe-item-tat", { enabled: false });
+    browser.contextMenus.update("mwe-item-monarch", { enabled: false });
   }
 }
 
@@ -494,6 +625,16 @@ getAllStorageSyncData().then((items) => {
       title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     }, onCreated);
+    browser.contextMenus.create({
+      id: "mwe-item-tat",
+      title: "Load in Tactile Authoring Tool",
+      contexts: ["image"]
+    }, onCreated);
+    browser.contextMenus.create({
+      id: "mwe-item-monarch",
+      title: "Send Graphic to Monarch",
+      contexts: ["image"]
+    }, onCreated);
   }
 });
 
@@ -517,6 +658,21 @@ browser.runtime.onInstalled.addListener(function (object) {
     title: (extVersion == 'development') ? (browser.i18n.getMessage("menuItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("menuItem"),
     contexts: ["image"]
   }, onCreated);
+
+    // //Context menu option to display image in Authoring tool
+    // browser.contextMenus.create({
+    //   id: "mwe-item-tat",
+    //   title: "Load in Tactile Authoring Tool",
+    //   contexts: ["image"]
+    // }, onCreated);
+  
+    // //Context menu option to send to Monarch
+    // browser.contextMenus.create({
+    //   id: "mwe-item-monarch",
+    //   title: "Send Graphic to Monarch",
+    //   contexts: ["image"]
+    // }, onCreated);
+
 });
 
 browser.commands.onCommand.addListener(async (command) => {
@@ -549,7 +705,20 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         "type": "resourceRequest",
         "tabId": tab.id,
       });
-    } else if (info.menuItemId === "preprocess-only") {
+    } 
+    else if (info.menuItemId === "mwe-item-tat") {
+      ports[tab.id].postMessage({
+        "type": "tactileAuthoringTool",
+        "tabId": tab.id,
+      });
+    }
+    else if(info.menuItemId === "mwe-item-monarch"){
+      ports[tab.id].postMessage({
+        "type": "sendToMonarch",
+        "tabId": tab.id,
+      });
+    }
+    else if (info.menuItemId === "preprocess-only") {
       ports[tab.id].postMessage({
         "type": "preprocessRequest",
         "tabId": tab.id

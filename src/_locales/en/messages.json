@@ -111,6 +111,30 @@
         "message": "Server Options",
         "description": "Header for server options in extension preferences."
     },
+    "monarchOptions": {
+        "message": "Monarch Options",
+        "description": "Header for monarch options in extension preferences."
+    },
+    "monarchTitle": {
+        "message": "Graphic Title",
+        "description": "Label for monarch graphic title in extension preferences."
+    },
+    "monarchChannelId": {
+        "message": "Channel Id",
+        "description": "Header for monarch channel id in extension preferences."
+    },
+    "monarchSecretKey": {
+        "message": "Secret Key",
+        "description": "Header for monarch secret key in extension preferences."
+    },
+    "monarchEncryptionKey": {
+        "message": "Encryption Key",
+        "description": "Header for monarch encryption key in extension preferences."
+    },
+    "tactileAuthoringTool" : {
+        "message": "Launch Tactile Authoring Tool",
+        "description": "Label for button to launch Authoring tool"
+    },
     "mcgillServerLabel": {
         "message": "McGill Server",
         "description": "Label for McGill server."

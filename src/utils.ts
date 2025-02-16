@@ -27,7 +27,11 @@ export function getAllStorageSyncData() {
     requestItem: "",
     mweItem: "",
     language: "auto",
-    displayInvisibleButtons: true
+    displayInvisibleButtons: true,
+    monarchTitle: "",
+    monarchChannelId: "",
+    monarchEncryptionKey: "",
+    monarchSecretKey: ""
   });
 };
 
@@ -48,6 +52,7 @@ export async function getRenderers(): Promise<string[]> {
   }
   if (items['developerMode']) {
     renderers.push(RENDERERS.svgLayers);
+    renderers.push(RENDERERS.tactileSvg);
   }
   return renderers;
 }

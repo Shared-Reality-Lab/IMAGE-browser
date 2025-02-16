@@ -26,7 +26,9 @@ const config: webpack.Configuration = {
     'launchpad/launchpad': './src/launchpad/launchpad.ts',
     'progressBar/progressBar': './src/progressBar/progressBar.ts',
     'hAPI/hapi-utils': './src/hAPI/hapi-utils.ts',
-    'hAPI/worker': './src/hAPI/worker.ts'
+    'hAPI/worker': './src/hAPI/worker.ts',
+    'monarch/utils': './src/monarch/utils.ts',
+    'monarch/types': './src/monarch/types.ts'
   },
   output: {
     filename: '[name].js',

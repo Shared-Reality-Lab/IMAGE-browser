@@ -37,6 +37,10 @@ const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audi
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
 const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
 const displayInvisibleButtons = <HTMLInputElement>(document.getElementById("toggle-checkbox"));
+const monarchTitle = <HTMLInputElement>(document.getElementById("monarch-title"));
+const monarchChannelId = <HTMLInputElement>(document.getElementById("monarch-channel-id"));
+const monarchSecretKey = <HTMLInputElement>(document.getElementById("monarch-secret-key"));
+const monarchEncryptionKey = <HTMLInputElement>(document.getElementById("monarch-encryption-key"));
 
 if (toggleButton) {
   toggleButton?.addEventListener("click", showDeveloperSettings);
@@ -97,7 +101,11 @@ function saveOptions() {
     audio:audioRenderingsSetting.checked,
     text:textRenderingsSetting.checked,
     language:languageSetting.value,
-    displayInvisibleButtons : displayInvisibleButtons.checked
+    displayInvisibleButtons : displayInvisibleButtons.checked,
+    monarchChannelId: monarchChannelId.value,
+    monarchEncryptionKey: monarchEncryptionKey.value,
+    monarchTitle: monarchTitle.value,
+    monarchSecretKey: monarchSecretKey.value
   }),
     (function () {
       optionsCheck();
@@ -123,7 +131,11 @@ function restore_options() {
       audio:true,
       text:true,
       language: "auto",
-      displayInvisibleButtons: true
+      displayInvisibleButtons: true,
+      monarchTitle: "",
+      monarchChannelId: "",
+      monarchSecretKey: "",
+      monarchEncryptionKey: ""
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -138,6 +150,10 @@ function restore_options() {
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];
         displayInvisibleButtons.checked = items["displayInvisibleButtons"];
+        monarchTitle.value = items["monarchTitle"]
+        monarchChannelId.value = items["monarchChannelId"],
+        monarchSecretKey.value = items["monarchSecretKey"],
+        monarchEncryptionKey.value = items["monarchEncryptionKey"]
         if (toggleButton.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }

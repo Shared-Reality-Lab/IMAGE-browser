@@ -4,6 +4,11 @@ export const SERVER_URL: string = "https://image.a11y.mcgill.ca/";
 /** Unicorn Server URL */
 export const UNICORN_SERVER_URL: string = "https://unicorn.cim.mcgill.ca/image/";
 
+/** TAT URL */
+export const TAT_URL: string = "https://tat.unicorn.cim.mcgill.ca/";
+
+/** MONARCH URL */
+export const MONARCH_URL: string = "https://monarch.unicorn.cim.mcgill.ca";
 
 /** Renderers Supported by Extension */
 export const RENDERERS = Object.freeze({
@@ -12,7 +17,8 @@ export const RENDERERS = Object.freeze({
     simpleAudio: "ca.mcgill.a11y.image.renderer.SimpleAudio",
     photoAudioHaptics: "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
     simpleHaptics: "ca.mcgill.a11y.image.renderer.SimpleHaptics",
-    svgLayers: "ca.mcgill.a11y.image.renderer.SVGLayers"
+    svgLayers: "ca.mcgill.a11y.image.renderer.SVGLayers",
+    tactileSvg: "ca.mcgill.a11y.image.renderer.TactileSVG"
 });
 
 /** Capabilities supported by Extension */

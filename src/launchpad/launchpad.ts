@@ -1,7 +1,7 @@
 import browser from "webextension-polyfill";
 import 'bootstrap/dist/css/bootstrap.css';
 import "./launchpad.css";
-import { TUTORIAL_PAGE } from "../config";
+import { TAT_URL, TUTORIAL_PAGE } from "../config";
 import { queryLocalisation } from "../utils";
 
 let port = browser.runtime.connect();
@@ -30,6 +30,11 @@ window.onload = () => {
     document.getElementById("tutorialLaunchPad")?.addEventListener("click",() => {
         browser.tabs.create({
             url: TUTORIAL_PAGE
+        });
+    });
+    document.getElementById("tactileAuthoringTool")?.addEventListener("click",() => {
+        browser.tabs.create({
+            url: TAT_URL
         });
     });
     
