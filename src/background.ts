@@ -219,13 +219,14 @@ async function handleMessage(p: Runtime.Port, message: any) {
               let monarchFetchUrl = flowType == "update" ?
                 `${MONARCH_URL}/update/${reqChannelId}` :
                 `${MONARCH_URL}/create`;
-              //const reqData = await encryptData(tactileSvgGraphic, encryptionKey);
+              let encryptedGraphicBlob = await encryptData(query["graphic"], encryptionKey);
               const reqData = await encryptData(svgDom, encryptionKey);
               const reqBody = {
                 "data": reqData,
                 "layer": "None",
                 "title": reqTitle,
-                "secret": reqSecretKey
+                "secret": reqSecretKey,
+                "graphicBlob": encryptedGraphicBlob
               };
               if (message["sendToMonarch"]) {
                 /** Send Graphic to Monarch flow - Make curl request to monarch */
