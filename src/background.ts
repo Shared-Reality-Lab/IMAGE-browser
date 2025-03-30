@@ -22,7 +22,7 @@ import { IMAGERequest } from "./types/request.schema";
 import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { MONARCH_URL, RENDERERS, SERVER_URL, TAT_URL } from './config';
-import { encryptData, monarchPopUp, saveToLocalStorage } from "./monarch/utils";
+import { encryptData, monarchPopUp, decryptData, saveToLocalStorage } from "./monarch/utils";
 import { TatStorageData } from "./monarch/types";
 
 let ports: { [key: number]: Runtime.Port } = {};
@@ -108,6 +108,22 @@ async function handleMessage(p: Runtime.Port, message: any) {
     case "mapSearch":
       console.debug("Generating map query");
       query = await generateMapSearchQuery(message);
+      break;
+    case "dataFromAuthoringTool":
+      console.debug("Data received from Authoring Tool");
+      let items = await getAllStorageSyncData();
+      const encryptionKey = items["monarchEncryptionKey"];
+      const [title, channelId, secretKey] = await Promise.all([
+        decryptData(message.storageData.graphicTitle, encryptionKey), 
+        decryptData(message.storageData.channelId, encryptionKey), 
+        decryptData(message.storageData.secretKey, encryptionKey)
+      ]);
+      //console.log("Decrypted Data", title, channelId, secretKey);
+      await browser.storage.sync.set({
+        monarchTitle: title,
+        monarchChannelId: channelId,
+        monarchSecretKey: secretKey
+      });
       break;
     case "checkImageSize":
       console.debug("Checking Image Size");
