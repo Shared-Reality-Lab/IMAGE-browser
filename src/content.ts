@@ -48,6 +48,14 @@ window.addEventListener("message", function (event) {
     // We only accept messages from our script in highcharts.js
     if (event.source != window)
         return;
+    if (event.data.messageFrom && (event.data.messageFrom == "AuthoringTool")) {
+        //console.log(" Message from Authoring Tool", JSON.parse(event.data.storageData));
+        let storageData = JSON.parse(event.data.storageData);
+        port.postMessage({
+            type: "dataFromAuthoringTool",
+            storageData: storageData
+        })
+    }
     if (event.data.messageFrom && (event.data.messageFrom == "imageCharts")) {
         port.postMessage({
             "type": "chartResource",
