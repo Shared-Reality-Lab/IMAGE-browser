@@ -1,257 +1,244 @@
  #saveChangesButton {
-  background: #7ed7f4 ; 
-  border: none;
-  border-radius: 12px;
-  color: black;
-  display: inline-block;
-  font-size: 20px;
-  font-weight: 400;
-  margin-top: 20px;
-  text-decoration: none;
-  /* width is dynamically set  */
-  padding: 0 20px;
-  height: 40px; 
-  margin-left: 20px;
-}
+   background: #7ed7f4;
+   border: none;
+   border-radius: 12px;
+   color: black;
+   display: inline-block;
+   font-size: 20px;
+   font-weight: 400;
+   margin-top: 20px;
+   text-decoration: none;
+   /* width is dynamically set  */
+   padding: 0 20px;
+   height: 40px;
+   margin-left: 20px;
+ }
 
-#cancelButton{
-  background: rgb(176, 175, 175) ; 
-  border: none;
-  border-radius: 12px;
-  color: black;
-  display: inline-block;
-  font-size: 20px;
-  font-weight: 400;
-  margin-top: 20px;
-  text-decoration: none;
-  padding: 0 20px; 
-  height: 40px; 
-}
+ #cancelButton {
+   background: rgb(176, 175, 175);
+   border: none;
+   border-radius: 12px;
+   color: black;
+   display: inline-block;
+   font-size: 20px;
+   font-weight: 400;
+   margin-top: 20px;
+   text-decoration: none;
+   padding: 0 20px;
+   height: 40px;
+ }
 
-button:hover {
-  cursor: pointer;
-}
+ button:hover {
+   cursor: pointer;
+ }
 
-#input-url{
-  height: 30px;
-  width: 500px;
-  font-size:12pt;
-  margin-left: 16px;
-  color: black;
-}
+ #input-url {
+   height: 30px;
+   width: 500px;
+   font-size: 12pt;
+   margin-left: 16px;
+   color: black;
+ }
 
-#wrapper-div{
-  position:relative;
-  top:0px; 
-  overflow:auto;
-}
 
-#developer-mode, #sr-button-toggle{
-  display: flex;
-}
+ #developer-mode,
+ #sr-button-toggle {
+   display: flex;
+ }
 
-#sr-button-toggle {
-  margin-top: 1rem;
-}
+ #sr-button-toggle,
+ #monarch-header {
+   margin: 1rem 0rem;
+ }
 
-#developer-mode-text{
-  color: black;
-  font-size: x-large;
-  font-weight: 400;
-}
+ .toggle-container {
+   position: relative;
+   display: inline-block;
+   width: 50px;
+   height: 25px;
+   left: 10px;
+   pointer-events: none;
+ }
 
-#div-togglebutton{
-  margin-top: 17px;
-  left: 10px;
-}
+ .toggle-container input {
+   opacity: 0;
+   width: 100%;
+   height: 100%;
+   pointer-events: all;
+ }
 
-#toggle-button {
-  left: 10px;
-}
+ .slider {
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   cursor: pointer;
+   background-color: rgb(178, 172, 172);
+   transition: 0.4s;
+   pointer-events: none;
+   border: #100f0f;
+ }
 
-.toggle-container {
-  position:relative;
-  display: inline-block;
-  width: 50px;
-  height: 25px;
-  pointer-events: none;
-}
+ .slider::before {
+   content: "";
+   position: absolute;
+   height: 20px;
+   width: 20px;
+   left: 2px;
+   bottom: 2px;
+   background-color: #808080;
+   transition: 0.2s;
+   pointer-events: none;
+ }
 
-.toggle-container input {
-opacity: 0;
-width: 100%;
-height: 100%;
-pointer-events: all;
-}
+ .slider::after {
+   position: absolute;
+   height: 20px;
+   width: 12px;
+   right: 5px;
+   bottom: 5px;
+   transition: 0.2s;
+   pointer-events: none;
+   color: #808080;
+ }
 
-.slider {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-cursor: pointer;
-background-color: rgb(178, 172, 172) ;
-transition: 0.4s;
-pointer-events: none;
-border: #100f0f ;
-}
+ .slider:hover {
+   cursor: pointer;
+ }
 
-.slider::before {
-content: "";
-position: absolute;
-height: 20px;
-width: 20px;
-left: 2px;
-bottom: 2px;
-background-color: #808080;
-transition: 0.2s;
-pointer-events: none;
-}
+ input:checked+.slider {
+   background-color: #7ed7f4;
+ }
 
-.slider::after {
-position: absolute;
-height: 20px;
-width: 12px;
-right: 5px;
-bottom: 5px;
-transition: 0.2s;
-pointer-events: none;
-color: #808080;
-}
+ input:checked+.slider:before {
+   transform: translateX(25px);
+ }
 
-.slider:hover {
-  cursor: pointer;
-}
+ input:checked+.slider:after {
+   left: 8px;
+ }
 
-input:checked + .slider {
-background-color:#7ed7f4;
-}
+ .slider.round {
+   border-radius: 34px;
+ }
 
-input:checked + .slider:before {
-transform: translateX(25px);
-}
+ .slider.round:before {
+   border-radius: 50%;
+ }
 
-input:checked + .slider:after {
-left: 8px;
-}
+ h1.localisation {
+   color: black;
+   font-size: x-large;
+   font-weight: 400;
+ }
 
-.slider.round {
-border-radius: 34px;
-}
+ #audioRenderingsLabel {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+ }
 
-.slider.round:before {
-border-radius: 50%;
-}
+ #textRenderingsLabel {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+   line-height: 30pt;
+ }
 
-h1.localisation {
-color: black;
-font-size: x-large;
-font-weight: 400;
-}
+ .options-label {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+   flex: 0.1
+ }
 
-#noHaptics{
-color: black;
-font-size: medium;
-font-weight: 400; 
-}
+ #serverOptions,
+ #monarchOptions {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+ }
 
-#Haply2diy{
-color: black;
-font-size: medium;
-font-weight: 400; 
-}
-#audioRenderingsLabel{
-color: black;
-font-size: medium;
-font-weight: 400;
-}
+ #mcgillServerLabel {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+   line-height: 30pt;
+ }
 
-#textRenderingsLabel{
-color: black;
-font-size: medium;
-font-weight: 400;
-line-height: 30pt;
-}
+ #customServerLabel {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+   line-height: 20pt;
+ }
 
-.options-label {
-  color: black;
-  font-size: medium;
-  font-weight: 400; 
-  flex: 0.1
-}
+ #monarch-container {
+   display: flex;
+   flex-direction: column;
+   gap: 1vw;
+ }
 
-#serverOptions, #monarchOptions{
-color: black;
-font-size: medium;
-font-weight: 400;
-}
+ #monarch-options{
+  display: none;
+ }
+ 
+ .monarch-row {
+   display: flex;
+   flex-direction: row;
+   flex-wrap: nowrap;
+   width: 100%;
+ }
 
-#mcgillServerLabel{
-color: black;
-font-size: medium;
-font-weight: 400; 
-line-height: 30pt;
-}
+ #languageSelectionLabel,
+ #buttonsToggle {
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+ }
 
-#customServerLabel{
-color: black;
-font-size: medium;
-font-weight: 400; 
-line-height: 20pt;
-}
+ select {
+   padding: 10px 12px;
+   border: 2px solid #7ed7f4;
+   border-radius: 12px;
+   font-size: 16px;
+   background-color: #7ed7f4;
+ }
 
-#language-div, .monarch-row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: baseline;
-  gap: 1vw;
-}
+ select:hover {
+   cursor: pointer;
+   background-color: #A0E4FD;
+ }
 
-.monarch-wrapper{
-  display: flex;
-  flex-direction: column;
-  row-gap: 10px;
-}
+ select:focus {
+   background-color: #FFFFFF;
+ }
 
-#languageSelectionLabel , #buttonsToggle{
-color: black;
-font-size: medium;
-font-weight: 400;
-}
+ #languageWarning {
+   color: rgb(170, 30, 30);
+   font-size: medium;
+   font-weight: 400;
+   line-height: 20pt;
+ }
 
-select {
-  padding: 10px 12px;
-  border: 2px solid #7ed7f4;
-  border-radius: 12px;
-  font-size: 16px;
-  background-color: #7ed7f4;
-}
+ #debugText {
+   display: none;
+   color: black;
+   font-size: medium;
+   font-weight: 400;
+ }
 
-select:hover {
-  cursor: pointer;
-  background-color: #A0E4FD;
-}
+ .options-body {
+   margin: 1rem;
+ }
 
-select:focus {
-  background-color: #FFFFFF;
-}
+ .options-section {
+   margin: 1rem 0rem;
+ }
 
-#languageWarning{
-  color: rgb(170, 30, 30);
-  font-size: medium;
-  font-weight: 400;
-  line-height: 20pt;
-}
-
-#debugText{
-color: black;
-font-size: medium;
-font-weight: 400; 
-}
-
-#debug-text-div{
-  text-align: start;
-}
-
+ .settings-div {
+   padding: 1rem;
+   border: 2px solid lightgrey;
+   margin: 0.5rem 0rem;
+ }
