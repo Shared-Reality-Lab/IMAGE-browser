@@ -17,6 +17,9 @@
 import  browser  from "webextension-polyfill";
 import { queryLocalisation } from "../utils";
 import './options.css';
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';
+
 let port = browser.runtime.connect();
 let navigatorSerial = navigator.serial;
 
@@ -26,47 +29,29 @@ console.log("Extension Version options page", extVersion);
 // load localized labels 
 queryLocalisation();
 
-const toggleButton = <HTMLInputElement>(document.getElementById("toggle"));
 const mcgillServerSetting = <HTMLInputElement>(document.getElementById("mcgill-server"));
 const customServerSetting = <HTMLInputElement>(document.getElementById("custom-server"));
-const developerSettings = <HTMLInputElement>(document.getElementById("developerSettingsDiv"));
-const noHapticsSetting = <HTMLInputElement>(document.getElementById("none-option"));
-const haply2diy2genSetting =  <HTMLInputElement>(document.getElementById("haply-2gen-option"));
-const haply2diy3genSetting =  <HTMLInputElement>(document.getElementById("haply-3gen-option"));
+const developerSettings = <HTMLInputElement>(document.getElementById("toggle-developer-mode"));
 const audioRenderingsSetting =  <HTMLInputElement>(document.getElementById("audio-renderings"));
 const textRenderingsSetting = <HTMLInputElement>(document.getElementById("text-renderings"));
 const languageSetting = <HTMLInputElement>(document.getElementById("language-selection"));
-const displayInvisibleButtons = <HTMLInputElement>(document.getElementById("toggle-checkbox"));
+const displayInvisibleButtons = <HTMLInputElement>(document.getElementById("toggle-invisible-buttons"));
 const monarchTitle = <HTMLInputElement>(document.getElementById("monarch-title"));
 const monarchChannelId = <HTMLInputElement>(document.getElementById("monarch-channel-id"));
 const monarchSecretKey = <HTMLInputElement>(document.getElementById("monarch-secret-key"));
 const monarchEncryptionKey = <HTMLInputElement>(document.getElementById("monarch-encryption-key"));
+const toggleMonarchOptions = <HTMLInputElement>(document.getElementById("toggle-monarch-options"));
 
-if (toggleButton) {
-  toggleButton?.addEventListener("click", showDeveloperSettings);
-} else {
-  console.warn('Could not find toggle button with ID "toggle"');
-}
+developerSettings?.addEventListener("change", (event)=>{
+  let debugText = <HTMLElement>document.querySelector("#debugText");
+  debugText.style.display = developerSettings.checked ? "block" : "none";
+});
 
-function showDeveloperSettings() {
-  if(toggleButton.checked){
-    let haply2genLabel = document.querySelector("#Haply2diy2gen");
-    let haply3genLabel = document.querySelector("#Haply2diy3gen");
-    if(navigatorSerial){
-      haply2genLabel!.textContent = browser.i18n.getMessage("Haply2diy2gen");
-      haply3genLabel!.textContent = browser.i18n.getMessage("Haply2diy3gen");
-      (document.getElementById("haply-2gen-option") as HTMLInputElement)!.disabled = false;
-      (document.getElementById("haply-3gen-option") as HTMLInputElement)!.disabled = false;
-    } else {
-      haply2genLabel!.textContent = browser.i18n.getMessage("Haply2diyNotSupported");
-      (document.getElementById("haply-2gen-option") as HTMLInputElement)!.disabled = true;
-      (document.getElementById("haply-3gen-option") as HTMLInputElement)!.disabled = true;
-    }
-    developerSettings.style.display = "block";
-  } else {
-    developerSettings.style.display = "none";
-  }
-}
+toggleMonarchOptions?.addEventListener("change", (event)=>{
+  let monarchOptions= <HTMLElement>document.querySelector("#monarch-options");
+  monarchOptions.style.display = toggleMonarchOptions.checked ? "block" : "none";
+});
+
 
 function optionsCheck(){
   browser.storage.sync.get({
@@ -94,10 +79,7 @@ function saveOptions() {
     inputUrl: (<HTMLInputElement>document.getElementById("input-url")).value,
     mcgillServer: mcgillServerSetting.checked,
     customServer: customServerSetting.checked,
-    developerMode: toggleButton.checked,
-    noHaptics: noHapticsSetting.checked,
-    haply2diy2gen: haply2diy2genSetting.checked,
-    haply2diy3gen: haply2diy3genSetting.checked,
+    developerMode: developerSettings.checked,
     audio:audioRenderingsSetting.checked,
     text:textRenderingsSetting.checked,
     language:languageSetting.value,
@@ -125,9 +107,6 @@ function restore_options() {
       customServer:false,
       previousToggleState:false,
       developerMode: false,
-      noHaptics:true,
-      haply2diy2gen:false,
-      haply2diy3gen: false,
       audio:true,
       text:true,
       language: "auto",
@@ -142,10 +121,7 @@ function restore_options() {
         items["inputUrl"];
         mcgillServerSetting.checked = items["mcgillServer"];
         customServerSetting.checked = items["customServer"];
-        toggleButton.checked = items["developerMode"];
-        noHapticsSetting.checked= items["noHaptics"];
-        haply2diy2genSetting.checked= items["haply2diy2gen"];
-        haply2diy3genSetting.checked= items["haply2diy3gen"];
+        developerSettings.checked = items["developerMode"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];
@@ -154,14 +130,12 @@ function restore_options() {
         monarchChannelId.value = items["monarchChannelId"],
         monarchSecretKey.value = items["monarchSecretKey"],
         monarchEncryptionKey.value = items["monarchEncryptionKey"]
-        if (toggleButton.checked &&  navigatorSerial !== undefined) {
+        if (developerSettings.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }
     });
     if(extVersion === "development"){
-      document.getElementById("renderingOptions")!.innerText += process.env.SUFFIX_TEXT;
-      document.getElementById("advancedOptions")!.innerText += process.env.SUFFIX_TEXT;
-      document.getElementById("developerMode")!.innerText += process.env.SUFFIX_TEXT;
+      document.getElementById("extensionPreferences")!.innerText += process.env.SUFFIX_TEXT;
     } 
 }
 

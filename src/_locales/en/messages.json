@@ -15,9 +15,13 @@
         "message": "Interpret this graphic with IMAGE",
         "description": "Fetches IMAGE audio and haptic renderings for an image."
     },
-    "renderingOptions": {
-        "message": "Rendering Options",
-        "description": "Header of option window"
+    "interpretationOptions": {
+        "message": "Interpretation options",
+        "description": "Header of Interpretation options in extension preferences."
+    },
+    "languageOptions":{
+        "message": "Language and Interface Settings",
+        "description": "Header of language and interface options in extension preferences."
     },
     "noInputURL": {
         "message": "Continuing without entering Custom URL will not give any renderings.",
@@ -111,9 +115,17 @@
         "message": "Server Options",
         "description": "Header for server options in extension preferences."
     },
-    "monarchOptions": {
-        "message": "Monarch Options",
-        "description": "Header for monarch options in extension preferences."
+    "extensionPreferences":{
+        "message": "IMAGE Preferences",
+        "description": "Header for IMAGE preferences in extension preferences."
+    },
+    "hapticDevices": {
+        "message": "Haptic Devices",
+        "description": "Label for haptic devices in extension preferences."
+    },
+    "monarchContainerHeading": {
+        "message": "Monarch",
+        "description": "Label for Monarch in extension preferences."
     },
     "monarchTitle": {
         "message": "Graphic Title",
@@ -121,15 +133,15 @@
     },
     "monarchChannelId": {
         "message": "Channel Id",
-        "description": "Header for monarch channel id in extension preferences."
+        "description": "Label for monarch channel id in extension preferences."
     },
     "monarchSecretKey": {
         "message": "Secret Key",
-        "description": "Header for monarch secret key in extension preferences."
+        "description": "Label for monarch secret key in extension preferences."
     },
     "monarchEncryptionKey": {
         "message": "Encryption Key",
-        "description": "Header for monarch encryption key in extension preferences."
+        "description": "Label for monarch encryption key in extension preferences."
     },
     "tactileAuthoringTool" : {
         "message": "Launch Tactile Authoring Tool",

@@ -111,6 +111,38 @@
         "message": "Serveur",
         "description": "Étiquette pour les options de serveur dans les préférences de l'extension."
     },
+    "extensionPreferences":{
+        "message": "Préférences IMAGE",
+        "description": "En-tête pour les préférences IMAGE dans les préférences d'extension."
+    },
+    "hapticDevices": {
+        "message": "Dispositifs haptiques",
+        "description": "En-tête pour les périphériques haptiques dans les préférences d'extension."
+    },
+    "monarchContainerHeading": {
+        "message": "Monarch",
+        "description": "Étiquette pour Monarch dans les préférences d'extension."
+    },
+    "monarchTitle": {
+        "message": "Graphic Title",
+        "description": "Étiquette pour le titre graphique du monarque dans les préférences d'extension."
+    },
+    "monarchChannelId": {
+        "message": "Channel Id",
+        "description": "Étiquette pour l'ID du canal Monarch dans les préférences d'extension."
+    },
+    "monarchSecretKey": {
+        "message": "Clé secrète",
+        "description": "Étiquette pour la clé secrète du monarque dans les préférences d'extension."
+    },
+    "monarchEncryptionKey": {
+        "message": "Clé de cryptage",
+        "description": "Étiquette pour la clé de cryptage du monarque dans les préférences d'extension." 
+    },
+    "tactileAuthoringTool" : {
+        "message": "Lancer l'outil de création tactile",
+        "description": "Étiquette du bouton permettant de lancer l'outil de création"
+    },
     "mcgillServerLabel": {
         "message": "Serveur McGill",
         "description": "Étiquette pour serveur McGill."
