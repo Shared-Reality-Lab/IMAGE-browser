@@ -158,6 +158,10 @@ async function handleMessage(p: Runtime.Port, message: any) {
         query = await generateQuery(message);
       }
       break;
+    case "handleMapMonarchOptions": {
+      console.debug("Handling map monarch options");
+      getCurrentTabInfo();
+    }
     default:
       console.debug(message["type"]);
   }
@@ -427,49 +431,32 @@ async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
   //console.log("Saved Items", items);
   showDebugOptions = items["developerMode"];
+  monarchEnabled = items["monarchEnabled"];
+  // previous toggle state keeps track of the previous state of the developer mode
   previousToggleState = items["previousToggleState"];
+  // previousMonarchToggle keeps track of the previous state of the monarch mode
+  previousMonarchMode = items["previousMonarchMode"];
   displayInvisibleButtons = items["displayInvisibleButtons"];
   let tabs = browser.tabs.query({})
   //console.log("inside Background new code", displayInvisibleButtons)
 
-  // let tabs = browser.tabs.query({ active: true, currentWindow: true });
+  // handleInvisibleButtons based on the value of displayInvisibleButtons in storag
   tabs.then(function (tabs) {
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
         let tabId = tabs[i].id || 0;  
-        ports[tabId].postMessage({
-          "type": "handleInvisibleButton",
-          "displayInvisibleButtons": displayInvisibleButtons
-        });
+        if(ports[tabId]){
+          ports[tabId].postMessage({
+            "type": "handleInvisibleButton",
+            "displayInvisibleButtons": displayInvisibleButtons
+          });
+        }
       }
     }
   });
   
+  // handle context menu items based on the value of showDebugOptions
   if (showDebugOptions) {
-    tabs.then(function (tabs) {
-      for (var i = 0; i < tabs.length; i++) {
-        if (tabs[i].url && !tabs[i].url?.startsWith("chrome://")) {
-          browser.scripting.insertCSS({
-            target: { tabId: tabs[i].id || 0 },
-            css: `
-            button#preprocessor-map-button{
-              display: inline-block;
-            }`,
-          });
-        }
-      }
-    }, function () { });
-
-    browser.contextMenus.create({
-      id: "mwe-item-tat",
-      title: "Load in Tactile Authoring Tool",
-      contexts: ["image"]
-    }, onCreated);
-    browser.contextMenus.create({
-      id: "mwe-item-monarch",
-      title: "Send Graphic to Monarch",
-      contexts: ["image"]
-    }, onCreated);
 
     if (items["processItem"] === "" && items["requestItem"] === "") {
       browser.contextMenus.create({
@@ -490,31 +477,59 @@ async function updateDebugContextMenu() {
       requestItem: "request-only",
     })
   }
+  // if the developer mode is disabled, remove the context menu items
   else if (showDebugOptions === false && previousToggleState) {
     browser.contextMenus.remove("preprocess-only");
     browser.contextMenus.remove("request-only");
-    browser.contextMenus.remove("mwe-item-tat");
-    browser.contextMenus.remove("mwe-item-monarch");
+
     browser.storage.sync.set({ previousToggleState: false });
     browser.storage.sync.set({
       processItem: "",
       requestItem: "",
     });
-    tabs.then(function (tabs) {
-      for (var i = 0; i < tabs.length; i++) {
-        if (tabs[i].url && !tabs[i].url?.startsWith("chrome://")) {
-          browser.scripting.insertCSS({
-            target: { tabId: tabs[i].id || 0 },
-            css: `
-            button#preprocessor-map-button{
-              display: none;
-            }`,
-          });
-        }
-      }
-    }, function () { });
   }
+  // handle monarchItems based on the value of monarchEnabled in storage
+  if (monarchEnabled) {
+    // set toggleMonarch options in storage
+    browser.storage.sync.set({
+      previousMonarchMode: true,
+    })
+    // monarchOptions for image
+    browser.contextMenus.create({ id: "mwe-item-tat", title: "Load in Tactile Authoring Tool", contexts: ["image"]}, onCreated);
+    browser.contextMenus.create({ id: "mwe-item-monarch", title: "Send Graphic to Monarch", contexts: ["image"]}, onCreated);
+  } else if(!monarchEnabled && previousMonarchMode) {
+    browser.storage.sync.set({
+      previousMonarchMode: false,
+    })
+    browser.contextMenus.remove("mwe-item-tat");
+    browser.contextMenus.remove("mwe-item-monarch");
+  }
+  tabs.then(function (tabs) {
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].url && !tabs[i].url?.startsWith("chrome://")) {
+        browser.scripting.executeScript({
+          target: { tabId: tabs[i].id || 0 }, 
+          func: toggleMapOptions,
+          args: [showDebugOptions, monarchEnabled]
+        });
+      }
+    }
+  }, function () { });
 }
+
+function toggleMapOptions(showDebugOptions: Boolean, monarchEnabled: Boolean) {
+    let mapButtonContainer = document.getElementById("map-button-container");
+    let mapSelectContainer = document.getElementById("map-select-container");
+    if (mapButtonContainer && mapSelectContainer) {
+      if (monarchEnabled) {
+        mapSelectContainer.style.display = "flex";
+        mapButtonContainer.style.display = "none";
+      } else {
+        mapSelectContainer.style.display = "none";
+        mapButtonContainer.style.display = "flex";
+      }
+    }
+};
 
 function storeConnection(p: Runtime.Port) {
   //console.debug("store Connection");
@@ -555,6 +570,7 @@ function enableContextMenu() {
       enabled: true,
       title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("requestItem"),
     });
+  } if(monarchEnabled){
     browser.contextMenus.update("mwe-item-tat", {
       enabled: true,
       title: "Load in Tactile Authoring Tool",
@@ -572,6 +588,8 @@ function disableContextMenu() {
   if (showDebugOptions) {
     browser.contextMenus.update("preprocess-only", { enabled: false });
     browser.contextMenus.update("request-only", { enabled: false });
+  }
+  if (monarchEnabled){
     browser.contextMenus.update("mwe-item-tat", { enabled: false });
     browser.contextMenus.update("mwe-item-monarch", { enabled: false });
   }
@@ -583,13 +601,21 @@ function handleUpdated(tabId: any, changeInfo: any) {
     // console.log("handleUpdated called");
     enableContextMenu();
     //console.log("Handle Updated function", displayInvisibleButtons);
-    // send message 
+      // send message 
     if(ports[tabId] && !ports[tabId].sender?.url?.startsWith("chrome://") && !ports[tabId].sender?.url?.startsWith("chrome-extension://")){
+      // handle map options
+      browser.scripting.executeScript({
+        target: { tabId: tabId || 0 }, 
+        func: toggleMapOptions,
+        args: [showDebugOptions, monarchEnabled]
+      });
+
+      // handle invisible buttons
       ports[tabId].postMessage({
         "type": "handleInvisibleButton",
         "displayInvisibleButtons": displayInvisibleButtons
       });
-    } 
+  } 
   } else if (changeInfo.status == "unloaded" || changeInfo.status == "loading") {
     disableContextMenu();
   }
@@ -612,7 +638,7 @@ browser.tabs.onActivated.addListener(getCurrentTabInfo);
 
 function onCreated(): void {
   if (browser.runtime.lastError) {
-    console.error(browser.runtime.lastError);
+    //console.error(browser.runtime.lastError);
   }
 }
 
@@ -622,12 +648,16 @@ function onCreated(): void {
 
 var showDebugOptions: Boolean;
 
+var monarchEnabled: Boolean;
+var previousMonarchMode: Boolean;
 var previousToggleState: Boolean;
 
 var displayInvisibleButtons : Boolean;
 
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
+  monarchEnabled = items["monarchEnabled"];
+  //console.debug("monarchEnabled", monarchEnabled);
   previousToggleState = items["previousToggleState"];
   displayInvisibleButtons = items["displayInvisibleButtons"];
   console.debug("debug value inside storage sync data", showDebugOptions);
@@ -642,6 +672,8 @@ getAllStorageSyncData().then((items) => {
       title: (extVersion == 'development') ? (browser.i18n.getMessage("requestItem") + process.env.SUFFIX_TEXT) : browser.i18n.getMessage("preprocessItem"),
       contexts: ["image"]
     }, onCreated);
+  }
+  if(monarchEnabled){
     browser.contextMenus.create({
       id: "mwe-item-tat",
       title: "Load in Tactile Authoring Tool",
