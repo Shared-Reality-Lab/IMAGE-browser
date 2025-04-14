@@ -40,16 +40,16 @@ const monarchTitle = <HTMLInputElement>(document.getElementById("monarch-title")
 const monarchChannelId = <HTMLInputElement>(document.getElementById("monarch-channel-id"));
 const monarchSecretKey = <HTMLInputElement>(document.getElementById("monarch-secret-key"));
 const monarchEncryptionKey = <HTMLInputElement>(document.getElementById("monarch-encryption-key"));
-const toggleMonarchOptions = <HTMLInputElement>(document.getElementById("toggle-monarch-options"));
+const monarchSettings = <HTMLInputElement>(document.getElementById("toggle-monarch-options"));
 
 developerSettings?.addEventListener("change", (event)=>{
   let debugText = <HTMLElement>document.querySelector("#debugText");
   debugText.style.display = developerSettings.checked ? "block" : "none";
 });
 
-toggleMonarchOptions?.addEventListener("change", (event)=>{
+monarchSettings?.addEventListener("change", (event)=>{
   let monarchOptions= <HTMLElement>document.querySelector("#monarch-options");
-  monarchOptions.style.display = toggleMonarchOptions.checked ? "block" : "none";
+  monarchOptions.style.display = monarchSettings.checked ? "block" : "none";
 });
 
 
@@ -87,7 +87,8 @@ function saveOptions() {
     monarchChannelId: monarchChannelId.value,
     monarchEncryptionKey: monarchEncryptionKey.value,
     monarchTitle: monarchTitle.value,
-    monarchSecretKey: monarchSecretKey.value
+    monarchSecretKey: monarchSecretKey.value,
+    monarchEnabled: monarchSettings.checked
   }),
     (function () {
       optionsCheck();
@@ -114,7 +115,9 @@ function restore_options() {
       monarchTitle: "",
       monarchChannelId: "",
       monarchSecretKey: "",
-      monarchEncryptionKey: ""
+      monarchEncryptionKey: "",
+      monarchEnabled: false,
+      previousMonarchMode: false
     })
     .then((items) => {
       (<HTMLInputElement>document.getElementById("input-url")).value =
@@ -122,6 +125,7 @@ function restore_options() {
         mcgillServerSetting.checked = items["mcgillServer"];
         customServerSetting.checked = items["customServer"];
         developerSettings.checked = items["developerMode"];
+        monarchSettings.checked = items["monarchEnabled"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];

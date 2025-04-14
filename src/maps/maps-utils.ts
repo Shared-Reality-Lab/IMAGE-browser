@@ -3,6 +3,8 @@ import { IMAGERequest } from "../types/request.schema";
 import { getCapabilities, getRenderers, getLanguage } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 
+type ServerOptions = {toRender: string, redirectToTAT?: boolean, sendToMonarch?: boolean};
+
 export function processMap(port: browser.Runtime.Port, map: any, origin: string, extVersion?: string, ) {
     // domains list at www.google.com/supported_domains, but this is too long to manually put
     if (map.hasAttribute("src") && 
@@ -18,33 +20,75 @@ export function processMap(port: browser.Runtime.Port, map: any, origin: string,
         if (extVersion === "development") {
             mapButton.innerText += process.env.SUFFIX_TEXT;
         }
-        let preprocessorMapButton = document.createElement("button");
-        preprocessorMapButton.innerText = browser.i18n.getMessage("getMapPreprocessorResponse");
         // Get all the information about our found map and store the info. Then create a button to render the map
         mapButton.addEventListener("click", () => {
-            sendMapRequest(port, map, "full");
+            sendMapRequest(port, map, {toRender:"full"});
         });
-
-        mapButton.setAttribute("tabindex", "0");
+        mapButton.setAttribute("id", "map-button");
+        
         let buttonContainer = document.createElement("div");
         buttonContainer.style.display = "flex";
         buttonContainer.style.marginTop = "1rem";
         buttonContainer.style.position = "relative";
-
-        preprocessorMapButton.setAttribute("id", "preprocessor-map-button");
-
-        preprocessorMapButton.addEventListener("click", () => {
-            sendMapRequest(port, map, "preprocess");
-        });
+        buttonContainer.setAttribute("id", "map-button-container");
         buttonContainer.appendChild(mapButton);
-        buttonContainer.appendChild(preprocessorMapButton);
+
+        let selectElement = document.createElement("select");
+        const mapOptions = [
+            {option: "Select IMAGE Options", value: ""},
+            {option: "Send this map to Monarch", value: "SendMaptoMonarch"},
+            {option: browser.i18n.getMessage("getMapRendering"), value: "getMapRendering"},
+            // {option: browser.i18n.getMessage("getMapPreprocessorResponse"), value: "getMapPreprocessorResponse"},
+            {option: "Load this map in Tactile Authoring tool", value: "LoadMapInTAT"},
+        ];
+        mapOptions.forEach((option) => {
+            let optionElement = document.createElement("option");
+            optionElement.value = option.value;
+            optionElement.innerText = option.option;
+            selectElement.appendChild(optionElement);
+        });
+
+        let selectContainer = document.createElement("div");
+        selectContainer.style.display = "none";
+        selectContainer.style.marginTop = "1rem";
+        selectContainer.style.position = "relative";
+        selectElement.style.width = "100%";
+        selectContainer.setAttribute("id", "map-select-container");
+
+        selectContainer.appendChild(selectElement);
+
+        selectElement.setAttribute("id", "map-renderer-select");
+        selectElement.addEventListener("change", () => {
+            //let selectedRenderer = selectElement.options[selectElement.selectedIndex].value;
+            console.log("Selected Value", selectElement.value);
+            switch(selectElement.value){
+                case "getMapRendering":
+                    sendMapRequest(port, map, {toRender: "full"});
+                    break;
+                case "getMapPreprocessorResponse":
+                    sendMapRequest(port, map, {toRender: "preprocess"});
+                    break;
+                case "LoadMapInTAT":
+                    sendMapRequest(port, map, {toRender: "full", redirectToTAT: true, sendToMonarch: false});
+                    break;
+                case "SendMaptoMonarch":
+                    sendMapRequest(port, map, {toRender: "full", redirectToTAT: true, sendToMonarch: true});
+                    break;
+                default:
+                    break;
+            }
+        });    
         let parentElement = map;
         // handle cases when map(image) is embedded in an anchor tag - necessary to fix the layout
         if (map.parentNode.nodeName.toLowerCase() === "a" ){
             parentElement = parentElement.parentElement;
         }
         parentElement.insertAdjacentElement("afterend", buttonContainer);
+        parentElement.insertAdjacentElement("afterend", selectContainer);
         parentElement.parentElement.style.overflow = "visible";
+        port.postMessage({
+            "type": "handleMapMonarchOptions",
+        });
     }
 }
 
@@ -79,7 +123,8 @@ export async function generateMapSearchQuery(message: { context: string, placeID
     } as IMAGERequest;
 }
 
-function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRender: String) {
+
+function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, serverOptions: ServerOptions) {
     const serializer = new XMLSerializer();
     let src = map.getAttribute("src");
     let q, lat, lon, zoom;
@@ -104,7 +149,9 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRe
                 "type": "mapResource",
                 "context": map ? serializer.serializeToString(map) : null,
                 "coordinates": [parseFloat(lat), parseFloat(lon)],
-                "toRender": toRender
+                "toRender": serverOptions.toRender,
+                "redirectToTAT": serverOptions.redirectToTAT,
+                "sendToMonarch" : serverOptions.sendToMonarch
             });
         } else if (q) { // if we don't have a lat and lon, but we have a query, send a search request
             console.debug("Sending map search request");
@@ -113,13 +160,15 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, toRe
                 "type": "mapSearch",
                 "context": map ? serializer.serializeToString(map) : null,
                 "placeID": q,
-                "toRender": toRender
+                "toRender": serverOptions.toRender,
+                "redirectToTAT": serverOptions.redirectToTAT,
+                "sendToMonarch" : serverOptions.sendToMonarch
             });
         }
     } else{
         console.debug("Map Source empty!");
     }
-    }
+}
 
 
 export function processMaps(document: Document, port: browser.Runtime.Port,  extVersion?: string) {

@@ -31,7 +31,9 @@ export function getAllStorageSyncData() {
     monarchTitle: "",
     monarchChannelId: "",
     monarchEncryptionKey: "",
-    monarchSecretKey: ""
+    monarchSecretKey: "",
+    monarchEnabled: false,
+    previousMonarchMode: false,
   });
 };
 
@@ -52,6 +54,8 @@ export async function getRenderers(): Promise<string[]> {
   }
   if (items['developerMode']) {
     renderers.push(RENDERERS.svgLayers);
+  }
+  if(items['monarchEnabled']) {
     renderers.push(RENDERERS.tactileSvg);
   }
   return renderers;
