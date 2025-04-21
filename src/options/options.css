@@ -180,7 +180,7 @@
    gap: 1vw;
  }
 
- #monarch-options{
+ #monarch-options, #debugText{
   display: none;
  }
  

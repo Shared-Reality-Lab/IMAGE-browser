@@ -83,12 +83,12 @@
         "message": "Langue",
         "description": "Étiquette pour le menu de sélection de la langue."
     },
-    "automaticLanguage": {
-        "message": "Automatique",
+    "browserLanguage": {
+        "message": "Langue du navigateur",
         "description": "Option de sélection pour la langue automatique."
     },
     "languageWarning": {
-        "message": "Avertissement : Dans quelques cas, les résultats d'IMAGE peuvent apparaître en anglais ou en français au lieu de la langue choisie, en raison de limitations techniques.",
+        "message": "Remarque : les langues autres que le français et l’anglais peuvent ne pas être entièrement prises en charge.",
         "description": "Avertissement pour la selection de la langue."
     },
     "cancelButton": {

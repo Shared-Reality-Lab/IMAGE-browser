@@ -52,6 +52,12 @@ monarchSettings?.addEventListener("change", (event)=>{
   monarchOptions.style.display = monarchSettings.checked ? "block" : "none";
 });
 
+languageSetting?.addEventListener("change", (event)=>{
+  let languageWarning= <HTMLElement>document.querySelector("#languageWarning");
+  const target = event.target as HTMLSelectElement;
+  languageWarning.style.display = target?.value === "auto" ? "inline-block" : "none";
+});
+
 
 function optionsCheck(){
   browser.storage.sync.get({
@@ -137,6 +143,10 @@ function restore_options() {
         if (developerSettings.checked &&  navigatorSerial !== undefined) {
           developerSettings.style.display = "block"; 
         }
+        let monarchOptions= <HTMLElement>document.querySelector("#monarch-options");
+        monarchOptions.style.display = monarchSettings.checked ? "block" : "none";
+        let debugText = <HTMLElement>document.querySelector("#debugText");
+        debugText.style.display = developerSettings.checked ? "block" : "none";
     });
     if(extVersion === "development"){
       document.getElementById("extensionPreferences")!.innerText += process.env.SUFFIX_TEXT;

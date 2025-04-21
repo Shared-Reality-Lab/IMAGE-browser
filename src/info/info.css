@@ -31,11 +31,11 @@ footer{
     height: auto;
 }
 
-/* .svg-container{
+.svg-container{
     position: absolute;
     top:0;
     left:0;
-} */
+}
 
 
 .render-img, .render-svg{

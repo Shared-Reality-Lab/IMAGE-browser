@@ -10,7 +10,7 @@
     <div class="options-section">
         <button type="button" data-bs-toggle="collapse" data-bs-target="#interpretation-div"
             class="localisation btn btn-light" id="interpretationOptions"></button>
-        <div id="interpretation-div" class="settings-div">
+        <div id="interpretation-div" class="settings-div show">
             <div class="browser-style">
                 <input type="checkbox" id="audio-renderings" name="audio-renderings">
                 <label class="localisation" for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
@@ -24,11 +24,11 @@
     <div class="options-section">
         <button type="button" data-bs-toggle="collapse" data-bs-target="#language-div"
             class="localisation btn btn-light" id="languageOptions"></button>
-        <div id="language-div" class="settings-div">
+        <div id="language-div" class="settings-div show">
             <div>
                 <label class="localisation" for="languageSelectionLabel" id="languageSelectionLabel"></label>
                 <select name="language-selection" id="language-selection">
-                    <option class="localisation" id="automaticLanguage" value="auto"></option>
+                    <option class="localisation" id="browserLanguage" value="auto"></option>
                     <option value="en">English</option>
                     <option value="fr">Français</option>
                 </select>
@@ -46,7 +46,7 @@
     <div class="options-section">
         <button type="button" data-bs-toggle="collapse" data-bs-target="#server-div" class="localisation btn btn-light"
             class="localisation" id="serverOptions"></button>
-        <div id="server-div" class="settings-div">
+        <div id="server-div" class="settings-div show">
             <div>
                 <input type="radio" id="mcgill-server" name="serverOptions" checked>
                 <label class="localisation" for="mcgillServerLabel" id="mcgillServerLabel"></label>
@@ -63,7 +63,7 @@
     <div class="options-section">
         <button type="button" data-bs-toggle="collapse" data-bs-target="#monarch-div" class="localisation btn btn-light"
             class="localisation" id="hapticDevices"></button>
-        <div id="monarch-div" class="settings-div">
+        <div id="monarch-div" class="settings-div show">
             <div id="monarch-header">
                 <label class="localisation" id="monarchContainerHeading"></label>
                 <div class="toggle-container">

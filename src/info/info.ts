@@ -28,7 +28,7 @@ import * as utils from "./info-utils";
 import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
-import { getAllStorageSyncData } from '../utils';
+import { getAllStorageSyncData, getContext } from '../utils';
 
 import { queryLocalisation } from '../utils';
 
@@ -210,13 +210,15 @@ port.onMessage.addListener(async (message) => {
                 if (request && request.graphic) {
                     renderImg.src = request.graphic;
                 }
-
                 const svgContainer = document.createElement("div");
                 svgContainer.classList.add("svg-container");
 
                 // append renderImg and svgImg to imgContainer
                 imgContainer.append(renderImg);
-
+                // in case of maps, renderImg src is not available, fix svg container position
+                if (!renderImg.src) {
+                    svgContainer.style.position = "static";
+                }
                 const selectContainer = document.createElement("div");
                 selectContainer.style.display = "flex";
                 selectContainer.style.width = "50%";
@@ -255,6 +257,29 @@ port.onMessage.addListener(async (message) => {
                 contentDiv.append(imgContainer);
             }
 
+            if (rendering["type_id"] == RENDERERS.tactileSvg) {
+                // Tactile SVG renderings should be handled by the authoring tool
+                headerElement.addEventListener("click", function () {
+                    const renderImg = document.createElement("img");
+                    renderImg.id = "render-img";
+                    renderImg.classList.add("render-img");
+                    if (request && request.graphic) {
+                        renderImg.src = request.graphic;
+                    }
+                    // Send the request to the background script
+                    port.postMessage({
+                        "type": "resource",
+                        "context": renderImg ? getContext(renderImg) : null,
+                        "dims": [renderImg.naturalWidth, renderImg.naturalHeight],
+                        "url": graphic_url,
+                        "sourceURL": renderImg.currentSrc,
+                        "graphicBlob": request.graphic,
+                        "toRender": "full",
+                        "redirectToTAT": true,
+                        "sendToMonarch": false
+                    });
+                });
+            }
             document.getElementById("renderings-container")!.appendChild(container)
             count++;
         }
