@@ -87,12 +87,12 @@
         "message": "Language",
         "description": "Label for language selection menu."
     },
-    "automaticLanguage": {
-        "message": "Automatic",
+    "browserLanguage": {
+        "message": "Browser Language",
         "description": "Automatic language select option"
     },
     "languageWarning": {
-        "message": "Warning: In some cases, IMAGE results may appear in English or French instead of your chosen language due to technical limitations.",
+        "message": "Note: Languages other than French and English may not be fully supported.",
         "description": "Warning for language selection"
     },
     "cancelButton": {
