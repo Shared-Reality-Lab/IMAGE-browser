@@ -5,13 +5,15 @@ import { v4 as uuidv4 } from "uuid";
 
 type ServerOptions = {toRender: string, redirectToTAT?: boolean, sendToMonarch?: boolean};
 
+enum MapType {
+    GOOGLE = "Google",
+    OPENSTREET = "OpenStreet"
+}
+
 export function processMap(port: browser.Runtime.Port, map: any, origin: string, extVersion?: string, ) {
     // domains list at www.google.com/supported_domains, but this is too long to manually put
-    if (map.hasAttribute("src") && 
-    //    
-    ((origin == "iframe" && ((/google.[\w\.]+\/maps\/embed\/v1/.test(map.src) || (/google.[\w\.]+\/maps\?/.test(map.src))))
-         || (origin == "staticImage" && (/google.[\w\.]+\/maps\/api/.test(map.src)))))) {
-
+    const mapType = checkMapType(map, origin);
+    if (map.hasAttribute("src") && mapType !== undefined) {   
         map.setAttribute("tabindex", "0");
         let mapButton = document.createElement("button");
 
@@ -22,7 +24,7 @@ export function processMap(port: browser.Runtime.Port, map: any, origin: string,
         }
         // Get all the information about our found map and store the info. Then create a button to render the map
         mapButton.addEventListener("click", () => {
-            sendMapRequest(port, map, {toRender:"full"});
+            sendMapRequest(port, map, mapType, {toRender:"full"});
         });
         mapButton.setAttribute("id", "map-button");
         
@@ -63,16 +65,16 @@ export function processMap(port: browser.Runtime.Port, map: any, origin: string,
             console.log("Selected Value", selectElement.value);
             switch(selectElement.value){
                 case "getMapRendering":
-                    sendMapRequest(port, map, {toRender: "full"});
+                    sendMapRequest(port, map, mapType, {toRender: "full"});
                     break;
                 case "getMapPreprocessorResponse":
-                    sendMapRequest(port, map, {toRender: "preprocess"});
+                    sendMapRequest(port, map, mapType, {toRender: "preprocess"});
                     break;
                 case "LoadMapInTAT":
-                    sendMapRequest(port, map, {toRender: "full", redirectToTAT: true, sendToMonarch: false});
+                    sendMapRequest(port, map, mapType, {toRender: "full", redirectToTAT: true, sendToMonarch: false});
                     break;
                 case "SendMaptoMonarch":
-                    sendMapRequest(port, map, {toRender: "full", redirectToTAT: true, sendToMonarch: true});
+                    sendMapRequest(port, map, mapType, {toRender: "full", redirectToTAT: true, sendToMonarch: true});
                     break;
                 default:
                     break;
@@ -124,18 +126,19 @@ export async function generateMapSearchQuery(message: { context: string, placeID
 }
 
 
-function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, serverOptions: ServerOptions) {
+function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, mapType: MapType, serverOptions: ServerOptions) {
     const serializer = new XMLSerializer();
     let src = map.getAttribute("src");
     let q, lat, lon, zoom;
     //let maptype = "roadmap";
     console.log(src);
+    console.debug("Inside sendMapRequest", mapType);
     if(src){
         const mapUrl = new URL(src);
         const searchParams = mapUrl.searchParams;
         /** from the map source extract following params */
         q = searchParams.get("q");
-        let latLongStr = searchParams.get("center") || searchParams.get("markers");
+        let latLongStr = searchParams.get("center") || searchParams.get("markers") || searchParams.get("marker");
         // let zoom = searchParams.get("zoom");
         // let mapType = searchParams.get("mapType");
         if(latLongStr){
@@ -170,6 +173,18 @@ function sendMapRequest(port: browser.Runtime.Port, map: HTMLIFrameElement, serv
     }
 }
 
+function checkMapType(map: HTMLIFrameElement, origin: string): MapType | undefined {
+    if (origin == "iframe" && (/google.[\w\.]+\/maps\/embed/.test(map.src))) {
+        return MapType.GOOGLE;
+    } else if (origin == "staticImage" && (/google.[\w\.]+\/maps\/api/.test(map.src))) {
+        return MapType.GOOGLE;
+    } else if (origin == "iframe" && (/google.[\w\.]+\/maps\?/.test(map.src))) {
+        return MapType.GOOGLE;
+    } else if (origin == "iframe" && (/openstreetmap.[\w\.]+\/export/.test(map.src))) {
+        return MapType.OPENSTREET;
+    }
+    return;
+}
 
 export function processMaps(document: Document, port: browser.Runtime.Port,  extVersion?: string) {
     Array.from(document.getElementsByTagName("iframe")).forEach((map) => processMap(port, map, "iframe", extVersion));
