@@ -35,7 +35,9 @@ import { queryLocalisation } from '../utils';
 const urlParams = new URLSearchParams(window.location.search);
 let request_uuid = urlParams.get("uuid") || "";
 let graphic_url = urlParams.get("graphicUrl") || "";
-
+let dimensions = urlParams.get("dimensions") || "";
+let graphicWidth = Number(dimensions.split(",")[0]);
+let graphicHeight = Number(dimensions.split(",")[1]);
 let renderings: IMAGEResponse;
 let request: IMAGERequest;
 let serverUrl: string;  // Retrived through the message in case the settings have changed
@@ -270,7 +272,7 @@ port.onMessage.addListener(async (message) => {
                     port.postMessage({
                         "type": "resource",
                         "context": renderImg ? getContext(renderImg) : null,
-                        "dims": [renderImg.naturalWidth, renderImg.naturalHeight],
+                        "dims": [graphicWidth, graphicHeight],
                         "url": graphic_url,
                         "sourceURL": renderImg.currentSrc,
                         "graphicBlob": request.graphic,

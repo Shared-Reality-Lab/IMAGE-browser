@@ -296,7 +296,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   placeID: query["placeID"],
                 }
                 //console.log("Svg Dom Value", svgDom);
-                let tatTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/tat` : `${serverUrl}tat`;
+                let tatTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/tat/` : `${serverUrl}tat/`;
                 let tabs = await browser.tabs.query({ url: tatTargetUrl });
                 // if(tabs){
                 //   tabs.forEach((tab)=>{
@@ -803,11 +803,11 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 function createPanel(query: IMAGERequest) {
   let window = windowsPanel ? browser.windows.create({
     type: "normal",
-    url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
+    url: `info/info.html?uuid=${query["request_uuid"]}&graphicUrl=${graphicUrl}&dimensions=${query["dimensions"]}`,
     height: 1080,
     width: 1920
   }) : browser.tabs.create({
-    url: "info/info.html?uuid=" + query["request_uuid"] + "&" + "graphicUrl=" + graphicUrl,
+    url: `info/info.html?uuid=${query["request_uuid"]}&graphicUrl=${graphicUrl}&dimensions=${query["dimensions"]}`,
   });
   return window;
 }

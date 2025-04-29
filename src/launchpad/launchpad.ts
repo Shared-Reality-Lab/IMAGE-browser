@@ -34,7 +34,7 @@ window.onload = () => {
     });
     document.getElementById("tactileAuthoringTool")?.addEventListener("click",() => {
         browser.tabs.create({
-            url: `${SERVER_URL}image/tat`
+            url: `${SERVER_URL}image/tat/`
         });
     });
     
