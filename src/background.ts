@@ -21,7 +21,7 @@ import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
 import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
-import { MONARCH_URL, RENDERERS, SERVER_URL, TAT_URL } from './config';
+import { RENDERERS, SERVER_URL } from './config';
 import { encryptData, monarchPopUp, decryptData, saveToLocalStorage } from "./monarch/utils";
 import { TatStorageData } from "./monarch/types";
 
@@ -236,11 +236,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
               let reqChannelId = items["monarchChannelId"];
               let encryptionKey = items["monarchEncryptionKey"];
               const flowType = reqChannelId ? "update" : "create";
+              let monarchTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/monarch` : `${serverUrl}monarch`;
               let monarchFetchUrl = flowType == "update" ?
-                `${MONARCH_URL}/update/${reqChannelId}` :
-                `${MONARCH_URL}/create`;
+                `${monarchTargetUrl}/update/${reqChannelId}` :
+                `${monarchTargetUrl}/create`;
               let encryptedGraphicBlob = query["graphic"] && await encryptData(query["graphic"], encryptionKey);
-              let encryptedCoordinates = query["coordinates"] && await encryptData(query["graphic"], encryptionKey);
+              let encryptedCoordinates = query["coordinates"] && await encryptData(JSON.stringify(query["coordinates"]), encryptionKey);
               let encryptedPlaceId = query["placeID"] && await encryptData(query["placeID"], encryptionKey);
               const reqData = await encryptData(svgDom, encryptionKey);
               const reqBody = {
@@ -290,11 +291,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   channelId: items["monarchChannelId"],
                   graphicTitle: items["monarchTitle"],
                   secretKey: items["monarchSecretKey"],
-                  graphicBlob: query["graphic"]
+                  graphicBlob: query["graphic"],
+                  coordinates: query["coordinates"] && JSON.stringify(query["coordinates"]),
+                  placeID: query["placeID"],
                 }
-                //console.log("Data stored in storage", tatStorageData);
                 //console.log("Svg Dom Value", svgDom);
-                let tabs = await browser.tabs.query({ url: TAT_URL });
+                let tatTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/tat` : `${serverUrl}tat`;
+                let tabs = await browser.tabs.query({ url: tatTargetUrl });
                 // if(tabs){
                 //   tabs.forEach((tab)=>{
                 //     if(tab.id){browser.tabs.remove(tab.id)}
@@ -302,9 +305,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 // }
                 /** encrypt data before storing in local storage */
                 let encryptedSvgData = await encryptData(svgDom, encryptionKey);
-                let encryptedTatData: TatStorageData = tatStorageData;
+                let encryptedTatData: TatStorageData = {channelId:"", graphicTitle:"", secretKey:""};
                 for (let key of Object.keys(tatStorageData)) {
-                  encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
+                  let stringToEncrypt = tatStorageData[key as keyof TatStorageData];
+                  if (stringToEncrypt){
+                    encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
+                  }
                 }
                 // let encryptedTatData = await Promise.all(Object.keys(tatStorageData).map(async (tatKey)=>{
                 //   return await encryptData(tatStorageData[tatKey as keyof TatStorageData], encryptionKey);
@@ -320,7 +326,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 }
                 else {
                   let authoringTool = browser.tabs.create({
-                    url: TAT_URL
+                    url: tatTargetUrl
                   });
                   authoringTool.then((tab) => {
                     browser.scripting.executeScript({

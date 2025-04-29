@@ -1,7 +1,7 @@
 import browser from "webextension-polyfill";
 import 'bootstrap/dist/css/bootstrap.css';
 import "./launchpad.css";
-import { TAT_URL, TUTORIAL_PAGE } from "../config";
+import { SERVER_URL, TAT_URL, TUTORIAL_PAGE } from "../config";
 import { queryLocalisation } from "../utils";
 
 let port = browser.runtime.connect();
@@ -34,7 +34,7 @@ window.onload = () => {
     });
     document.getElementById("tactileAuthoringTool")?.addEventListener("click",() => {
         browser.tabs.create({
-            url: TAT_URL
+            url: `${SERVER_URL}image/tat`
         });
     });
     

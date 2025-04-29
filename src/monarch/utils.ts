@@ -6,7 +6,7 @@ export function saveToLocalStorage(svgData: string, tatStorageData: TatStorageDa
     //localStorage.setItem("key", "value");
     const oldValue = localStorage.getItem("svgedit-default");
     localStorage.setItem("svgedit-default", svgData);
-    localStorage.setItem("tat-storage-data", JSON.stringify(tatStorageData))
+    localStorage.setItem("tat-storage-data", JSON.stringify(tatStorageData));
     if (existingTab) {
         dispatchEvent(new StorageEvent("storage", {
             key: "svgedit-default",
