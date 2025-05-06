@@ -236,7 +236,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
               let reqChannelId = items["monarchChannelId"];
               let encryptionKey = items["monarchEncryptionKey"];
               const flowType = reqChannelId ? "update" : "create";
-              let monarchTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/monarch` : `${serverUrl}monarch`;
+              let monarchTargetUrl = `${serverUrl}/monarch`;
+              monarchTargetUrl = monarchTargetUrl.replace(/([^:]\/)\/+/g, "$1");
               let monarchFetchUrl = flowType == "update" ?
                 `${monarchTargetUrl}/update/${reqChannelId}` :
                 `${monarchTargetUrl}/create`;
@@ -296,7 +297,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
                   placeID: query["placeID"],
                 }
                 //console.log("Svg Dom Value", svgDom);
-                let tatTargetUrl = items["mcgillServer"] ? `${SERVER_URL}image/tat/` : `${serverUrl}tat/`;
+                let tatTargetUrl =  `${serverUrl}/tat/`;
+                tatTargetUrl = tatTargetUrl.replace(/([^:]\/)\/+/g, "$1");
                 let tabs = await browser.tabs.query({ url: tatTargetUrl });
                 // if(tabs){
                 //   tabs.forEach((tab)=>{
