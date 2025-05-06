@@ -79,7 +79,10 @@ export function processMap(port: browser.Runtime.Port, map: any, origin: string,
                 default:
                     break;
             }
-        });    
+        });
+        selectElement.addEventListener("focus",(event)=> {
+            selectElement.selectedIndex = 0;
+        });   
         let parentElement = map;
         // handle cases when map(image) is embedded in an anchor tag - necessary to fix the layout
         if (map.parentNode.nodeName.toLowerCase() === "a" ){
