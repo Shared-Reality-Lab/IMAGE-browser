@@ -123,3 +123,94 @@ export function queryLocalisation() {
     }
   }
 }
+
+/** Configuration for modal buttons */
+interface ButtonConfig {
+    /** Button text to display */
+    text: string;
+    /** Message type for port communication */
+    type: string;
+    /** Additional parameters for specific button types */
+    additionalParams?: {
+        /** Whether to redirect to Tactile Authoring Tool */
+        redirectToTAT?: boolean;
+        /** Whether to send to Monarch */
+        sendToMonarch?: boolean;
+    };
+}
+
+/** Creates the base message object for port communication */
+function createBaseMessage(selectedElement: HTMLElement, imageElement: HTMLImageElement) {
+    return {
+        "context": selectedElement ? getContext(selectedElement) : null,
+        "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+        "url": window.location.href,
+        "sourceURL": imageElement.currentSrc,
+        "toRender": "full"
+    };
+}
+
+/** Creates a button element with consistent styling and behavior */
+function createButton(config: ButtonConfig, modal: HTMLDivElement, selectedElement: HTMLElement, imageElement: HTMLImageElement, port: browser.Runtime.Port): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.textContent = config.text;
+    button.className = 'image-options-button';
+    button.onclick = () => {
+        modal.remove();
+        const message = {
+            ...createBaseMessage(selectedElement, imageElement),
+            "type": config.type,
+            ...config.additionalParams
+        };
+        port.postMessage(message);
+    };
+    return button;
+}
+
+/** Shows a modal with options for interacting with the selected image */
+export function showImageOptionsModal(selectedElement: HTMLElement, imageElement: HTMLImageElement, port: browser.Runtime.Port) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'image-options-modal';
+
+    // Define button configurations
+    const buttonConfigs: ButtonConfig[] = [
+        {
+            text: 'Interpret this graphic with IMAGE',
+            type: 'checkImageSize'
+        },
+        {
+            text: 'Load in Tactile Authoring tool',
+            type: 'checkImageSize',
+            additionalParams: {
+                redirectToTAT: true,
+                sendToMonarch: false
+            }
+        },
+        {
+            text: 'Send Graphic to Monarch',
+            type: 'checkImageSize',
+            additionalParams: {
+                redirectToTAT: true,
+                sendToMonarch: true
+            }
+        }
+    ];
+
+    // Create and add buttons
+    buttonConfigs.forEach(config => {
+        const button = createButton(config, modal, selectedElement, imageElement, port);
+        modal.appendChild(button);
+    });
+
+    // Add modal to page
+    document.body.appendChild(modal);
+
+    // Add click outside to close
+    document.addEventListener('click', function closeModal(e) {
+        if (!modal.contains(e.target as Node)) {
+            modal.remove();
+            document.removeEventListener('click', closeModal);
+        }
+    });
+}
