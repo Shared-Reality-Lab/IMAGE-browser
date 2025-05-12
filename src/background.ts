@@ -461,7 +461,8 @@ async function updateDebugContextMenu() {
         if(ports[tabId]){
           ports[tabId].postMessage({
             "type": "handleInvisibleButton",
-            "displayInvisibleButtons": displayInvisibleButtons
+            "displayInvisibleButtons": displayInvisibleButtons,
+            "monarchEnabled": monarchEnabled
           });
         }
       }
@@ -626,7 +627,8 @@ function handleUpdated(tabId: any, changeInfo: any) {
       // handle invisible buttons
       ports[tabId].postMessage({
         "type": "handleInvisibleButton",
-        "displayInvisibleButtons": displayInvisibleButtons
+        "displayInvisibleButtons": displayInvisibleButtons,
+        "monarchEnabled": monarchEnabled
       });
   } 
   } else if (changeInfo.status == "unloaded" || changeInfo.status == "loading") {

@@ -68,6 +68,57 @@ function processCharts() {
   }
 }
 
+function createDropdownForImage(img) {
+  const dropdown = document.createElement('select');
+  dropdown.className = 'monarch-dropdown-sr-only display-none';
+  
+  const options = [
+    { text: 'Select IMAGE options', value: '' },
+    { text: 'Interpret this graphic with IMAGE', value: 'interpret' },
+    { text: 'Load in Tactile Authoring tool', value: 'tactile' },
+    { text: 'Send Graphic to Monarch', value: 'monarch' }
+  ];
+
+  options.forEach((opt, index) => {
+    const option = document.createElement('option');
+    option.text = opt.text;
+    option.value = opt.value;
+    if (index === 0) {
+      option.selected = true;
+      option.disabled = true;
+    }
+    dropdown.appendChild(option);
+  });
+
+  dropdown.addEventListener('change', function() {
+    const selectedValue = this.value;
+    if (selectedValue) {
+      let imageData = {
+        "naturalWidth": img.naturalWidth,
+        "naturalHeight": img.naturalHeight,
+        "sourceURL": img.currentSrc
+      };
+      let messageObj = { "messageFrom": "screenReaderGraphic", "imageData": imageData };
+
+      switch(selectedValue) {
+        case 'tactile':
+          messageObj.redirectToTAT = true;
+          messageObj.sendToMonarch = false;
+          break;
+        case 'monarch':
+          messageObj.redirectToTAT = true;
+          messageObj.sendToMonarch = true;
+          break;
+      }
+
+      window.postMessage(messageObj, "*");
+      this.selectedIndex = 0;
+    }
+  });
+
+  return dropdown;
+}
+
 function processGraphics() {
   console.debug("inside screenreader script");
   let userAgent = navigator.userAgent;
@@ -102,7 +153,7 @@ function processGraphics() {
         "naturalHeight": image.naturalHeight,
         "sourceURL": image.currentSrc
       }
-      messageObj = { "messageFrom": "screenReaderGraphic", "imageData": imageData };
+      let messageObj = { "messageFrom": "screenReaderGraphic", "imageData": imageData };
       window.postMessage(messageObj, "*");
     })
     // add inline css for sr-only class to handle print display
@@ -117,9 +168,12 @@ function processGraphics() {
     // button.style.border = "0";
 
     image.parentNode.insertBefore(button, image.nextSibling);
+
+    // Create and add dropdown
+    let dropdown = createDropdownForImage(image);
+    image.parentNode.insertBefore(dropdown, button.nextSibling);
   }
 }
-
 
 document.onreadystatechange = function () {
   if (document.readyState === 'complete') {

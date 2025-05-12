@@ -17,13 +17,14 @@
 import imageCompression from "browser-image-compression";
 import browser from "webextension-polyfill";
 import { processMAPImages, processMaps } from './maps/maps-utils';
-import { getContext } from "./utils";
+import { getContext, showImageOptionsModal } from "./utils";
 
 var selectedElement: HTMLElement | null = null;
 
 let port = browser.runtime.connect();
 var extVersion = process.env.NODE_ENV || "";
 let showInvisibleButtons = true;
+let monarchEnabled = false;
 //console.debug("Extension Version", extVersion);
 
 // version - required for highcharts
@@ -33,7 +34,7 @@ versionDiv.setAttribute("ext-version", extVersion);
 (document.head || document.documentElement).appendChild(versionDiv);
 
 var styleDiv = document.createElement("style");
-styleDiv.textContent = ".sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;}";
+//styleDiv.textContent = ".sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;}";
 styleDiv.textContent += ".display-none{ display: none; !important}";
 (document.head || document.documentElement).appendChild(styleDiv);
 
@@ -71,7 +72,9 @@ window.addEventListener("message", function (event) {
             "dims": [imageData.naturalWidth, imageData.naturalHeight],
             "url": window.location.href,
             "sourceURL": imageData.sourceURL,
-            "toRender": "full"
+            "toRender": "full",
+            "redirectToTAT": event.data.redirectToTAT,
+            "sendToMonarch": event.data.sendToMonarch,
         });
     }
 });
@@ -103,17 +106,36 @@ function hideInvisibleButtons(){
     })
 }
 
+
+function displayInvisibleDropdowns() {
+    document.querySelectorAll('.monarch-dropdown-sr-only').forEach(dropdown => {
+        dropdown.classList.remove('display-none');
+        dropdown.classList.add('sr-only');
+    });
+}
+
+function hideInvisibleDropdowns() {
+    document.querySelectorAll('.monarch-dropdown-sr-only').forEach(dropdown => {
+        dropdown.classList.remove('sr-only');
+        dropdown.classList.add('display-none');
+    });
+}
+
 port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
     let imageElement: HTMLImageElement;
     if(message && message.status == "ping" ) return;
-    if(message["type"] === "handleInvisibleButton"){
-        if(message["displayInvisibleButtons"]){
-            displayInvisibleButtons();
-        } else {
+    if (message["type"] === "handleInvisibleButton") {
+        monarchEnabled = message["monarchEnabled"];
+        
+        if (monarchEnabled) {
             hideInvisibleButtons();
+            message["displayInvisibleButtons"] ? displayInvisibleDropdowns() : hideInvisibleDropdowns();
+        } else {
+            hideInvisibleDropdowns();
+            message["displayInvisibleButtons"] ? displayInvisibleButtons() : hideInvisibleButtons();
         }
-        //console.log("message received inside content script", message["displayInvisibleButtons"]);
+        
         return;
     }
     if (selectedElement instanceof HTMLImageElement) {
@@ -244,9 +266,9 @@ document.onreadystatechange = function () {
             processMaps(document, port, extVersion);
             processMAPImages(document, port, extVersion);
             if (showInvisibleButtons){
-                displayInvisibleButtons();
+                (monarchEnabled) ? displayInvisibleDropdowns() : displayInvisibleButtons();
             } else {
-                hideInvisibleButtons();
+                (monarchEnabled) ? hideInvisibleDropdowns() : hideInvisibleButtons();
             }
         }
     }, 1500)
@@ -254,21 +276,21 @@ document.onreadystatechange = function () {
 
 document.addEventListener('keydown', function(event) {
     if (event.ctrlKey && (event.key === 'b' || event.key == 'B')) {
-        // console.log('Hotkey pressed');
-        // console.log('Active Element', document.activeElement);
-        // console.log(document.activeElement?.tagName);
         if(document.activeElement && document.activeElement.tagName == "IMG"){
             let selectedElement = document.activeElement as HTMLElement;
             let imageElement = selectedElement as HTMLImageElement;
-            let toRender = "full";
-            port.postMessage({
-                "type": "checkImageSize",
-                "context": selectedElement ? getContext(selectedElement) : null,
-                "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
-                "url": window.location.href,
-                "sourceURL": imageElement.currentSrc,
-                "toRender": toRender
-            });
+            if(monarchEnabled){
+                showImageOptionsModal(selectedElement, imageElement, port);
+            } else {
+                port.postMessage({
+                    "type": "checkImageSize",
+                    "context": selectedElement ? getContext(selectedElement) : null,
+                    "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
+                    "url": window.location.href,
+                    "sourceURL": imageElement.currentSrc,
+                    "toRender": "full"
+                });
+            }
         }
     }
 });
