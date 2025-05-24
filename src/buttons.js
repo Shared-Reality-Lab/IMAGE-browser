@@ -182,6 +182,6 @@ document.onreadystatechange = function () {
   }
 }
 
-window.addEventListener('locationchange', function () {
-  setTimeout(processCharts, 1000);
-})
+// window.addEventListener('locationchange', function () {
+//   setTimeout(processCharts, 1000);
+// })
