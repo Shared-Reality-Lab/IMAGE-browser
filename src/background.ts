@@ -226,7 +226,23 @@ async function handleMessage(p: Runtime.Port, message: any) {
             console.log("message", message);
             if (message["redirectToTAT"]) {
               console.log("Received TAT data in background script");
-              let tactileResponse = json.renderings.filter((rendering) => (rendering.type_id == RENDERERS.tactileSvg))
+              let tactileResponse = json.renderings.filter((rendering) => (rendering.type_id == RENDERERS.tactileSvg));
+              if (tactileResponse.length === 0) {
+                console.error("No Tactile SVG rendering found in response");  
+                await windowsPanel ? browser.windows.create({
+                  type: "panel",
+                  url: 'errors/no_renderings.html?uuid=' +
+                    encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                    encodeURIComponent(hash(query)) + "&serverURL=" +
+                    encodeURIComponent(serverUrl.toString())
+                }) : browser.tabs.create({
+                  url: 'errors/no_renderings.html?uuid=' +
+                    encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                    encodeURIComponent(hash(query)) + "&serverURL=" +
+                    encodeURIComponent(serverUrl.toString())
+                });
+                return;
+              }
               let tactileSvgGraphic = tactileResponse[0].data.graphic as string;
               //console.log("Tactile Response", tactileSvgGraphic);
               let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
