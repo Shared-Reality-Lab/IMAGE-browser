@@ -68,15 +68,21 @@ function optionsCheck(){
     text:false
   })
   .then((items)=>{
+    const announcer = document.getElementById('announcements');
+    let alertMessage = ""
     if(items["inputUrl"]=== "" && items["customServer"]=== true){
-      window.alert(browser.i18n.getMessage("noInputURL"));
+      alertMessage = browser.i18n.getMessage("noInputURL");
     } 
     else if(items["noHaptics"]=== true && items["audio"]=== false && items["text"]=== false ){
-      window.alert(browser.i18n.getMessage("noRenderings"));
+      alertMessage = browser.i18n.getMessage("noRenderings");
     }
     else{
-     window.alert(browser.i18n.getMessage("perferencesSaved"));
+      alertMessage = browser.i18n.getMessage("perferencesSaved");
     }
+    announcer!.textContent = alertMessage;
+    setTimeout(() => {
+      announcer!.textContent = '';
+    }, 1000);
   });
 }
 

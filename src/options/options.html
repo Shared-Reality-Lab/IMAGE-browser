@@ -1,41 +1,43 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Preferences</title>
     <!-- <link rel="stylesheet" href="./options.css"> -->
 </head>
 
 <body class="options-body">
+    <div id="announcements" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
     <h1 class="localisation" id="extensionPreferences"></h1>
     <div class="options-section">
-        <button type="button" data-bs-toggle="collapse" data-bs-target="#interpretation-div"
-            class="localisation btn btn-light" id="interpretationOptions"></button>
-        <div id="interpretation-div" class="settings-div show">
+        <div class="localisation btn btn-light" id="interpretationOptions"></div>
+        <div id="interpretation-div" class="settings-div show" role="region" aria-labelledby="interpretationOptions">
             <div class="browser-style">
                 <input type="checkbox" id="audio-renderings" name="audio-renderings">
-                <label class="localisation" for="audioRenderingsLabel" id="audioRenderingsLabel"></label>
+                <label class="localisation" for="audio-renderings" id="audioRenderingsLabel"></label>
             </div>
             <div class="browser-style">
                 <input type="checkbox" id="text-renderings" name="text-renderings">
-                <label class="localisation" for="textRenderingsLabel" id="textRenderingsLabel"></label>
+                <label class="localisation" for="text-renderings" id="textRenderingsLabel"></label>
             </div>
         </div>
     </div>
     <div class="options-section">
-        <button type="button" data-bs-toggle="collapse" data-bs-target="#language-div"
-            class="localisation btn btn-light" id="languageOptions"></button>
-        <div id="language-div" class="settings-div show">
+        <div class="localisation btn btn-light" id="languageOptions"></div>
+        <div id="language-div" class="settings-div show" role="region" aria-labelledby="languageOptions">
             <div>
-                <label class="localisation" for="languageSelectionLabel" id="languageSelectionLabel"></label>
+                <label class="localisation" for="language-selection" id="languageSelectionLabel"></label>
                 <select name="language-selection" id="language-selection">
                     <option class="localisation" id="browserLanguage" value="auto"></option>
                     <option value="en">English</option>
                     <option value="fr">Français</option>
                 </select>
-                <label class="localisation" id="languageWarning"></label>
+                <div class="localisation" id="languageWarning" role="status" aria-live="polite"></div>
             </div>
             <div id="sr-button-toggle">
-                <label class="localisation" id="buttonsToggle"></label>
+                <label class="localisation" for="toggle-invisible-buttons" id="buttonsToggle"></label>
                 <div class="toggle-container">
                     <input type="checkbox" id="toggle-invisible-buttons" />
                     <div class="slider round"></div>
@@ -44,28 +46,26 @@
         </div>
     </div>
     <div class="options-section">
-        <button type="button" data-bs-toggle="collapse" data-bs-target="#server-div" class="localisation btn btn-light"
-            class="localisation" id="serverOptions"></button>
-        <div id="server-div" class="settings-div show">
+        <div class="localisation btn btn-light" id="serverOptions"></div>
+        <div id="server-div" class="settings-div show" role="region" aria-labelledby="serverOptions">
             <div>
                 <input type="radio" id="mcgill-server" name="serverOptions" checked>
-                <label class="localisation" for="mcgillServerLabel" id="mcgillServerLabel"></label>
+                <label class="localisation" for="mcgill-server" id="mcgillServerLabel"></label>
             </div>
             <div>
                 <input type="radio" id="custom-server" name="serverOptions">
-                <label class="localisation" for="customServerLabel" id="customServerLabel"></label>
+                <label class="localisation" for="custom-server" id="customServerLabel"></label>
                 <span>
-                    <input type="text" id="input-url">
+                    <input type="text" id="input-url" aria-label="Custom server URL">
                 </span>
             </div>
         </div>
     </div>
     <div class="options-section">
-        <button type="button" data-bs-toggle="collapse" data-bs-target="#monarch-div" class="localisation btn btn-light"
-            class="localisation" id="hapticDevices"></button>
-        <div id="monarch-div" class="settings-div show">
+        <div class="localisation btn btn-light" id="hapticDevices"></div>
+        <div id="monarch-div" class="settings-div show" role="region" aria-labelledby="hapticDevices">
             <div id="monarch-header">
-                <label class="localisation" id="monarchContainerHeading"></label>
+                <label class="localisation" for="toggle-monarch-options" id="monarchContainerHeading"></label>
                 <div class="toggle-container">
                     <input type="checkbox" id="toggle-monarch-options"/>
                     <div class="slider round"></div>
@@ -74,25 +74,25 @@
             <div id="monarch-options">
                 <div id="monarch-container">
                     <div class="monarch-row">
-                        <label class="localisation options-label" for="monarchTitle" id="monarchTitle"></label>
+                        <label class="localisation options-label" for="monarch-title" id="monarchTitle"></label>
                         <div>
                             <input type="text" id="monarch-title">
                         </div>
                     </div>
                     <div class="monarch-row">
-                        <label class="localisation options-label" for="monarchChannelId" id="monarchChannelId"></label>
+                        <label class="localisation options-label" for="monarch-channel-id" id="monarchChannelId"></label>
                         <div>
                             <input type="text" id="monarch-channel-id">
                         </div>
                     </div>
                     <div class="monarch-row">
-                        <label class="localisation options-label" for="monarchSecretKey" id="monarchSecretKey"></label>
+                        <label class="localisation options-label" for="monarch-secret-key" id="monarchSecretKey"></label>
                         <div>
                             <input type="text" id="monarch-secret-key">
                         </div>
                     </div>
                     <div class="monarch-row">
-                        <label class="localisation options-label" for="monarchEncryptionKey"
+                        <label class="localisation options-label" for="monarch-encryption-key"
                             id="monarchEncryptionKey"></label>
                         <div>
                             <input type="text" id="monarch-encryption-key">
@@ -107,7 +107,7 @@
     </div>
     <div class="options-section">
         <div>
-            <label class="localisation" id="developerMode"></label>
+            <label class="localisation" for="toggle-developer-mode" id="developerMode"></label>
             <div class="toggle-container">
                 <input type="checkbox" id="toggle-developer-mode" />
                 <div class="slider round"></div>
