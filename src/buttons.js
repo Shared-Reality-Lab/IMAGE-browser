@@ -83,14 +83,10 @@ function createDropdownForImage(img) {
     const option = document.createElement('option');
     option.text = opt.text;
     option.value = opt.value;
-    if (index === 0) {
-      option.selected = true;
-      option.disabled = true;
-    }
     dropdown.appendChild(option);
   });
 
-  dropdown.addEventListener('change', function() {
+  dropdown.addEventListener('blur', function() {
     const selectedValue = this.value;
     if (selectedValue) {
       let imageData = {
@@ -101,19 +97,29 @@ function createDropdownForImage(img) {
       let messageObj = { "messageFrom": "screenReaderGraphic", "imageData": imageData };
 
       switch(selectedValue) {
+        case 'interpret':
+          messageObj.redirectToTAT = false;
+          messageObj.sendToMonarch = false;
+          window.postMessage(messageObj, "*");
+          break;
         case 'tactile':
           messageObj.redirectToTAT = true;
           messageObj.sendToMonarch = false;
+          window.postMessage(messageObj, "*");
           break;
         case 'monarch':
           messageObj.redirectToTAT = true;
           messageObj.sendToMonarch = true;
+          window.postMessage(messageObj, "*");
+          break;
+        default:
           break;
       }
-
-      window.postMessage(messageObj, "*");
-      this.selectedIndex = 0;
     }
+  });
+
+  dropdown.addEventListener("focus",(event)=> {
+    dropdown.selectedIndex = 0;
   });
 
   return dropdown;
