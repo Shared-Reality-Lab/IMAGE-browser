@@ -80,6 +80,7 @@ function optionsCheck(){
       alertMessage = browser.i18n.getMessage("perferencesSaved");
     }
     announcer!.textContent = alertMessage;
+    window.alert(alertMessage)
     setTimeout(() => {
       announcer!.textContent = '';
     }, 1000);
