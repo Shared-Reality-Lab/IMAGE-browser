@@ -29,6 +29,7 @@ let ports: { [key: number]: Runtime.Port } = {};
 const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
 var serverUrl: RequestInfo;
 var renderingsPanel: browser.Windows.Window | browser.Tabs.Tab;
+var errorPanel: browser.Windows.Window | browser.Tabs.Tab;
 let launchPad : browser.Windows.Window | browser.Tabs.Tab;
 var graphicUrl: string = "";
 var extVersion = process.env.NODE_ENV;
@@ -197,13 +198,15 @@ async function handleMessage(p: Runtime.Port, message: any) {
               "body": JSON.stringify(query)
             });
             windowsPanel ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
+            // close existing error panel if it exists
+            windowsPanel ? (errorPanel && browser.windows.remove(errorPanel.id!)) : (errorPanel && browser.tabs.remove(errorPanel.id!));
             if (resp.ok) {
               json = await resp.json();
             } else {
-              windowsPanel ? browser.windows.create({
+              errorPanel = windowsPanel ? await browser.windows.create({
                 type: "panel",
                 url: "errors/http_error.html"
-              }) : browser.tabs.create({
+              }) : await browser.tabs.create({
                 url: "errors/http_error.html",
               });
               console.error(`HTTP Error ${resp.status}: ${resp.statusText}`);
@@ -213,10 +216,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
             }
           } catch {
             windowsPanel ? browser.windows.remove(progressWindow.id!) : browser.tabs.remove(progressWindow.id!);
-            windowsPanel ? browser.windows.create({
+            // close existing error panel if it exists
+            windowsPanel ? (errorPanel && browser.windows.remove(errorPanel.id!)) : (errorPanel && browser.tabs.remove(errorPanel.id!));
+            errorPanel = windowsPanel ? await browser.windows.create({
               type: "panel",
               url: "errors/http_error.html"
-            }) : browser.tabs.create({
+            }) : await browser.tabs.create({
               url: "errors/http_error.html",
             });
             return;
@@ -811,6 +816,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     }
   } else {
     console.error("No tab passed to context menu listener!");
+    windowsPanel ? (errorPanel && browser.windows.remove(errorPanel.id!)) : (errorPanel && browser.tabs.remove(errorPanel.id!));
     windowsPanel ? browser.windows.create({
       type: "panel",
       url: "errors/http_error.html"

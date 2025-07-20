@@ -242,3 +242,15 @@
    border: 2px solid lightgrey;
    margin: 0.5rem 0rem;
  }
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .slider {
+    background-color: Canvas;
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+  }
+  .slider::before {
+    background-color: CanvasText;
+  }
+}
