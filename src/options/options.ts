@@ -41,10 +41,13 @@ const monarchChannelId = <HTMLInputElement>(document.getElementById("monarch-cha
 const monarchSecretKey = <HTMLInputElement>(document.getElementById("monarch-secret-key"));
 const monarchEncryptionKey = <HTMLInputElement>(document.getElementById("monarch-encryption-key"));
 const monarchSettings = <HTMLInputElement>(document.getElementById("toggle-monarch-options"));
+const monarchEnabledSetting = <HTMLInputElement>(document.getElementById("monarch-enabled"));
 
 developerSettings?.addEventListener("change", (event)=>{
   let debugText = <HTMLElement>document.querySelector("#debugText");
   debugText.style.display = developerSettings.checked ? "block" : "none";
+  let monarchEnabledDiv = <HTMLElement>document.querySelector("#monarch-enabled-div");
+  monarchEnabledDiv.style.display = developerSettings.checked ? "block" : "none";
 });
 
 monarchSettings?.addEventListener("change", (event)=>{
@@ -101,7 +104,8 @@ function saveOptions() {
     monarchEncryptionKey: monarchEncryptionKey.value,
     monarchTitle: monarchTitle.value,
     monarchSecretKey: monarchSecretKey.value,
-    monarchEnabled: monarchSettings.checked
+    monarchEnabledToggle: monarchSettings.checked,
+    monarchEnabled: monarchEnabledSetting.checked
   }),
     (function () {
       optionsCheck();
@@ -138,7 +142,8 @@ function restore_options() {
         mcgillServerSetting.checked = items["mcgillServer"];
         customServerSetting.checked = items["customServer"];
         developerSettings.checked = items["developerMode"];
-        monarchSettings.checked = items["monarchEnabled"];
+        monarchSettings.checked = items["monarchEnabledToggle"];
+        monarchEnabledSetting.checked = items["monarchEnabled"];
         audioRenderingsSetting.checked = items["audio"];
         textRenderingsSetting.checked = items["text"];
         languageSetting.value = items["language"];
@@ -154,6 +159,8 @@ function restore_options() {
         monarchOptions.style.display = monarchSettings.checked ? "block" : "none";
         let debugText = <HTMLElement>document.querySelector("#debugText");
         debugText.style.display = developerSettings.checked ? "block" : "none";
+        let monarchEnabledDiv = <HTMLElement>document.querySelector("#monarch-enabled-div");
+        monarchEnabledDiv.style.display = developerSettings.checked ? "block" : "none";
     });
     if(extVersion === "development"){
       document.getElementById("extensionPreferences")!.innerText += process.env.SUFFIX_TEXT;

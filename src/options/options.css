@@ -139,7 +139,7 @@
    font-weight: 400;
  }
 
- #textRenderingsLabel {
+ #textRenderingsLabel , #monarchEnabledLabel{
    color: black;
    font-size: medium;
    font-weight: 400;

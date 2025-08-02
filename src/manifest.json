@@ -25,7 +25,8 @@
         "downloads",
         "storage",
         "scripting",
-        "offscreen"
+        "offscreen",
+        "notifications"
     ],
     "host_permissions" : ["<all_urls>"],
 

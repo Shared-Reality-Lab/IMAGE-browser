@@ -301,11 +301,27 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 }
                 //console.log("response received", responseJSON);
                 let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
-                browser.scripting.executeScript({
-                  target: { tabId: currentTab[0].id || 0 },
-                  func: monarchPopUp,
-                  args: [responseJSON["id"], flowType]
-                });
+                
+                // Check if the current tab is an extension page
+                if (currentTab[0].url && !currentTab[0].url.startsWith('chrome-extension://')) {
+                  browser.scripting.executeScript({
+                    target: { tabId: currentTab[0].id || 0 },
+                    func: monarchPopUp,
+                    args: [responseJSON["id"], flowType]
+                  });
+                } else {
+                  // If we're on an extension page, use notifications instead of alert
+                  const message = flowType === "create" 
+                    ? `New channel created with code ${responseJSON["id"]}`
+                    : `Graphic in channel ${responseJSON["id"]} has been updated!`;
+                  
+                  browser.notifications.create({
+                    type: 'basic',
+                    iconUrl: 'image-icon-128.png',
+                    title: 'Monarch Response',
+                    message: message
+                  });
+                }
 
               } else {
                 /** Handle "Load in Tactile Authoring Tool" flow */
