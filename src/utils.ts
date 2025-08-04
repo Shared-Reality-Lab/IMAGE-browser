@@ -34,6 +34,7 @@ export function getAllStorageSyncData() {
     monarchSecretKey: "",
     monarchEnabled: false,
     previousMonarchMode: false,
+    monarchEnabledToggle: false
   });
 };
 
@@ -55,7 +56,7 @@ export async function getRenderers(): Promise<string[]> {
   if (items['developerMode']) {
     renderers.push(RENDERERS.svgLayers);
   }
-  if(items['monarchEnabled']) {
+  if(items['monarchEnabled'] || items['monarchEnabledToggle']) {
     renderers.push(RENDERERS.tactileSvg);
   }
   return renderers;

@@ -261,14 +261,26 @@ port.onMessage.addListener(async (message) => {
 
             if (rendering["type_id"] == RENDERERS.tactileSvg) {
                 // Tactile SVG renderings should be handled by the authoring tool
-                headerElement.addEventListener("click", function () {
+                let contentDiv = utils.addRenderingContent(container, contentId);
+                
+                // Create buttons container
+                const buttonsContainer = document.createElement("div");
+                buttonsContainer.style.display = "flex";
+                buttonsContainer.style.gap = "10px";
+                buttonsContainer.style.marginBottom = "1rem";
+                
+                // Send to TAT button
+                const sendToTATButton = document.createElement("button");
+                sendToTATButton.classList.add("btn", "btn-secondary");
+                sendToTATButton.textContent = "Send to Tactile Authoring Tool (TAT)";
+                sendToTATButton.addEventListener("click", function () {
                     const renderImg = document.createElement("img");
                     renderImg.id = "render-img";
                     renderImg.classList.add("render-img");
                     if (request && request.graphic) {
                         renderImg.src = request.graphic;
                     }
-                    // Send the request to the background script
+                    // Send the request to the background script for TAT
                     port.postMessage({
                         "type": "resource",
                         "context": renderImg ? getContext(renderImg) : null,
@@ -278,9 +290,40 @@ port.onMessage.addListener(async (message) => {
                         "graphicBlob": request.graphic,
                         "toRender": "full",
                         "redirectToTAT": true,
-                        "sendToMonarch": false
+                        "sendToMonarch": false,
+                        "specificTactileRendering": rendering
                     });
                 });
+                
+                // Send to Monarch button
+                const sendToMonarchButton = document.createElement("button");
+                sendToMonarchButton.classList.add("btn", "btn-secondary");
+                sendToMonarchButton.textContent = "Send to Monarch";
+                sendToMonarchButton.addEventListener("click", function () {
+                    const renderImg = document.createElement("img");
+                    renderImg.id = "render-img";
+                    renderImg.classList.add("render-img");
+                    if (request && request.graphic) {
+                        renderImg.src = request.graphic;
+                    }
+                    // Send the request to the background script for Monarch
+                    port.postMessage({
+                        "type": "resource",
+                        "context": renderImg ? getContext(renderImg) : null,
+                        "dims": [graphicWidth, graphicHeight],
+                        "url": graphic_url,
+                        "sourceURL": renderImg.currentSrc,
+                        "graphicBlob": request.graphic,
+                        "toRender": "full",
+                        "redirectToTAT": true,
+                        "sendToMonarch": true,
+                        "specificTactileRendering": rendering
+                    });
+                });
+                
+                buttonsContainer.append(sendToTATButton);
+                buttonsContainer.append(sendToMonarchButton);
+                contentDiv.append(buttonsContainer);
             }
             document.getElementById("renderings-container")!.appendChild(container)
             count++;

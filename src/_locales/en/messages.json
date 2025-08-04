@@ -143,6 +143,10 @@
         "message": "Encryption Key",
         "description": "Label for monarch encryption key in extension preferences."
     },
+    "monarchEnabledLabel": {
+        "message": "Enable tactile options in dropdown",
+        "description": "Label for monarch enabled checkbox in developer settings."
+    },
     "tactileAuthoringTool" : {
         "message": "Launch Tactile Authoring Tool",
         "description": "Label for button to launch Authoring tool"
