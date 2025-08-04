@@ -80,6 +80,128 @@ async function generateChartQuery(message: { highChartsData: { [k: string]: unkn
   } as IMAGERequest;
 }
 
+async function processTactileRendering(tactileSvgGraphic: string, query: IMAGERequest, message: any, serverUrl: RequestInfo) {
+  let items = await getAllStorageSyncData();
+  let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
+  let svgDom = atob(encodedSvg);
+  console.log("SVG DOM", svgDom);
+  let reqTitle = items["monarchTitle"];
+  let reqSecretKey = items["monarchSecretKey"];
+  let reqChannelId = items["monarchChannelId"];
+  let encryptionKey = items["monarchEncryptionKey"];
+  const flowType = reqChannelId ? "update" : "create";
+  let monarchTargetUrl = `${serverUrl}/monarch`;
+  monarchTargetUrl = monarchTargetUrl.replace(/([^:]\/)\/+/g, "$1");
+  let monarchFetchUrl = flowType == "update" ?
+    `${monarchTargetUrl}/update/${reqChannelId}` :
+    `${monarchTargetUrl}/create`;
+  let encryptedGraphicBlob = query["graphic"] && await encryptData(query["graphic"], encryptionKey);
+  let encryptedCoordinates = query["coordinates"] && await encryptData(JSON.stringify(query["coordinates"]), encryptionKey);
+  let encryptedPlaceId = query["placeID"] && await encryptData(query["placeID"], encryptionKey);
+  const reqData = await encryptData(svgDom, encryptionKey);
+  const reqBody = {
+    "data": reqData,
+    "layer": "None",
+    "title": reqTitle,
+    "secret": reqSecretKey,
+    "graphicBlob": encryptedGraphicBlob,
+    "coordinates": encryptedCoordinates,
+    "placeID": encryptedPlaceId
+  };
+  
+  if (message["sendToMonarch"]) {
+    /** Send Graphic to Monarch flow - Make curl request to monarch */
+    const response = await fetch(monarchFetchUrl,
+      {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": JSON.stringify(reqBody)
+      });
+
+    let responseJSON = {
+      "id": reqChannelId || "",
+      "secret": ""
+    };
+    if (flowType == "create") {
+      responseJSON = await response.json();
+      browser.storage.sync.set({
+        "monarchChannelId": responseJSON["id"],
+        "monarchSecretKey": responseJSON["secret"]
+      });
+    }
+    let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
+    
+    // Check if the current tab is an extension page
+    if (currentTab[0].url && !currentTab[0].url.startsWith('chrome-extension://')) {
+      browser.scripting.executeScript({
+        target: { tabId: currentTab[0].id || 0 },
+        func: monarchPopUp,
+        args: [responseJSON["id"], flowType]
+      });
+    } else {
+      // If we're on an extension page, use notifications instead of alert
+      const message = flowType === "create" 
+        ? `New channel created with code ${responseJSON["id"]}`
+        : `Graphic in channel ${responseJSON["id"]} has been updated!`;
+      
+      browser.notifications.create({
+        type: 'basic',
+        iconUrl: 'image-icon-128.png',
+        title: 'Monarch Response',
+        message: message
+      });
+    }
+
+  } else {
+    /** Handle "Load in Tactile Authoring Tool" flow */
+    const tatStorageData: TatStorageData = {
+      channelId: items["monarchChannelId"],
+      graphicTitle: items["monarchTitle"],
+      secretKey: items["monarchSecretKey"],
+      graphicBlob: query["graphic"],
+      coordinates: query["coordinates"] && JSON.stringify(query["coordinates"]),
+      placeID: query["placeID"],
+    }
+    let tatTargetUrl =  `${serverUrl}/tat/`;
+    tatTargetUrl = tatTargetUrl.replace(/([^:]\/)\/+/g, "$1");
+    let tabs = await browser.tabs.query({ url: tatTargetUrl });
+    
+    /** encrypt data before storing in local storage */
+    let encryptedSvgData = await encryptData(svgDom, encryptionKey);
+    let encryptedTatData: TatStorageData = {channelId:"", graphicTitle:"", secretKey:""};
+    for (let key of Object.keys(tatStorageData)) {
+      let stringToEncrypt = tatStorageData[key as keyof TatStorageData];
+      if (stringToEncrypt){
+        encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
+      }
+    }
+    
+    if (tabs && tabs.length > 0) {
+      let existingTab = tabs[0];
+      browser.scripting.executeScript({
+        target: { tabId: existingTab.id || 0 },
+        func: saveToLocalStorage,
+        args: [encryptedSvgData, encryptedTatData, existingTab]
+      });
+      browser.tabs.update(existingTab.id, { active: true });
+    }
+    else {
+      let authoringTool = browser.tabs.create({
+        url: tatTargetUrl
+      });
+      authoringTool.then((tab) => {
+        browser.scripting.executeScript({
+          target: { tabId: tab.id || 0 },
+          func: saveToLocalStorage,
+          args: [encryptedSvgData, encryptedTatData]
+        });
+      }, (error) => { console.log(error) });
+    }
+  }
+}
+
 async function handleMessage(p: Runtime.Port, message: any) {
   console.debug("Handling message", message);
   let query: IMAGERequest | undefined;
@@ -179,6 +301,16 @@ async function handleMessage(p: Runtime.Port, message: any) {
               serverUrl = items["inputUrl"];
             }
           }
+          
+          // Check if we have specific tactile rendering data and can skip server call
+          if (message["redirectToTAT"] && message["specificTactileRendering"]) {
+            console.log("Skipping server call - using provided tactile rendering data");
+            let tactileSvgGraphic = message["specificTactileRendering"].data.graphic as string;
+            await processTactileRendering(tactileSvgGraphic, query, message, serverUrl);
+            return;
+          }
+          
+          // Original server call flow for cases without specific tactile rendering
           var progressWindow = windowsPanel ? await browser.windows.create({
             type: "popup",
             url: "progressBar/progressBar.html",
@@ -231,152 +363,37 @@ async function handleMessage(p: Runtime.Port, message: any) {
             console.log("message", message);
             if (message["redirectToTAT"]) {
               console.log("Received TAT data in background script");
-              let tactileResponse = json.renderings.filter((rendering) => (rendering.type_id == RENDERERS.tactileSvg));
-              if (tactileResponse.length === 0) {
-                console.error("No Tactile SVG rendering found in response");  
-                await windowsPanel ? browser.windows.create({
-                  type: "panel",
-                  url: 'errors/no_renderings.html?uuid=' +
-                    encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
-                    encodeURIComponent(hash(query)) + "&serverURL=" +
-                    encodeURIComponent(serverUrl.toString())
-                }) : browser.tabs.create({
-                  url: 'errors/no_renderings.html?uuid=' +
-                    encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
-                    encodeURIComponent(hash(query)) + "&serverURL=" +
-                    encodeURIComponent(serverUrl.toString())
-                });
-                return;
-              }
-              let tactileSvgGraphic = tactileResponse[0].data.graphic as string;
-              //console.log("Tactile Response", tactileSvgGraphic);
-              let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
-              let svgDom = atob(encodedSvg);
-              let reqTitle = items["monarchTitle"];
-              let reqSecretKey = items["monarchSecretKey"];
-              let reqChannelId = items["monarchChannelId"];
-              let encryptionKey = items["monarchEncryptionKey"];
-              const flowType = reqChannelId ? "update" : "create";
-              let monarchTargetUrl = `${serverUrl}/monarch`;
-              monarchTargetUrl = monarchTargetUrl.replace(/([^:]\/)\/+/g, "$1");
-              let monarchFetchUrl = flowType == "update" ?
-                `${monarchTargetUrl}/update/${reqChannelId}` :
-                `${monarchTargetUrl}/create`;
-              let encryptedGraphicBlob = query["graphic"] && await encryptData(query["graphic"], encryptionKey);
-              let encryptedCoordinates = query["coordinates"] && await encryptData(JSON.stringify(query["coordinates"]), encryptionKey);
-              let encryptedPlaceId = query["placeID"] && await encryptData(query["placeID"], encryptionKey);
-              const reqData = await encryptData(svgDom, encryptionKey);
-              const reqBody = {
-                "data": reqData,
-                "layer": "None",
-                "title": reqTitle,
-                "secret": reqSecretKey,
-                "graphicBlob": encryptedGraphicBlob,
-                "coordinates": encryptedCoordinates,
-                "placeID": encryptedPlaceId
-              };
+              let tactileSvgGraphic: string;
               
-              if (message["sendToMonarch"]) {
-                /** Send Graphic to Monarch flow - Make curl request to monarch */
-                const response = await fetch(monarchFetchUrl,
-                  {
-                    "method": "POST",
-                    "headers": {
-                      "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(reqBody)
-                  });
-
-                let responseJSON = {
-                  "id": reqChannelId || "",
-                  "secret": ""
-                };
-                //console.log("header", response.headers.get("Content-Type"));
-                if (flowType == "create") {
-                  responseJSON = await response.json();
-                  browser.storage.sync.set({
-                    "monarchChannelId": responseJSON["id"],
-                    "monarchSecretKey": responseJSON["secret"]
-                  });
-                }
-                //console.log("response received", responseJSON);
-                let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
-                
-                // Check if the current tab is an extension page
-                if (currentTab[0].url && !currentTab[0].url.startsWith('chrome-extension://')) {
-                  browser.scripting.executeScript({
-                    target: { tabId: currentTab[0].id || 0 },
-                    func: monarchPopUp,
-                    args: [responseJSON["id"], flowType]
-                  });
-                } else {
-                  // If we're on an extension page, use notifications instead of alert
-                  const message = flowType === "create" 
-                    ? `New channel created with code ${responseJSON["id"]}`
-                    : `Graphic in channel ${responseJSON["id"]} has been updated!`;
-                  
-                  browser.notifications.create({
-                    type: 'basic',
-                    iconUrl: 'image-icon-128.png',
-                    title: 'Monarch Response',
-                    message: message
-                  });
-                }
-
+              // Check if specific tactile rendering is provided
+              if (message["specificTactileRendering"]) {
+                console.log("Using specific tactile rendering provided");
+                tactileSvgGraphic = message["specificTactileRendering"].data.graphic as string;
               } else {
-                /** Handle "Load in Tactile Authoring Tool" flow */
-                const tatStorageData: TatStorageData = {
-                  channelId: items["monarchChannelId"],
-                  graphicTitle: items["monarchTitle"],
-                  secretKey: items["monarchSecretKey"],
-                  graphicBlob: query["graphic"],
-                  coordinates: query["coordinates"] && JSON.stringify(query["coordinates"]),
-                  placeID: query["placeID"],
-                }
-                //console.log("Svg Dom Value", svgDom);
-                let tatTargetUrl =  `${serverUrl}/tat/`;
-                tatTargetUrl = tatTargetUrl.replace(/([^:]\/)\/+/g, "$1");
-                let tabs = await browser.tabs.query({ url: tatTargetUrl });
-                // if(tabs){
-                //   tabs.forEach((tab)=>{
-                //     if(tab.id){browser.tabs.remove(tab.id)}
-                //   })
-                // }
-                /** encrypt data before storing in local storage */
-                let encryptedSvgData = await encryptData(svgDom, encryptionKey);
-                let encryptedTatData: TatStorageData = {channelId:"", graphicTitle:"", secretKey:""};
-                for (let key of Object.keys(tatStorageData)) {
-                  let stringToEncrypt = tatStorageData[key as keyof TatStorageData];
-                  if (stringToEncrypt){
-                    encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
-                  }
-                }
-                // let encryptedTatData = await Promise.all(Object.keys(tatStorageData).map(async (tatKey)=>{
-                //   return await encryptData(tatStorageData[tatKey as keyof TatStorageData], encryptionKey);
-                // }))
-                if (tabs && tabs.length > 0) {
-                  let existingTab = tabs[0];
-                  browser.scripting.executeScript({
-                    target: { tabId: existingTab.id || 0 },
-                    func: saveToLocalStorage,
-                    args: [encryptedSvgData, encryptedTatData, existingTab]
+                // Fallback to existing behavior - use first tactile rendering from server response
+                console.log("Using first tactile rendering from server response");
+                let tactileResponse = json.renderings.filter((rendering) => (rendering.type_id == RENDERERS.tactileSvg));
+                if (tactileResponse.length === 0) {
+                  console.error("No Tactile SVG rendering found in response");  
+                  await windowsPanel ? browser.windows.create({
+                    type: "panel",
+                    url: 'errors/no_renderings.html?uuid=' +
+                      encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                      encodeURIComponent(hash(query)) + "&serverURL=" +
+                      encodeURIComponent(serverUrl.toString())
+                  }) : browser.tabs.create({
+                    url: 'errors/no_renderings.html?uuid=' +
+                      encodeURIComponent((query['request_uuid'] || '')) + "&hash=" +
+                      encodeURIComponent(hash(query)) + "&serverURL=" +
+                      encodeURIComponent(serverUrl.toString())
                   });
-                  browser.tabs.update(existingTab.id, { active: true });
+                  return;
                 }
-                else {
-                  let authoringTool = browser.tabs.create({
-                    url: tatTargetUrl
-                  });
-                  authoringTool.then((tab) => {
-                    browser.scripting.executeScript({
-                      target: { tabId: tab.id || 0 },
-                      func: saveToLocalStorage,
-                      args: [encryptedSvgData, encryptedTatData]
-                    });
-                  }, (error) => { console.log(error) });
-                }
+                tactileSvgGraphic = tactileResponse[0].data.graphic as string;
               }
-
+              
+              // Use the refactored function to process the tactile rendering
+              await processTactileRendering(tactileSvgGraphic, query, message, serverUrl);
             }
             else {
               if (query["request_uuid"] !== undefined) {

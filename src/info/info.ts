@@ -290,7 +290,8 @@ port.onMessage.addListener(async (message) => {
                         "graphicBlob": request.graphic,
                         "toRender": "full",
                         "redirectToTAT": true,
-                        "sendToMonarch": false
+                        "sendToMonarch": false,
+                        "specificTactileRendering": rendering
                     });
                 });
                 
@@ -315,7 +316,8 @@ port.onMessage.addListener(async (message) => {
                         "graphicBlob": request.graphic,
                         "toRender": "full",
                         "redirectToTAT": true,
-                        "sendToMonarch": true
+                        "sendToMonarch": true,
+                        "specificTactileRendering": rendering
                     });
                 });
                 
