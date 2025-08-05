@@ -134,6 +134,7 @@ function restore_options() {
       monarchSecretKey: "",
       monarchEncryptionKey: "",
       monarchEnabled: false,
+      monarchEnabledToggle: false,
       previousMonarchMode: false
     })
     .then((items) => {
