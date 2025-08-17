@@ -25,7 +25,6 @@ import { IMAGEResponse } from "../types/response.schema";
 import { IMAGERequest } from "../types/request.schema";
 
 import * as utils from "./info-utils";
-import * as hapiUtils from '../hAPI/hapi-utils';
 import { RENDERERS } from '../config';
 import { createSVG } from './info-utils';
 import { getAllStorageSyncData, getContext } from '../utils';
@@ -195,10 +194,6 @@ port.onMessage.addListener(async (message) => {
                 if (rendering["metadata"] && rendering["metadata"]["homepage"]) {
                     utils.addRenderingExplanation(contentDiv, rendering["metadata"]["homepage"])
                 }
-            }
-
-            if (rendering["type_id"] === RENDERERS.photoAudioHaptics) {
-                hapiUtils.processHapticsRendering(rendering, graphic_url, container, contentId)
             }
 
             if (rendering["type_id"] === RENDERERS.svgLayers) {

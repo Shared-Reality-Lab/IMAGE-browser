@@ -159,22 +159,6 @@
         "message": "Custom (enter server URL)",
         "description": "Label for custom server."
     },
-    "noHaptics": {
-        "message": "None",
-        "description": "Label for no haptics option."
-    },
-    "Haply2diy2gen": {
-        "message": "Haply 2diy-2Gen",
-        "description": "Label for Haply 2diy-2Gen option."
-    },
-    "Haply2diy3gen": {
-        "message": "Haply 2diy-3Gen",
-        "description": "Label for Haply 2diy-3Gen option."
-    },
-    "Haply2diyNotSupported": {
-        "message": "Haply 2diy: Unavailable since this browser does not support Web Serial.",
-        "description": "Label for Haply 2diy option when it is not supported by browser"
-    },
     "preprocessMap": {
         "message": "Get Preprocessed Map Data",
         "description": "Fetch preprocessed JSON data for a map without renderings."

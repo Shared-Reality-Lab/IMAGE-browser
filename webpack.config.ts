@@ -25,8 +25,6 @@ const config: webpack.Configuration = {
     'feedback/feedback': './src/feedback/feedback.ts',
     'launchpad/launchpad': './src/launchpad/launchpad.ts',
     'progressBar/progressBar': './src/progressBar/progressBar.ts',
-    'hAPI/hapi-utils': './src/hAPI/hapi-utils.ts',
-    'hAPI/worker': './src/hAPI/worker.ts',
     'monarch/utils': './src/monarch/utils.ts',
     'monarch/types': './src/monarch/types.ts'
   },
