@@ -18,9 +18,6 @@ export function getAllStorageSyncData() {
     mcgillServer: true,
     developerMode: false,
     previousToggleState: false,
-    noHaptics: true,
-    haply2diy2gen: false,
-    haply2diy3gen: false,
     audio: true,
     text: true,
     processItem: "",
@@ -48,10 +45,6 @@ export async function getRenderers(): Promise<string[]> {
   }
   if (items["text"]) {
     renderers.push(RENDERERS.text);
-  }
-  if (items["haply2diy2gen"] || items["haply2diy3gen"]) {
-    renderers.push(RENDERERS.simpleHaptics);
-    renderers.push(RENDERERS.photoAudioHaptics);
   }
   if (items['developerMode']) {
     renderers.push(RENDERERS.svgLayers);

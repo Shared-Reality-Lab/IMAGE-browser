@@ -151,22 +151,6 @@
         "message": "Personnalisé (entrer l'URL du serveur)",
         "description": "Étiquette pour serveur personnalisé."
     },
-    "noHaptics": {
-        "message": "Aucune",
-        "description": "Étiquette pour pas d'option haptiques."
-    },
-    "Haply2diy2gen": {
-        "message": "Haply 2diy-2gen",
-        "description": "Étiquette pour l'option Haply 2diy-2Gen."
-    },
-    "Haply2diy3gen": {
-        "message": "Haply 2diy-3gen",
-        "description": "Étiquette pour l'option Haply 2diy-3Gen."
-    },
-    "Haply2diyNotSupported": {
-        "message": "Haply 2diy: Indisponible car ce navigateur ne supporte pas le Web Serial.",
-        "description": "Étiquette pour l'option Haply 2diy lorsqu'elle n'est pas supportée par le navigateur"
-    },
     "preprocessMap": {
         "message": "Obtenir des données cartographiques prétraitées",
         "description": "Récupérer des données JSON prétraitées pour une carte sans rendu."

@@ -56,7 +56,6 @@
             "launchpad/*",
             "firstLaunch/*",
             "maps/*",
-            "hAPI/*.js",
             "errors/*",
             "progressBar/progressBar.html",
             "audio/*",
