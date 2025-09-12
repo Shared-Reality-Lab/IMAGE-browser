@@ -18,6 +18,7 @@ import imageCompression from "browser-image-compression";
 import browser from "webextension-polyfill";
 import { processMAPImages, processMaps } from './maps/maps-utils';
 import { getContext, showImageOptionsModal } from "./utils";
+import { MESSAGE_TYPES, RENDER_TYPES } from "./types/message-types.constants";
 
 var selectedElement: HTMLElement | null = null;
 
@@ -53,26 +54,26 @@ window.addEventListener("message", function (event) {
         //console.log(" Message from Authoring Tool", JSON.parse(event.data.storageData));
         let storageData = JSON.parse(event.data.storageData);
         port.postMessage({
-            type: "dataFromAuthoringTool",
+            type: MESSAGE_TYPES.DATA_FROM_AUTHORING_TOOL,
             storageData: storageData
         })
     }
     if (event.data.messageFrom && (event.data.messageFrom == "imageCharts")) {
         port.postMessage({
-            "type": "chartResource",
+            "type": MESSAGE_TYPES.CHART_RESOURCE,
             "highChartsData": event.data.charts || null,
-            "toRender": "full"
+            "toRender": RENDER_TYPES.FULL
         });
     }
     if (event.data.messageFrom && (event.data.messageFrom == "screenReaderGraphic")) {
         let imageData = event.data.imageData;
         port.postMessage({
-            "type": "checkImageSize",
+            "type": MESSAGE_TYPES.CHECK_IMAGE_SIZE,
             "context": "",
             "dims": [imageData.naturalWidth, imageData.naturalHeight],
             "url": window.location.href,
             "sourceURL": imageData.sourceURL,
-            "toRender": "full",
+            "toRender": RENDER_TYPES.FULL,
             "redirectToTAT": event.data.redirectToTAT,
             "sendToMonarch": event.data.sendToMonarch,
         });
@@ -125,7 +126,7 @@ port.onMessage.addListener(async message => {
     const serializer = new XMLSerializer();
     let imageElement: HTMLImageElement;
     if(message && message.status == "ping" ) return;
-    if (message["type"] === "handleInvisibleButton") {
+    if (message["type"] === MESSAGE_TYPES.HANDLE_INVISIBLE_BUTTON) {
         monarchEnabled = message["monarchEnabled"];
         
         if (monarchEnabled) {
@@ -149,26 +150,26 @@ port.onMessage.addListener(async message => {
     const scheme = imageElement.currentSrc.split(":")[0];
     //console.debug("message received", message);
     let toRender = "";
-    if (message["type"] === "resourceRequest") {
-        toRender = "full";
+    if (message["type"] === MESSAGE_TYPES.RESOURCE_REQUEST) {
+        toRender = RENDER_TYPES.FULL;
     }
-    if (message["type"] === "preprocessRequest") {
-        toRender = "preprocess";
+    if (message["type"] === MESSAGE_TYPES.PREPROCESS_REQUEST) {
+        toRender = RENDER_TYPES.PREPROCESS;
     }
-    if (message["type"] === "onlyRequest") {
-        toRender = "none"
+    if (message["type"] === MESSAGE_TYPES.ONLY_REQUEST) {
+        toRender = RENDER_TYPES.NONE;
     }
-    if(message["type"] === "tactileAuthoringTool"){
-        toRender = "full";
+    if(message["type"] === MESSAGE_TYPES.TACTILE_AUTHORING_TOOL){
+        toRender = RENDER_TYPES.FULL;
         message["redirectToTAT"] = true;
         message["sendToMonarch"] = false; 
     }
-    if(message["type"] === "sendToMonarch"){
-        toRender = "full";
+    if(message["type"] === MESSAGE_TYPES.SEND_TO_MONARCH){
+        toRender = RENDER_TYPES.FULL;
         message["redirectToTAT"] = true;
         message["sendToMonarch"] = true; 
     }
-    if (message["type"] === "compressImage") {
+    if (message["type"] === MESSAGE_TYPES.COMPRESS_IMAGE) {
         console.debug("compressing inside content script");
         //let blobFile = new File([new Blob(message["graphicBlobStr"])], "buffer.jpg", {type: message["blobType"]});
         let blob = base64toBlob(message["graphicBlobStr"], message["blobType"]);
@@ -183,19 +184,19 @@ port.onMessage.addListener(async message => {
         let graphicBlob = compressedBlob;
         const graphicBlobStr = await blobToBase64(graphicBlob);
         port.postMessage({
-            "type": "resource",
+            "type": MESSAGE_TYPES.RESOURCE,
             "context": selectedElement ? getContext(selectedElement) : null,
             "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
             "url": window.location.href,
             "sourceURL": imageElement.currentSrc,
-            "toRender": toRender || "full",
+            "toRender": toRender || RENDER_TYPES.FULL,
             "graphicBlob": graphicBlobStr
         });
         return;
     }
     if (scheme === "http" || scheme === "https" || scheme === "data") {
         port.postMessage({
-            "type": "checkImageSize",
+            "type": MESSAGE_TYPES.CHECK_IMAGE_SIZE,
             "context": selectedElement ? getContext(selectedElement) : null,
             "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
             "url": window.location.href,
@@ -221,7 +222,7 @@ port.onMessage.addListener(async message => {
             });
         }).then(image => {
             port.postMessage({
-                "type": "localResource",
+                "type": MESSAGE_TYPES.LOCAL_RESOURCE,
                 "context": selectedElement ? serializer.serializeToString(selectedElement) : null,
                 "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
                 "image": image,
@@ -283,12 +284,12 @@ document.addEventListener('keydown', function(event) {
                 showImageOptionsModal(selectedElement, imageElement, port);
             } else {
                 port.postMessage({
-                    "type": "checkImageSize",
+                    "type": MESSAGE_TYPES.CHECK_IMAGE_SIZE,
                     "context": selectedElement ? getContext(selectedElement) : null,
                     "dims": [imageElement.naturalWidth, imageElement.naturalHeight],
                     "url": window.location.href,
                     "sourceURL": imageElement.currentSrc,
-                    "toRender": "full"
+                    "toRender": RENDER_TYPES.FULL
                 });
             }
         }
