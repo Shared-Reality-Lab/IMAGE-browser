@@ -68,6 +68,19 @@ This will:
 - Output the build to the `build-chrome` directory
 - Use the standard extension name without any suffix
 
+#### Submitting Extension Build to Chrome Web Store
+When preparing to submit the extension to the Chrome Web Store, follow these steps:
+
+1. Create a production build using the instructions above.
+
+2. Update the extension version in the generated `build-chrome/manifest.json` file to match the corresponding git tag of the codebase. You can view available tags [here](https://github.com/Shared-Reality-Lab/IMAGE-browser/tags).
+
+3. Create a ZIP file of the `build-chrome` directory.
+
+4. Submit the ZIP file to the Chrome Web Store Developer Dashboard following Google's submission guidelines.
+
+This versioning approach ensures consistency between the published extension and the corresponding source code in the repository.
+
 ## Build System
 
 ### Webpack Configuration
@@ -111,6 +124,9 @@ The nightly build contains the latest changes from the main branch:
   1. Download the ZIP file from the URL above
   2. Extract the ZIP file to a folder on your computer
   3. Follow the "Local Build" installation instructions below
+
+
+**Warning**: Installing different versions of the extension (production and test) in a browser at the same time can cause unexpected issues, and the extension may not function properly. It is recommended to only have one version of the extension installed at any given time.
 
 ### Local Build
 To use a locally built version of the extension:
