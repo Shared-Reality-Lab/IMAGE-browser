@@ -15,231 +15,141 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-browser/LICENSE>.
  */
 import browser, { Runtime } from "webextension-polyfill";
-import { v4 as uuidv4 } from "uuid";
 import hash from "object-hash";
 import { IMAGEResponse } from "./types/response.schema";
 import { IMAGERequest } from "./types/request.schema";
-import { getAllStorageSyncData, getCapabilities, getRenderers, getLanguage, windowsPanel } from './utils';
+import { getAllStorageSyncData, getLanguage, windowsPanel } from './utils';
 import { generateMapQuery, generateMapSearchQuery } from "./maps/maps-utils";
 import { RENDERERS, SERVER_URL } from './config';
-import { encryptData, monarchPopUp, decryptData, saveToLocalStorage } from "./monarch/utils";
-import { TatStorageData } from "./monarch/types";
+import { decryptData } from "./monarch/utils";
+import { 
+  Message, 
+  ResourceMessage, 
+  LocalResourceMessage, 
+  ChartResourceMessage,
+  MapResourceMessage,
+  MapSearchMessage,
+  CheckImageSizeMessage,
+  DataFromAuthoringToolMessage,
+  InfoMessage,
+  ResponseMapEntry, 
+  PortsMap
+} from "./types/background.types";
+import { MESSAGE_TYPES, RENDER_TYPES } from "./types/message-types.constants";
+import { 
+  generateQuery, 
+  generateLocalQuery, 
+  generateChartQuery, 
+  processTactileRendering, 
+  blobToBase64, 
+  createPanel, 
+  toggleMapOptions, 
+  createOffscreen, 
+  onCreated 
+} from "./background-utils";
 
-let ports: { [key: number]: Runtime.Port } = {};
-const responseMap: Map<string, { server: RequestInfo, response: IMAGEResponse, request: IMAGERequest }> = new Map();
+// ============================================================================
+// Global state
+// ============================================================================
+
+/**
+ * Global variables and constants for the background script
+ */
+// Connection and communication
+let ports: PortsMap = {};
+const responseMap: Map<string, ResponseMapEntry> = new Map();
 var serverUrl: RequestInfo;
+var graphicUrl: string = "";
+
+// UI elements
 var renderingsPanel: browser.Windows.Window | browser.Tabs.Tab;
 var errorPanel: browser.Windows.Window | browser.Tabs.Tab;
-let launchPad : browser.Windows.Window | browser.Tabs.Tab;
-var graphicUrl: string = "";
+let launchPad: browser.Windows.Window | browser.Tabs.Tab;
+
+// Extension settings
 var extVersion = process.env.NODE_ENV;
-//console.debug("Extension Version background page", extVersion);
-//console.debug("Suffix Text", process.env.SUFFIX_TEXT);
-async function generateQuery(message: { context: string, url: string, dims: [number, number], graphicBlob: string }): Promise<IMAGERequest> {
-  let renderers = await getRenderers();
-  let capabilities = await getCapabilities();
-  console.debug("inside generate query");
-  return {
-    "request_uuid": uuidv4(),
-    "timestamp": Math.round(Date.now() / 1000),
-    "URL": message.url,
-    "graphic": message.graphicBlob,
-    "dimensions": message.dims,
-    "context": message.context,
-    "language": await getLanguage(),
-    "capabilities": capabilities,
-    "renderers": renderers
-  } as IMAGERequest;
-}
+var showDebugOptions: Boolean;
+var monarchEnabled: Boolean;
+var previousMonarchMode: Boolean;
+var previousToggleState: Boolean;
+var displayInvisibleButtons: Boolean;
 
-async function generateLocalQuery(message: { context: string, dims: [number, number], image: string, graphicBlob: string }): Promise<IMAGERequest> {
-  let renderers = await getRenderers();
-  let capabilities = await getCapabilities();
-  return {
-    "request_uuid": uuidv4(),
-    "timestamp": Math.round(Date.now() / 1000),
-    "graphic": message.graphicBlob,
-    "dimensions": message.dims,
-    "context": message.context,
-    "language": await getLanguage(),
-    "capabilities": capabilities,
-    "renderers": renderers
-  } as IMAGERequest;
-}
+// ============================================================================
+// Message handling
+// ============================================================================
 
-async function generateChartQuery(message: { highChartsData: { [k: string]: unknown } }): Promise<IMAGERequest> {
-  let renderers = await getRenderers();
-  let capabilities = await getCapabilities();
-  return {
-    "request_uuid": uuidv4(),
-    "timestamp": Math.round(Date.now() / 1000),
-    "highChartsData": message.highChartsData,
-    "language": await getLanguage(),
-    "capabilities": capabilities,
-    "renderers": renderers
-  } as IMAGERequest;
-}
-
-async function processTactileRendering(tactileSvgGraphic: string, query: IMAGERequest, message: any, serverUrl: RequestInfo) {
-  let items = await getAllStorageSyncData();
-  let encodedSvg = tactileSvgGraphic.split("data:image/svg+xml;base64,")[1];
-  let svgDom = atob(encodedSvg);
-  console.log("SVG DOM", svgDom);
-  let reqTitle = items["monarchTitle"];
-  let reqSecretKey = items["monarchSecretKey"];
-  let reqChannelId = items["monarchChannelId"];
-  let encryptionKey = items["monarchEncryptionKey"];
-  const flowType = reqChannelId ? "update" : "create";
-  let monarchTargetUrl = `${serverUrl}/monarch`;
-  monarchTargetUrl = monarchTargetUrl.replace(/([^:]\/)\/+/g, "$1");
-  let monarchFetchUrl = flowType == "update" ?
-    `${monarchTargetUrl}/update/${reqChannelId}` :
-    `${monarchTargetUrl}/create`;
-  let encryptedGraphicBlob = query["graphic"] && await encryptData(query["graphic"], encryptionKey);
-  let encryptedCoordinates = query["coordinates"] && await encryptData(JSON.stringify(query["coordinates"]), encryptionKey);
-  let encryptedPlaceId = query["placeID"] && await encryptData(query["placeID"], encryptionKey);
-  const reqData = await encryptData(svgDom, encryptionKey);
-  const reqBody = {
-    "data": reqData,
-    "layer": "None",
-    "title": reqTitle,
-    "secret": reqSecretKey,
-    "graphicBlob": encryptedGraphicBlob,
-    "coordinates": encryptedCoordinates,
-    "placeID": encryptedPlaceId
-  };
-  
-  if (message["sendToMonarch"]) {
-    /** Send Graphic to Monarch flow - Make curl request to monarch */
-    const response = await fetch(monarchFetchUrl,
-      {
-        "method": "POST",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": JSON.stringify(reqBody)
-      });
-
-    let responseJSON = {
-      "id": reqChannelId || "",
-      "secret": ""
-    };
-    if (flowType == "create") {
-      responseJSON = await response.json();
-      browser.storage.sync.set({
-        "monarchChannelId": responseJSON["id"],
-        "monarchSecretKey": responseJSON["secret"]
-      });
-    }
-    let currentTab = await browser.tabs.query({ active: true, currentWindow: true });
-    
-    // Check if the current tab is an extension page
-    if (currentTab[0].url && !currentTab[0].url.startsWith('chrome-extension://')) {
-      browser.scripting.executeScript({
-        target: { tabId: currentTab[0].id || 0 },
-        func: monarchPopUp,
-        args: [responseJSON["id"], flowType]
-      });
-    } else {
-      // If we're on an extension page, use notifications instead of alert
-      const message = flowType === "create" 
-        ? `New channel created with code ${responseJSON["id"]}`
-        : `Graphic in channel ${responseJSON["id"]} has been updated!`;
-      
-      browser.notifications.create({
-        type: 'basic',
-        iconUrl: 'image-icon-128.png',
-        title: 'Monarch Response',
-        message: message
-      });
-    }
-
-  } else {
-    /** Handle "Load in Tactile Authoring Tool" flow */
-    const tatStorageData: TatStorageData = {
-      channelId: items["monarchChannelId"],
-      graphicTitle: items["monarchTitle"],
-      secretKey: items["monarchSecretKey"],
-      graphicBlob: query["graphic"],
-      coordinates: query["coordinates"] && JSON.stringify(query["coordinates"]),
-      placeID: query["placeID"],
-    }
-    let tatTargetUrl =  `${serverUrl}/tat/`;
-    tatTargetUrl = tatTargetUrl.replace(/([^:]\/)\/+/g, "$1");
-    let tabs = await browser.tabs.query({ url: tatTargetUrl });
-    
-    /** encrypt data before storing in local storage */
-    let encryptedSvgData = await encryptData(svgDom, encryptionKey);
-    let encryptedTatData: TatStorageData = {channelId:"", graphicTitle:"", secretKey:""};
-    for (let key of Object.keys(tatStorageData)) {
-      let stringToEncrypt = tatStorageData[key as keyof TatStorageData];
-      if (stringToEncrypt){
-        encryptedTatData[key as keyof TatStorageData] = await encryptData(tatStorageData[key as keyof TatStorageData], encryptionKey);
-      }
-    }
-    
-    if (tabs && tabs.length > 0) {
-      let existingTab = tabs[0];
-      browser.scripting.executeScript({
-        target: { tabId: existingTab.id || 0 },
-        func: saveToLocalStorage,
-        args: [encryptedSvgData, encryptedTatData, existingTab]
-      });
-      browser.tabs.update(existingTab.id, { active: true });
-    }
-    else {
-      let authoringTool = browser.tabs.create({
-        url: tatTargetUrl
-      });
-      authoringTool.then((tab) => {
-        browser.scripting.executeScript({
-          target: { tabId: tab.id || 0 },
-          func: saveToLocalStorage,
-          args: [encryptedSvgData, encryptedTatData]
-        });
-      }, (error) => { console.log(error) });
-    }
-  }
-}
-
-async function handleMessage(p: Runtime.Port, message: any) {
+/**
+ * Handles messages from content scripts
+ * 
+ * @param p - The port that the message was received on
+ * @param message - The message object
+ */
+async function handleMessage(p: Runtime.Port, message: Message) {
   console.debug("Handling message", message);
   let query: IMAGERequest | undefined;
-  graphicUrl = message["sourceURL"];
-  switch (message["type"]) {
-    case "info":
-      const value = responseMap.get(message["request_uuid"]);
+  if ('sourceURL' in message) {
+    graphicUrl = message.sourceURL;
+  }
+  
+  // Use type assertion with switch statement for type narrowing
+  switch (message.type) {
+    case MESSAGE_TYPES.INFO: {
+      const infoMessage = message as InfoMessage;
+      const value = responseMap.get(infoMessage.request_uuid);
       p.postMessage(value);
-      responseMap.delete(message["request_uuid"]);
+      responseMap.delete(infoMessage.request_uuid);
       break;
-    case "resource":
-      query = await generateQuery(message);
+    }
+    case MESSAGE_TYPES.RESOURCE: {
+      const resourceMessage = message as ResourceMessage;
+      query = await generateQuery(resourceMessage);
       break;
-    case "localResource":
-      query = await generateLocalQuery(message);
+    }
+    case MESSAGE_TYPES.LOCAL_RESOURCE: {
+      const localResourceMessage = message as LocalResourceMessage;
+      query = await generateLocalQuery(localResourceMessage);
       break;
-    case "mapResource":
+    }
+    case MESSAGE_TYPES.MAP_RESOURCE: {
       console.debug("Generating map query");
-      query = await generateMapQuery(message);
+      const mapResourceMessage = message as MapResourceMessage;
+      if (mapResourceMessage.context && mapResourceMessage.coordinates) {
+        query = await generateMapQuery({
+          context: mapResourceMessage.context,
+          coordinates: mapResourceMessage.coordinates
+        });
+      }
       break;
-    case "settingsSaved":
+    }
+    case MESSAGE_TYPES.SETTINGS_SAVED: {
       await updateDebugContextMenu();
       break;
-    case "chartResource":
-      query = await generateChartQuery(message);
+    }
+    case MESSAGE_TYPES.CHART_RESOURCE: {
+      const chartResourceMessage = message as ChartResourceMessage;
+      query = await generateChartQuery(chartResourceMessage);
       break;
-    case "mapSearch":
+    }
+    case MESSAGE_TYPES.MAP_SEARCH: {
       console.debug("Generating map query");
-      query = await generateMapSearchQuery(message);
+      const mapSearchMessage = message as MapSearchMessage;
+      if (mapSearchMessage.context && mapSearchMessage.placeID) {
+        query = await generateMapSearchQuery({
+          context: mapSearchMessage.context,
+          placeID: mapSearchMessage.placeID
+        });
+      }
       break;
-    case "dataFromAuthoringTool":
+    }
+    case MESSAGE_TYPES.DATA_FROM_AUTHORING_TOOL: {
       console.debug("Data received from Authoring Tool");
+      const dataFromAuthoringToolMessage = message as DataFromAuthoringToolMessage;
       let items = await getAllStorageSyncData();
       const encryptionKey = items["monarchEncryptionKey"];
       const [title, channelId, secretKey] = await Promise.all([
-        decryptData(message.storageData.graphicTitle, encryptionKey), 
-        decryptData(message.storageData.channelId, encryptionKey), 
-        decryptData(message.storageData.secretKey, encryptionKey)
+        decryptData(dataFromAuthoringToolMessage.storageData.graphicTitle, encryptionKey), 
+        decryptData(dataFromAuthoringToolMessage.storageData.channelId, encryptionKey), 
+        decryptData(dataFromAuthoringToolMessage.storageData.secretKey, encryptionKey)
       ]);
       //console.log("Decrypted Data", title, channelId, secretKey);
       await browser.storage.sync.set({
@@ -248,9 +158,11 @@ async function handleMessage(p: Runtime.Port, message: any) {
         monarchSecretKey: secretKey
       });
       break;
-    case "checkImageSize":
+    }
+    case MESSAGE_TYPES.CHECK_IMAGE_SIZE: {
       console.debug("Checking Image Size");
-      let blob = await fetch(message["sourceURL"]).then(r => r.blob());
+      const checkImageSizeMessage = message as CheckImageSizeMessage;
+      let blob = await fetch(checkImageSizeMessage.sourceURL).then(r => r.blob());
       const blobFile = new File([blob], "buffer.jpg", { type: blob.type });
       const sizeMb = blobFile.size / 1024 / 1024;
       console.debug(`originalFile size ${sizeMb} MB`);
@@ -263,9 +175,8 @@ async function handleMessage(p: Runtime.Port, message: any) {
           let currentTab = tabs[0];
           //console.debug("current Tab", currentTab);
           if (currentTab.id) {
-
             ports[currentTab.id].postMessage({
-              "type": "compressImage",
+              "type": MESSAGE_TYPES.COMPRESS_IMAGE,
               "tabId": currentTab.id,
               "graphicBlobStr": graphicBlobStr,
               "blobType": blob.type
@@ -276,22 +187,38 @@ async function handleMessage(p: Runtime.Port, message: any) {
         return;
       }
       else {
-        const graphicBlobStr = await blobToBase64(blob);
-        message["graphicBlob"] = graphicBlobStr;
-        query = await generateQuery(message);
+        const graphicBlobStr = await blobToBase64(blob) as string;
+        if (checkImageSizeMessage.context && checkImageSizeMessage.url && checkImageSizeMessage.dims) {
+          query = await generateQuery({
+            context: checkImageSizeMessage.context,
+            url: checkImageSizeMessage.url,
+            dims: checkImageSizeMessage.dims,
+            graphicBlob: graphicBlobStr
+          });
+        }
       }
       break;
-    case "handleMapMonarchOptions": {
+    }
+    case MESSAGE_TYPES.HANDLE_MAP_MONARCH_OPTIONS: {
       console.debug("Handling map monarch options");
       getCurrentTabInfo();
+      break;
     }
     default:
-      console.debug(message["type"]);
+      console.debug(message.type);
   }
   if (query) {
-    console.debug("Value of toRender ", message["toRender"]);
-    switch (message["toRender"]) {
-      case "full":
+    // Determine toRender value based on message type
+    let toRender: typeof RENDER_TYPES.FULL | typeof RENDER_TYPES.PREPROCESS | typeof RENDER_TYPES.NONE | undefined;
+    
+    if ('toRender' in message) {
+      toRender = (message as any).toRender;
+    }
+    
+    console.debug("Value of toRender ", toRender);
+    if (toRender) {
+      switch (toRender) {
+      case RENDER_TYPES.FULL:
         {
           let items = await getAllStorageSyncData();
           if (items["mcgillServer"] === true) {
@@ -303,9 +230,13 @@ async function handleMessage(p: Runtime.Port, message: any) {
           }
           
           // Check if we have specific tactile rendering data and can skip server call
-          if (message["redirectToTAT"] && message["specificTactileRendering"]) {
+          const hasRedirectToTAT = 'redirectToTAT' in message && 'specificTactileRendering' in message && 
+                                  message.redirectToTAT && message.specificTactileRendering;
+          
+          if (hasRedirectToTAT) {
             console.log("Skipping server call - using provided tactile rendering data");
-            let tactileSvgGraphic = message["specificTactileRendering"].data.graphic as string;
+            const specificMessage = message as any;
+            let tactileSvgGraphic = specificMessage.specificTactileRendering.data.graphic as string;
             await processTactileRendering(tactileSvgGraphic, query, message, serverUrl);
             return;
           }
@@ -361,14 +292,18 @@ async function handleMessage(p: Runtime.Port, message: any) {
           if (json["renderings"].length > 0) {
             console.log("Inside JSON Renderings");
             console.log("message", message);
-            if (message["redirectToTAT"]) {
+            const hasRedirectToTAT = 'redirectToTAT' in message && message.redirectToTAT;
+            
+            if (hasRedirectToTAT) {
               console.log("Received TAT data in background script");
               let tactileSvgGraphic: string;
               
               // Check if specific tactile rendering is provided
-              if (message["specificTactileRendering"]) {
+              const specificMessage = message as any;
+              
+              if ('specificTactileRendering' in message && specificMessage.specificTactileRendering) {
                 console.log("Using specific tactile rendering provided");
-                tactileSvgGraphic = message["specificTactileRendering"].data.graphic as string;
+                tactileSvgGraphic = specificMessage.specificTactileRendering.data.graphic as string;
               } else {
                 // Fallback to existing behavior - use first tactile rendering from server response
                 console.log("Using first tactile rendering from server response");
@@ -403,12 +338,12 @@ async function handleMessage(p: Runtime.Port, message: any) {
                 if (renderingsPanel !== undefined) {
                   try {
                     await windowsPanel ? browser.windows.remove(renderingsPanel.id!) : browser.tabs.remove(renderingsPanel.id!);
-                    renderingsPanel = await createPanel(query);
+                    renderingsPanel = await createPanel(query, graphicUrl);
                   } catch {
-                    renderingsPanel = await createPanel(query);
+                    renderingsPanel = await createPanel(query, graphicUrl);
                   }
                 } else {
-                  renderingsPanel = await createPanel(query);
+                  renderingsPanel = await createPanel(query, graphicUrl);
                 }
                 // How to handle if request_uuid was undefined??
               }
@@ -430,7 +365,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
         }
         break;
 
-      case "preprocess":
+      case RENDER_TYPES.PREPROCESS:
         {
           let items = await getAllStorageSyncData();
           if (items["mcgillServer"] === true) {
@@ -453,7 +388,7 @@ async function handleMessage(p: Runtime.Port, message: any) {
           }
         }
         break;
-      case "none":
+      case RENDER_TYPES.NONE:
         {
           try {
             await browser.downloads.download({
@@ -469,23 +404,11 @@ async function handleMessage(p: Runtime.Port, message: any) {
     }
   }
 }
-function blobToBase64(blob: Blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-};
-
-async function createOffscreen() {
-  // @ts-ignore
-  await browser.offscreen.createDocument({
-    url: 'offscreen.html',
-    reasons: ['BLOBS'],
-    justification: 'keep service worker running',
-  }).catch(() => { });
 }
+// ============================================================================
+// Context menu management
+// ============================================================================
+
 //browser.runtime.onInstalled.addListener(() => {createOffscreen();});
 browser.runtime.onStartup.addListener(() => { createOffscreen(); });
 // a message from an offscreen document every 50 second resets the inactivity timer
@@ -494,6 +417,12 @@ browser.runtime.onMessage.addListener(msg => {
 });
 
 
+/**
+ * Updates the context menu based on user settings
+ * 
+ * This function reads settings from storage and updates the context menu items accordingly.
+ * It also updates the UI elements in all open tabs to reflect the current settings.
+ */
 async function updateDebugContextMenu() {
   let items = await getAllStorageSyncData();
   //console.log("Saved Items", items);
@@ -513,11 +442,11 @@ async function updateDebugContextMenu() {
       if (tabs[i].url && !tabs[i].url?.startsWith("chrome://") && tabs[i].id) {
         let tabId = tabs[i].id || 0;  
         if(ports[tabId]){
-          ports[tabId].postMessage({
-            "type": "handleInvisibleButton",
-            "displayInvisibleButtons": displayInvisibleButtons,
-            "monarchEnabled": monarchEnabled
-          });
+      ports[tabId].postMessage({
+        "type": MESSAGE_TYPES.HANDLE_INVISIBLE_BUTTON,
+        "displayInvisibleButtons": displayInvisibleButtons,
+        "monarchEnabled": monarchEnabled
+      });
         }
       }
     }
@@ -585,20 +514,16 @@ async function updateDebugContextMenu() {
   }, function () { });
 }
 
-function toggleMapOptions(showDebugOptions: Boolean, monarchEnabled: Boolean) {
-    let mapButtonContainer = document.getElementById("map-button-container");
-    let mapSelectContainer = document.getElementById("map-select-container");
-    if (mapButtonContainer && mapSelectContainer) {
-      if (monarchEnabled) {
-        mapSelectContainer.style.display = "flex";
-        mapButtonContainer.style.display = "none";
-      } else {
-        mapSelectContainer.style.display = "none";
-        mapButtonContainer.style.display = "flex";
-      }
-    }
-};
 
+// ============================================================================
+// Connection management
+// ============================================================================
+
+/**
+ * Stores a connection to a content script
+ * 
+ * @param p - The port to store
+ */
 function storeConnection(p: Runtime.Port) {
   //console.debug("store Connection");
   let id = p.sender?.tab?.id;
@@ -623,7 +548,12 @@ function storeConnection(p: Runtime.Port) {
   //console.debug("Store Connection ports", ports);
 }
 
-/*Enable the context menu options*/
+/**
+ * Enables the context menu options based on current settings
+ * 
+ * Updates the context menu items to be enabled and sets their titles
+ * according to the current extension settings.
+ */
 function enableContextMenu() {
   browser.contextMenus.update("mwe-item", {
     enabled: true,
@@ -650,7 +580,9 @@ function enableContextMenu() {
   }
 }
 
-/*Disable the context menu options*/
+/**
+ * Disables the context menu options
+ */
 function disableContextMenu() {
   browser.contextMenus.update("mwe-item", { enabled: false });
   if (showDebugOptions) {
@@ -663,7 +595,15 @@ function disableContextMenu() {
   }
 }
 
-/*Handle the context menu items based on the status of the DOM*/
+/**
+ * Handle the context menu items based on the status of the DOM
+ * 
+ * Updates context menu and tab-specific settings when a tab's status changes.
+ * Enables or disables context menu items and updates UI elements accordingly.
+ * 
+ * @param tabId - The ID of the tab being updated
+ * @param changeInfo - Information about the change
+ */
 function handleUpdated(tabId: any, changeInfo: any) {
   if (changeInfo.status == "complete") {
     // console.log("handleUpdated called");
@@ -680,7 +620,7 @@ function handleUpdated(tabId: any, changeInfo: any) {
 
       // handle invisible buttons
       ports[tabId].postMessage({
-        "type": "handleInvisibleButton",
+        "type": MESSAGE_TYPES.HANDLE_INVISIBLE_BUTTON,
         "displayInvisibleButtons": displayInvisibleButtons,
         "monarchEnabled": monarchEnabled
       });
@@ -690,7 +630,12 @@ function handleUpdated(tabId: any, changeInfo: any) {
   }
 }
 
-/*Handle context menu items based on DOM for the active Tab*/
+/**
+ * Handle context menu items based on DOM for the active Tab
+ * 
+ * Retrieves information about the currently active tab and updates
+ * the context menu items accordingly by calling handleUpdated.
+ */
 function getCurrentTabInfo() {
   let currentTab = browser.tabs.query({ currentWindow: true, active: true });
   currentTab.then(
@@ -701,28 +646,24 @@ function getCurrentTabInfo() {
   );
 }
 
+// ============================================================================
+// Event listeners
+// ============================================================================
+
 browser.runtime.onConnect.addListener(storeConnection);
 browser.tabs.onUpdated.addListener(handleUpdated);
 browser.tabs.onActivated.addListener(getCurrentTabInfo);
 
-function onCreated(): void {
-  if (browser.runtime.lastError) {
-    //console.error(browser.runtime.lastError);
-  }
-}
+// ============================================================================
+// Initialization
+// ============================================================================
 
-// browser.storage.sync.set({
-//   mweItem: "mwe-item"
-// })
-
-var showDebugOptions: Boolean;
-
-var monarchEnabled: Boolean;
-var previousMonarchMode: Boolean;
-var previousToggleState: Boolean;
-
-var displayInvisibleButtons : Boolean;
-
+/**
+ * Initialize extension settings from storage
+ * 
+ * Loads user preferences and settings from storage and sets up
+ * the context menu items accordingly.
+ */
 getAllStorageSyncData().then((items) => {
   showDebugOptions = items["developerMode"];
   monarchEnabled = items["monarchEnabled"];
@@ -756,6 +697,15 @@ getAllStorageSyncData().then((items) => {
   }
 });
 
+/**
+ * Handle extension installation and updates
+ * 
+ * Sets up the extension when it's first installed or updated.
+ * Creates necessary context menu items and shows the first launch page
+ * for new installations.
+ * 
+ * @param object - Installation details including the reason for installation
+ */
 browser.runtime.onInstalled.addListener(function (object) {
   createOffscreen();
   let internalUrl = chrome.runtime.getURL("firstLaunch/firstLaunch.html");
@@ -793,6 +743,14 @@ browser.runtime.onInstalled.addListener(function (object) {
 
 });
 
+/**
+ * Handle keyboard commands
+ * 
+ * Listens for keyboard shortcuts and performs the appropriate action.
+ * Currently handles opening the launchpad.
+ * 
+ * @param command - The command that was triggered
+ */
 browser.commands.onCommand.addListener(async (command) => {
   console.debug(`Command: ${command}`);
   try{
@@ -813,6 +771,15 @@ browser.commands.onCommand.addListener(async (command) => {
   
 });
 
+/**
+ * Handle context menu clicks
+ * 
+ * Processes clicks on context menu items and sends appropriate messages
+ * to the content script in the tab where the click occurred.
+ * 
+ * @param info - Information about the context menu item that was clicked
+ * @param tab - The tab where the context menu was clicked
+ */
 browser.contextMenus.onClicked.addListener((info, tab) => {
   //console.debug("Tab", tab);
   //console.debug("ports", ports);
@@ -820,30 +787,30 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     // Request image from page
     if (info.menuItemId === "mwe-item") {
       ports[tab.id].postMessage({
-        "type": "resourceRequest",
+        "type": MESSAGE_TYPES.RESOURCE_REQUEST,
         "tabId": tab.id,
       });
     } 
     else if (info.menuItemId === "mwe-item-tat") {
       ports[tab.id].postMessage({
-        "type": "tactileAuthoringTool",
+        "type": MESSAGE_TYPES.TACTILE_AUTHORING_TOOL,
         "tabId": tab.id,
       });
     }
     else if(info.menuItemId === "mwe-item-monarch"){
       ports[tab.id].postMessage({
-        "type": "sendToMonarch",
+        "type": MESSAGE_TYPES.SEND_TO_MONARCH,
         "tabId": tab.id,
       });
     }
     else if (info.menuItemId === "preprocess-only") {
       ports[tab.id].postMessage({
-        "type": "preprocessRequest",
+        "type": MESSAGE_TYPES.PREPROCESS_REQUEST,
         "tabId": tab.id
       });
     } else if (info.menuItemId === "request-only") {
       ports[tab.id].postMessage({
-        "type": "onlyRequest",
+        "type": MESSAGE_TYPES.ONLY_REQUEST,
         "tabId": tab.id
       });
     }
@@ -858,15 +825,3 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     });
   }
 });
-
-function createPanel(query: IMAGERequest) {
-  let window = windowsPanel ? browser.windows.create({
-    type: "normal",
-    url: `info/info.html?uuid=${query["request_uuid"]}&graphicUrl=${graphicUrl}&dimensions=${query["dimensions"]}`,
-    height: 1080,
-    width: 1920
-  }) : browser.tabs.create({
-    url: `info/info.html?uuid=${query["request_uuid"]}&graphicUrl=${graphicUrl}&dimensions=${query["dimensions"]}`,
-  });
-  return window;
-}
