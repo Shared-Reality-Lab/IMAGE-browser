@@ -239,47 +239,6 @@ export interface PortsMap {
 }
 
 /**
- * Interface for storage sync data
- */
-// export interface StorageSyncData {
-//   mcgillServer?: boolean;
-//   inputUrl?: string;
-//   customServer?: boolean;
-//   monarchTitle?: string;
-//   monarchSecretKey?: string;
-//   monarchChannelId?: string;
-//   monarchEncryptionKey?: string;
-//   developerMode?: boolean;
-//   previousToggleState?: boolean;
-//   processItem?: string;
-//   requestItem?: string;
-//   monarchEnabled?: boolean;
-//   previousMonarchMode?: boolean;
-//   displayInvisibleButtons: boolean;
-// }
-
-/**
- * Interface for monarch request body
- */
-// export interface MonarchRequestBody {
-//   data: string;
-//   layer: string;
-//   title: string;
-//   secret: string;
-//   graphicBlob?: string;
-//   coordinates?: string;
-//   placeID?: string;
-// }
-
-// /**
-//  * Interface for monarch response
-//  */
-// export interface MonarchResponse {
-//   id: string;
-//   secret: string;
-// }
-
-/**
  * Interface for specific tactile rendering
  */
 export interface SpecificTactileRendering {
@@ -290,5 +249,3 @@ export interface SpecificTactileRendering {
   [key: string]: unknown;
 }
 
-// Type guards are not needed when using switch-case statements with discriminated unions
-// TypeScript will automatically narrow the type within each case block
