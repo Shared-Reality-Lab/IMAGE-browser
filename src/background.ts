@@ -188,9 +188,9 @@ async function handleMessage(p: Runtime.Port, message: Message) {
       }
       else {
         const graphicBlobStr = await blobToBase64(blob) as string;
-        if (checkImageSizeMessage.context && checkImageSizeMessage.url && checkImageSizeMessage.dims) {
+        if (checkImageSizeMessage.url && checkImageSizeMessage.dims) {
           query = await generateQuery({
-            context: checkImageSizeMessage.context,
+            context: checkImageSizeMessage.context || "",
             url: checkImageSizeMessage.url,
             dims: checkImageSizeMessage.dims,
             graphicBlob: graphicBlobStr
