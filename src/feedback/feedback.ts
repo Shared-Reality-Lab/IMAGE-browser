@@ -59,19 +59,20 @@ formButton?.addEventListener("click", () => {
            console.error(err);
            alert(browser.i18n.getMessage("saveDataUnknownError"));
         }).then(() => {
+            // Navigate current window for iOS compatibility
             if (lang === 'fr') {
-                window.open("https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url&entry.1541900668=" + request_uuid);
+                window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url&entry.1541900668=" + request_uuid;
             }
             else {
-                window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url&entry.1541900668=" + request_uuid);
+                window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url&entry.1541900668=" + request_uuid;
             }
         });
     } else {
         if (lang === 'fr') {
-            window.open("https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url");
+            window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSd3R9pit99xe2ZQUdavidKjJsvD0220tITGJ3LuEewuYcCIVQ/viewform?usp=pp_url";
         }
         else {
-            window.open("https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url");
+            window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSdZJH8xi_cUQK8MdR3cty1wZVB08WLGozzdKmRZqG-2q9zRaA/viewform?usp=pp_url";
         }
     }
 });
