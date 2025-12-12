@@ -98,3 +98,5 @@ In addition to the above known issues, the following issues will need to be hand
 
 - Apple does not allow background scripts to run persistently in iOS devices due to memory and power constraints.
 
+## Progress
+- Jaewon Kim resolved several issues and moved the iOS extension closer to submission. [Report here](./20251206_JaewonKim_iOS_report.pdf).
