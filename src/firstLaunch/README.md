@@ -19,7 +19,7 @@ The files in this directory are responsible for:
 
 ## Usage
 
-When a user installs the IMAGE browser extension for the first time, the extension automatically displays the first launch page. This page welcomes the user to the extension and provides a link to the quickstart guide at https://image.a11y.mcgill.ca/pages/quickstart.html.
+When a user installs the IMAGE browser extension for the first time, the extension automatically displays the first launch page. This page welcomes the user to the extension and provides a link to the tutorial at https://image.a11y.mcgill.ca/tutorial/.
 
 The first launch page is designed to be simple and straightforward, providing just enough information to get users started without overwhelming them with details.
 
