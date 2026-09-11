@@ -57,6 +57,20 @@
     border: 0;
 }
 
+.monarch-dropdown-sr-only:focus,
+.monarch-dropdown-sr-only:focus-visible,
+.sr-only:focus,
+.sr-only:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: revert;
+    margin: revert;
+    overflow: visible;
+    clip: auto;
+    border: revert;
+}
+
 .monarch-dropdown-sr-only option {
     padding: 10px;
     cursor: pointer;
