@@ -57,6 +57,8 @@
     border: 0;
 }
 
+.monarch-dropdown-sr-only:focus,
+.monarch-dropdown-sr-only:focus-visible,
 .sr-only:focus,
 .sr-only:focus-visible {
     position: static;

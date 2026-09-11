@@ -252,12 +252,6 @@ function base64toBlob(dataURI: string, type: string) {
     }
     return new Blob([ab], { type: 'image/jpeg' });
 }
-// // Process images on page
-// Array.from(document.getElementsByTagName("img")).forEach(image => {
-//     if (!image.hasAttribute("tabindex") && !image.closest("a")) {
-//         image.setAttribute("tabindex", "0");
-//     }
-// });
 
 console.debug("ext version from content", extVersion);
 document.onreadystatechange = function () {
