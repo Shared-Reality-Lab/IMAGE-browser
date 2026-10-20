@@ -36,7 +36,7 @@ versionDiv.setAttribute("ext-version", extVersion);
 
 var styleDiv = document.createElement("style");
 //styleDiv.textContent = ".sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;}";
-styleDiv.textContent += ".display-none{ display: none; !important}";
+styleDiv.textContent += ".display-none{ display: none !important; }";
 (document.head || document.documentElement).appendChild(styleDiv);
 
 var script = document.createElement('script');
